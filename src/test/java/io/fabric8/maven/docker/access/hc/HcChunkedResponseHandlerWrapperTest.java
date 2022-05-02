@@ -1,70 +1,70 @@
 package io.fabric8.maven.docker.access.hc;
 
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("unused")
-public class HcChunkedResponseHandlerWrapperTest {
+@ExtendWith(MockitoExtension.class)
+class HcChunkedResponseHandlerWrapperTest {
 
-    @Mocked
+    @Mock
     private EntityStreamReaderUtil.JsonEntityResponseHandler handler;
-    @Mocked
+    @Mock
     private HttpResponse response;
-    @Mocked
+    @Mock
+    private HttpEntity entity;
+    @Mock
     private EntityStreamReaderUtil entityStreamReaderUtil;
 
     private Header[] headers;
     private HcChunkedResponseHandlerWrapper hcChunkedResponseHandlerWrapper;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         hcChunkedResponseHandlerWrapper = new HcChunkedResponseHandlerWrapper(handler);
     }
 
     @Test
-    public void handleResponseWithJsonResponse() throws IOException {
+    void handleResponseWithJsonResponse() throws IOException {
         givenResponseHeaders(new BasicHeader("ConTenT-Type", "application/json; charset=UTF-8"));
         hcChunkedResponseHandlerWrapper.handleResponse(response);
         verifyProcessJsonStream(1);
     }
 
     @Test
-    public void handleResponseWithTextPlainResponse() throws IOException {
+    void handleResponseWithTextPlainResponse() throws IOException {
         givenResponseHeaders(new BasicHeader("Content-Type", "text/plain"));
         hcChunkedResponseHandlerWrapper.handleResponse(response);
         verifyProcessJsonStream(0);
     }
 
     @Test
-    public void handleResponseWithNoContentType() throws IOException {
+    void handleResponseWithNoContentType() throws IOException {
         givenResponseHeaders();
         hcChunkedResponseHandlerWrapper.handleResponse(response);
         verifyProcessJsonStream(0);
     }
 
-    private void givenResponseHeaders(Header... headers) {
-        // @formatter:off
-        new Expectations() {{
-            response.getAllHeaders(); result = headers;
-        }};
-        // @formatter:on
+    private void givenResponseHeaders(Header... headers) throws IOException {
+        Mockito.doReturn(headers).when(response).getAllHeaders();
+        Mockito.doReturn(new StringEntity("{}")).when(response).getEntity();
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     private void verifyProcessJsonStream(int timesCalled) throws IOException {
-        // @formatter:off
-        new Verifications() {{
-            entityStreamReaderUtil.processJsonStream(handler, response.getEntity().getContent()); times = timesCalled;
-        }};
-        // @formatter:on
+        Mockito.verify(handler, Mockito.times(timesCalled)).stop();
     }
 }

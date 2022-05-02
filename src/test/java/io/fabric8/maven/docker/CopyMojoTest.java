@@ -1,24 +1,5 @@
 package io.fabric8.maven.docker;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Test;
-
-import mockit.Deencapsulation;
-import mockit.Expectations;
-import mockit.Tested;
-import mockit.Verifications;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.CopyConfiguration.Entry;
@@ -29,24 +10,37 @@ import io.fabric8.maven.docker.service.RegistryService.RegistryConfig;
 import io.fabric8.maven.docker.service.RunService.ContainerDescriptor;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.GavLabel;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static io.fabric8.maven.docker.AbstractDockerMojo.CONTEXT_KEY_START_CALLED;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
-public class CopyMojoTest extends BaseMojoTest {
+@ExtendWith(MockitoExtension.class)
+class CopyMojoTest extends MojoTestBase {
 
     private static final String ANY_CONTAINER_NAME_PATTERN = "%regex[.*]";
 
-    @Tested
+    @InjectMocks
     private CopyMojo copyMojo;
 
     @Test
-    public void copyWithCreateContainersButNoImages() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButNoImages() throws IOException, MojoExecutionException {
         givenMavenProject();
         givenCreateContainersIsTrue();
 
@@ -56,7 +50,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersButNoCopyConfiguration() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButNoCopyConfiguration() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithBuild());
         givenCreateContainersIsTrue();
 
@@ -66,7 +60,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersButUndefinedCopyEntries() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButUndefinedCopyEntries() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithCopy(null));
         givenCreateContainersIsTrue();
 
@@ -76,7 +70,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersButNoCopyEntries() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButNoCopyEntries() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithCopy(Collections.emptyList()));
         givenCreateContainersIsTrue();
 
@@ -86,7 +80,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithStartGoalInvokedButNoContainersTracked() throws IOException, MojoExecutionException {
+    void copyWithStartGoalInvokedButNoContainersTracked() throws IOException, MojoExecutionException {
         givenProjectWithStartGoalInvoked();
         givenNoContainersTracked();
 
@@ -96,7 +90,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithStartGoalInvokedButNoCopyConfiguration() throws IOException, MojoExecutionException {
+    void copyWithStartGoalInvokedButNoCopyConfiguration() throws IOException, MojoExecutionException {
         givenProjectWithStartGoalInvoked();
         givenTrackedContainer(singleContainerDescriptor(singleImageWithBuild(), "some-container"));
 
@@ -106,7 +100,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithStartGoalInvokedButNoCopyEntries() throws IOException, MojoExecutionException {
+    void copyWithStartGoalInvokedButNoCopyEntries() throws IOException, MojoExecutionException {
         givenProjectWithStartGoalInvoked();
         givenTrackedContainer(singleContainerDescriptor(singleImageWithCopy(Collections.emptyList()), "example"));
 
@@ -116,7 +110,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyButNoImages() throws IOException, MojoExecutionException {
+    void copyButNoImages() throws IOException, MojoExecutionException {
         givenMavenProject();
 
         whenMojoExecutes();
@@ -125,7 +119,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyButNoCopyConfiguration() throws IOException, MojoExecutionException {
+    void copyButNoCopyConfiguration() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithBuild());
 
         whenMojoExecutes();
@@ -134,7 +128,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyButNoCopyEntries() throws IOException, MojoExecutionException {
+    void copyButNoCopyEntries() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithCopy(Collections.emptyList()));
 
         whenMojoExecutes();
@@ -143,7 +137,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyButNoContainers() throws IOException, MojoExecutionException {
+    void copyButNoContainers() throws IOException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithCopy(singleCopyEntry("containerPath", "hostDirectory")));
         givenNoContainerFound();
 
@@ -154,12 +148,12 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersAndAbsoluteHostDirectory() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersAndAbsoluteHostDirectory() throws IOException, MojoExecutionException {
         final String pullRegistry = "some-docker-registry";
         final String containerPath = "/container/path/to/some/directory";
-        final File hostDirectory = temporaryFolder.newFolder("absolute-host-directory");
+        final File hostDirectory = temporaryFolder.resolve("absolute-host-directory").toFile();
         final ImageConfiguration image = singleImageWithCopy(
-                singleCopyEntry(containerPath, hostDirectory.getAbsolutePath()));
+            singleCopyEntry(containerPath, hostDirectory.getAbsolutePath()));
         final String containerNamePattern = "%i";
         final String temporaryContainerId = "some-test-container";
 
@@ -178,7 +172,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersAndRelativeHostDirectory() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersAndRelativeHostDirectory() throws IOException, MojoExecutionException {
         final String pullRegistry = "another-docker-registry";
         final String containerPath = "/some/path/to/test/file.txt";
         final String hostDirectory = "project-base-dir-relative-host-directory";
@@ -201,7 +195,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersAndUndefinedHostDirectory() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersAndUndefinedHostDirectory() throws IOException, MojoExecutionException {
         final String containerPath = "/absolute/path/to/some/container/filesystem/resource";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, null));
         final String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
@@ -216,12 +210,12 @@ public class CopyMojoTest extends BaseMojoTest {
 
         thenExistingImageIsPulled(image, copyMojo.getPullRegistry());
         thenContainerIsCreated(image, containerNamePattern);
-        thenContainerPathIsCopied(temporaryContainerId, containerPath, new File(projectBaseDirectory));
+        thenContainerPathIsCopied(temporaryContainerId, containerPath, projectBaseDirectory);
         thenContainerIsRemoved(temporaryContainerId);
     }
 
     @Test
-    public void copyWithCreateContainersAndDefaultContainerNamePattern() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersAndDefaultContainerNamePattern() throws IOException, MojoExecutionException {
         final String containerPath = "/resource";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, null));
         final String temporaryContainerId = "another-test-container";
@@ -234,17 +228,17 @@ public class CopyMojoTest extends BaseMojoTest {
 
         thenExistingImageIsPulled(image, copyMojo.getPullRegistry());
         thenContainerWithNotEmptyNamePatternIsCreated(image);
-        thenContainerPathIsCopied(temporaryContainerId, containerPath, new File(projectBaseDirectory));
+        thenContainerPathIsCopied(temporaryContainerId, containerPath, projectBaseDirectory);
         thenContainerIsRemoved(temporaryContainerId);
     }
 
     @Test
-    public void copyWithCreateContainersButExceptionWhenCopying() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButExceptionWhenCopying() throws IOException, MojoExecutionException {
         final String containerPath = "/any/container/resource";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, null));
         final String containerNamePattern = "constant-container-name";
         final String temporaryContainerId = "some-container-id";
-        final Exception copyException = new RuntimeException("Test exception when copying from container");
+        final RuntimeException copyException = new RuntimeException("Test exception when copying from container");
 
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
@@ -252,14 +246,8 @@ public class CopyMojoTest extends BaseMojoTest {
         givenCreatedContainerId(temporaryContainerId);
         givenExceptionWhenCopyingArchiveFromContainer(temporaryContainerId, copyException);
 
-        try {
-            whenMojoExecutes();
-            fail();
-        } catch (MojoExecutionException e) {
-            assertEquals(copyException, e.getCause());
-        } catch (Exception e) {
-            assertEquals(copyException, e);
-        }
+        RuntimeException caught= Assertions.assertThrows(RuntimeException.class, () ->whenMojoExecutes());
+        Assertions.assertSame(copyException, caught);
 
         thenExistingImageIsPulled(image, copyMojo.getPullRegistry());
         thenContainerIsCreated(image, containerNamePattern);
@@ -267,7 +255,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersButExceptionWhenExtractingArchive() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButExceptionWhenExtractingArchive() throws IOException, MojoExecutionException {
         final String containerPath = "/another/container/resource";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, null));
         final String containerNamePattern = "container-name-pattern";
@@ -282,11 +270,11 @@ public class CopyMojoTest extends BaseMojoTest {
 
         try {
             whenMojoExecutes();
-            fail();
+            Assertions.fail();
         } catch (MojoExecutionException e) {
-            assertEquals(extractException, e.getCause());
+            Assertions.assertEquals(extractException, e.getCause());
         } catch (Exception e) {
-            assertEquals(extractException, e);
+            Assertions.assertEquals(extractException, e);
         }
 
         thenExistingImageIsPulled(image, copyMojo.getPullRegistry());
@@ -296,7 +284,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithCreateContainersButUndefinedContainerPath() throws IOException, MojoExecutionException {
+    void copyWithCreateContainersButUndefinedContainerPath() throws IOException, MojoExecutionException {
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(null, null));
         final String containerNamePattern = "%i";
         final String temporaryContainerId = "container-id";
@@ -308,7 +296,7 @@ public class CopyMojoTest extends BaseMojoTest {
 
         try {
             whenMojoExecutes();
-            fail();
+            Assertions.fail();
         } catch (Exception ignored) {
             // Nothing to check
         }
@@ -320,7 +308,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyWithStartGoalInvoked() throws IOException, MojoExecutionException {
+    void copyWithStartGoalInvoked() throws IOException, MojoExecutionException {
         final String containerPath = "/container/test/path";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, null));
         final String trackedContainerId = "tracked-container-id";
@@ -331,11 +319,11 @@ public class CopyMojoTest extends BaseMojoTest {
         whenMojoExecutes();
 
         thenNoContainerIsCreated();
-        thenContainerPathIsCopied(trackedContainerId, containerPath, new File(projectBaseDirectory));
+        thenContainerPathIsCopied(trackedContainerId, containerPath, projectBaseDirectory);
     }
 
     @Test
-    public void copyWithUndefinedCopyNamePattern() throws IOException, MojoExecutionException {
+    void copyWithUndefinedCopyNamePattern() throws IOException, MojoExecutionException {
         final String containerPath = "/container/test/path";
         final String hostDirectory = "project-base-dir-relative-host-directory";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, hostDirectory));
@@ -351,11 +339,11 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyFromTheLatestContainer() throws IOException, MojoExecutionException {
+    void copyFromTheLatestContainer() throws IOException, MojoExecutionException {
         final String containerPath = "/container/test/path";
         final String hostDirectory = "project-base-dir-relative-host-directory";
         final ImageConfiguration image = singleImageWithCopyNamePatternAndCopyEntries(ANY_CONTAINER_NAME_PATTERN,
-                singleCopyEntry(containerPath, hostDirectory));
+            singleCopyEntry(containerPath, hostDirectory));
         final String containerId = "latest-container-id";
 
         givenProjectWithResolvedImage(image);
@@ -368,7 +356,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     @Test
-    public void copyAllWithUndefinedCopyNamePattern() throws IOException, MojoExecutionException {
+    void copyAllWithUndefinedCopyNamePattern() throws IOException, MojoExecutionException {
         final String containerPath = "/container/test/path";
         final String hostDirectory = "project-base-dir-relative-host-directory";
         final ImageConfiguration image = singleImageWithCopy(singleCopyEntry(containerPath, hostDirectory));
@@ -377,33 +365,33 @@ public class CopyMojoTest extends BaseMojoTest {
 
         givenProjectWithCopyAll(image);
         givenMatchingContainers(Arrays.asList(singleContainer(image, 1, container1Id, false),
-                singleContainer(image, 1, container2Id, false)));
+            singleContainer(image, 1, container2Id, false)));
 
         whenMojoExecutes();
 
         thenNoContainerIsCreated();
         thenContainersPathIsCopied(Arrays.asList(container1Id, container2Id), containerPath,
-                new File(projectBaseDirectory, hostDirectory));
+            new File(projectBaseDirectory, hostDirectory));
     }
 
     @Test
-    public void copyAll() throws IOException, MojoExecutionException {
+    void copyAll() throws IOException, MojoExecutionException {
         final String containerPath = "/container/test/path";
         final String hostDirectory = "project-base-dir-relative-host-directory";
         final ImageConfiguration image = singleImageWithCopyNamePatternAndCopyEntries(ANY_CONTAINER_NAME_PATTERN,
-                singleCopyEntry(containerPath, hostDirectory));
+            singleCopyEntry(containerPath, hostDirectory));
         final String container1Id = "test-container1-id";
         final String container2Id = "test-container2-id";
 
         givenProjectWithCopyAll(image);
         givenMatchingContainers(Arrays.asList(singleContainer(image, 1, container1Id, false),
-                singleContainer(image, 1, container2Id, false)));
+            singleContainer(image, 1, container2Id, false)));
 
         whenMojoExecutes();
 
         thenNoContainerIsCreated();
         thenContainersPathIsCopied(Arrays.asList(container1Id, container2Id), containerPath,
-                new File(projectBaseDirectory, hostDirectory));
+            new File(projectBaseDirectory, hostDirectory));
     }
 
     private void givenMavenProject() {
@@ -418,7 +406,7 @@ public class CopyMojoTest extends BaseMojoTest {
     private void givenProjectWithCopyAll(ImageConfiguration image) {
         givenMavenProject();
         givenResolvedImages(copyMojo, Collections.singletonList(image));
-        givenCopyAll(copyMojo);
+        copyMojo.copyAll = true;
     }
 
     private void givenProjectWithResolvedImage(ImageConfiguration image) {
@@ -436,91 +424,67 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     private void givenCreateContainersIsTrue() {
-        Deencapsulation.setField(copyMojo, "createContainers", true);
+        copyMojo.createContainers = true;
     }
 
     private void givenPullRegistry(String pullRegistry) {
-        Deencapsulation.setField(copyMojo, "pullRegistry", pullRegistry);
+        copyMojo.pullRegistry = pullRegistry;
     }
 
     private void givenNoContainersTracked() {
-        new Expectations() {{
-            runService.getContainers((GavLabel) any);
-            result = Collections.emptyList();
-            minTimes = 0;
-        }};
+        Mockito.lenient().doReturn(Collections.emptyList())
+            .when(runService).getContainers(Mockito.any(GavLabel.class));
     }
 
     private void givenTrackedContainer(ContainerDescriptor container) {
-        new Expectations() {{
-            runService.getContainers((GavLabel) any);
-            result = Collections.singletonList(container);
-            minTimes = 0;
-        }};
+        Mockito.lenient().doReturn(Collections.singletonList(container))
+            .when(runService).getContainers(Mockito.any(GavLabel.class));
     }
 
     private void givenContainerNamePattern(String containerNamePattern) {
-        Deencapsulation.setField(copyMojo, "containerNamePattern", containerNamePattern);
+        copyMojo.containerNamePattern = containerNamePattern;
     }
 
     private void givenCreatedContainerId(String containerId) throws DockerAccessException {
-        new Expectations() {{
-            runService.createContainer((ImageConfiguration) any, (PortMapping) any, projectGavLabel, (Properties) any,
-                    (File) any, anyString, (Date) any);
-            result = containerId;
-        }};
+        Mockito.doReturn(containerId)
+            .when(runService).createContainer(Mockito.any(ImageConfiguration.class), Mockito.any(), Mockito.any(GavLabel.class),
+                Mockito.any(Properties.class), Mockito.any(File.class), Mockito.anyString(), Mockito.any(Date.class));
     }
 
     private void givenExceptionWhenCopyingArchiveFromContainer(String containerId, Exception exception)
-            throws DockerAccessException {
-        new Expectations() {{
-            dockerAccess.copyArchiveFromContainer(containerId, anyString, (File) any);
-            result = exception;
-        }};
+        throws DockerAccessException {
+        Mockito.doThrow(exception)
+            .when(dockerAccess).copyArchiveFromContainer(Mockito.eq(containerId), Mockito.anyString(), Mockito.any(File.class));
     }
 
     private void givenExceptionWhenExtractingArchive(Exception exception) throws MojoExecutionException {
-        new Expectations() {{
-            archiveService.extractDockerCopyArchive((File) any, (File) any);
-            result = exception;
-        }};
+        Mockito.doThrow(exception)
+            .when(archiveService).extractDockerCopyArchive(Mockito.any(File.class), Mockito.any(File.class));
     }
 
     private void givenNoContainerFound() throws DockerAccessException {
-        new Expectations() {{
-            queryService.getContainersForImage(anyString, anyBoolean);
-            minTimes = 0;
-            result = null;
-            queryService.listContainers(anyBoolean);
-            minTimes = 0;
-            result = Collections.emptyList();
-            queryService.getLatestContainerForImage(anyString, anyBoolean);
-            minTimes = 0;
-            result = null;
-        }};
+        Mockito.lenient().doReturn(null)
+            .when(queryService).getContainersForImage(Mockito.anyString(), Mockito.anyBoolean());
+        Mockito.lenient().doReturn(Collections.emptyList())
+            .when(queryService).listContainers(Mockito.anyBoolean());
+        Mockito.lenient().doReturn(null)
+            .when(queryService).getLatestContainerForImage(Mockito.anyString(), Mockito.anyBoolean());
     }
 
     private void givenMatchingContainers(List<Container> containers) throws DockerAccessException {
-        new Expectations() {{
-            queryService.getContainersForImage(anyString, anyBoolean);
-            minTimes = 0;
-            result = containers;
-            queryService.listContainers(anyBoolean);
-            minTimes = 0;
-            result = containers;
-        }};
+        Mockito.lenient().doReturn(containers)
+            .when(queryService).getContainersForImage(Mockito.anyString(), Mockito.anyBoolean());
+        Mockito.lenient().doReturn(containers)
+            .when(queryService).listContainers(Mockito.anyBoolean());
     }
 
     private void givenMatchingLatestContainer(Container container) throws DockerAccessException {
         givenMatchingContainers(Collections.singletonList(container));
-        new Expectations() {{
-            queryService.getLatestContainerForImage(anyString, anyBoolean);
-            minTimes = 0;
-            result = container;
-            queryService.getLatestContainer((List) any);
-            minTimes = 0;
-            result = container;
-        }};
+
+        Mockito.lenient().doReturn(container)
+            .when(queryService).getLatestContainerForImage(Mockito.anyString(), Mockito.anyBoolean());
+        Mockito.lenient().doReturn(container)
+            .when(queryService).getLatestContainer(Mockito.any(List.class));
     }
 
     private ContainerDescriptor singleContainerDescriptor(ImageConfiguration imageConfiguration, String containerId) {
@@ -528,7 +492,7 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     private Container singleContainer(ImageConfiguration imageConfiguration, long created, String containerId,
-            boolean running) {
+        boolean running) {
         return new Container() {
             @Override
             public long getCreated() {
@@ -605,159 +569,141 @@ public class CopyMojoTest extends BaseMojoTest {
     }
 
     private void thenListContainersIsNotCalled() throws DockerAccessException {
-        new Verifications() {{
-            queryService.listContainers(anyBoolean);
-            times = 0;
-        }};
+        Mockito.verify(queryService, Mockito.never()).listContainers(Mockito.anyBoolean());
     }
 
     @SuppressWarnings("unchecked")
     private void thenGetLatestContainerIsNotCalled() {
-        new Verifications() {{
-            queryService.getLatestContainer((List<Container>) any);
-            times = 0;
-        }};
+        Mockito.verify(queryService, Mockito.never()).getLatestContainer(Mockito.any(List.class));
     }
 
     private void thenNoContainerLookupByImageOccurs() throws DockerAccessException {
-        new Verifications() {{
-            queryService.getContainersForImage(anyString, anyBoolean);
-            times = 0;
-        }};
+        Mockito.verify(queryService, Mockito.never()).getContainersForImage(Mockito.anyString(), Mockito.anyBoolean());
     }
 
     private void thenNoLatestContainerLookupByImageOccurs() throws DockerAccessException {
-        new Verifications() {{
-            queryService.getLatestContainerForImage(anyString, anyBoolean);
-            times = 0;
-        }};
+        Mockito.verify(queryService, Mockito.never()).getLatestContainerForImage(Mockito.anyString(), Mockito.anyBoolean());
     }
 
     private void thenNoContainerIsCreated() throws DockerAccessException {
-        new Verifications() {{
-            runService.createContainer((ImageConfiguration) any, (PortMapping) any, projectGavLabel, (Properties) any,
-                    (File) any, anyString, (Date) any);
-            times = 0;
-        }};
+        Mockito.verify(runService, Mockito.never())
+            .createContainer(Mockito.any(ImageConfiguration.class), Mockito.any(PortMapping.class), Mockito.any(GavLabel.class), Mockito.any(Properties.class),
+                Mockito.any(File.class), Mockito.anyString(), Mockito.any(Date.class));
     }
 
     private void thenCopyArchiveFromContainerIsNotCalled() throws DockerAccessException {
-        new Verifications() {{
-            dockerAccess.copyArchiveFromContainer(anyString, anyString, (File) any);
-            times = 0;
-        }};
+        Mockito.verify(dockerAccess, Mockito.never()).copyArchiveFromContainer(Mockito.anyString(), Mockito.anyString(), Mockito.any(File.class));
     }
 
     private void thenMissingImageIsPulled(ImageConfiguration image, String pullRegistry)
-            throws DockerAccessException, MojoExecutionException {
+        throws DockerAccessException, MojoExecutionException {
         thenImageIsPulled(image, pullRegistry, false);
     }
 
     private void thenExistingImageIsPulled(ImageConfiguration image, String pullRegistry)
-            throws DockerAccessException, MojoExecutionException {
+        throws DockerAccessException, MojoExecutionException {
         thenImageIsPulled(image, pullRegistry, true);
     }
 
     private void thenImageIsPulled(ImageConfiguration image, String pullRegistry, boolean imageExists)
-            throws DockerAccessException, MojoExecutionException {
-        new Verifications() {{
-            final String imageName;
-            final RegistryConfig registryConfig;
-            registryService.pullImageWithPolicy(imageName = withCapture(), (ImagePullManager) any,
-                    registryConfig = withCapture(), image.getBuildConfiguration());
-            times = 1;
-            assertEquals(image.getName(), imageName);
-            assertNotNull(registryConfig);
-            assertEquals(pullRegistry, registryConfig.getRegistry());
-        }};
+        throws DockerAccessException, MojoExecutionException {
+
+        ArgumentCaptor<String> pulledImage = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<RegistryConfig> registryCapture = ArgumentCaptor.forClass(RegistryConfig.class);
+        Mockito.verify(registryService)
+            .pullImageWithPolicy(pulledImage.capture(), Mockito.any(ImagePullManager.class), registryCapture.capture(), Mockito.eq(image.getBuildConfiguration()));
+
+        Assertions.assertEquals(image.getName(), pulledImage.getValue());
+        RegistryConfig registryConfig = registryCapture.getValue();
+        Assertions.assertNotNull(registryConfig);
+        Assertions.assertEquals(pullRegistry, registryConfig.getRegistry());
     }
 
     private void thenContainerIsCreated(ImageConfiguration image, String namePattern) throws DockerAccessException {
-        new Verifications() {{
-            final ImageConfiguration containerImage;
-            runService.createContainer(containerImage = withCapture(), (PortMapping) any, projectGavLabel,
-                    (Properties) any, (File) any, namePattern, (Date) any);
-            times = 1;
-            assertEquals(image.getName(), containerImage.getName());
-        }};
+
+        ArgumentCaptor<ImageConfiguration> imageCapture = ArgumentCaptor.forClass(ImageConfiguration.class);
+        Mockito.verify(runService).createContainer(imageCapture.capture(), Mockito.any(), Mockito.eq(projectGavLabel),
+            Mockito.any(Properties.class), Mockito.any(File.class), Mockito.eq(namePattern), Mockito.any(Date.class));
+
+        Assertions.assertEquals(image.getName(), imageCapture.getValue().getName());
     }
 
     private void thenContainerWithNotEmptyNamePatternIsCreated(ImageConfiguration image) throws DockerAccessException {
-        new Verifications() {{
-            final ImageConfiguration containerImage;
-            final String defaultContainerNamePattern;
-            runService.createContainer(containerImage = withCapture(), (PortMapping) any, projectGavLabel,
-                    (Properties) any, (File) any, defaultContainerNamePattern = withCapture(), (Date) any);
-            times = 1;
-            assertEquals(image.getName(), containerImage.getName());
-            assertNotNull(defaultContainerNamePattern);
-            assertNotEquals(0, defaultContainerNamePattern.length());
-        }};
+
+        ArgumentCaptor<ImageConfiguration> imageCapture = ArgumentCaptor.forClass(ImageConfiguration.class);
+        ArgumentCaptor<String> patternCapture = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(runService).createContainer(imageCapture.capture(), Mockito.any(), Mockito.eq(projectGavLabel),
+            Mockito.any(Properties.class), Mockito.any(File.class), patternCapture.capture(), Mockito.any(Date.class));
+
+        Assertions.assertEquals(image.getName(), imageCapture.getValue().getName());
+        String defaultContainerNamePattern = patternCapture.getValue();
+        Assertions.assertNotNull(defaultContainerNamePattern);
+        Assertions.assertNotEquals(0, defaultContainerNamePattern.length());
     }
 
     private void thenContainerPathIsCopied(String containerId, String containerPath, File targetDirectory)
-            throws DockerAccessException, MojoExecutionException {
-        new Verifications() {{
-            final File copied;
-            dockerAccess.copyArchiveFromContainer(containerId, containerPath, copied = withCapture());
-            times = 1;
-            assertNotNull(copied);
+        throws DockerAccessException, MojoExecutionException {
 
-            final File archive;
-            final File destination;
-            archiveService.extractDockerCopyArchive(archive = withCapture(), destination = withCapture());
-            times = 1;
-            assertAbsolutePathEquals(copied, archive);
-            assertAbsolutePathEquals(targetDirectory, destination);
-            assertFalse(copied.exists());
-        }};
+        ArgumentCaptor<File> copiedCapture = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(dockerAccess).copyArchiveFromContainer(Mockito.eq(containerId), Mockito.eq(containerPath), copiedCapture.capture());
+
+        File copied = copiedCapture.getValue();
+        Assertions.assertNotNull(copied);
+
+        ArgumentCaptor<File> archiveCapture = ArgumentCaptor.forClass(File.class);
+        ArgumentCaptor<File> destCapture = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(archiveService).extractDockerCopyArchive(archiveCapture.capture(), destCapture.capture());
+
+        File archive = archiveCapture.getValue();
+        File destination = destCapture.getValue();
+        assertAbsolutePathEquals(copied, archive);
+        assertAbsolutePathEquals(targetDirectory, destination);
+        Assertions.assertFalse(copied.exists());
     }
 
     private void thenContainersPathIsCopied(List<String> containerIds, String containerPath, File targetDirectory)
-            throws DockerAccessException, MojoExecutionException {
-        new Verifications() {{
-            final List<String> copiedContainerIds = new ArrayList<>();
-            final List<File> copiedArchives = new ArrayList<>();
-            dockerAccess.copyArchiveFromContainer(withCapture(copiedContainerIds), containerPath,
-                    withCapture(copiedArchives));
-            times = containerIds.size();
-            assertArrayEquals(containerIds.toArray(), copiedContainerIds.toArray());
+        throws DockerAccessException, MojoExecutionException {
 
-            final List<File> archives = new ArrayList<>();
-            final List<File> destinations = new ArrayList<>();
-            archiveService.extractDockerCopyArchive(withCapture(archives), withCapture(destinations));
-            times = containerIds.size();
+        ArgumentCaptor<String> containerIdsCapture = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<File> copiedArchivesCapture = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(dockerAccess, Mockito.times(containerIds.size()))
+            .copyArchiveFromContainer(containerIdsCapture.capture(), Mockito.eq(containerPath), copiedArchivesCapture.capture());
 
-            assertEquals(copiedArchives.size(), archives.size());
-            final Iterator<File> expectedArchiveIterator = copiedArchives.iterator();
-            for (File archive : archives) {
-                assertAbsolutePathEquals(expectedArchiveIterator.next(), archive);
-                assertFalse(archive.exists());
-            }
+        List<String> copiedContainerIds = containerIdsCapture.getAllValues();
+        List<File> copiedArchives = copiedArchivesCapture.getAllValues();
+        Assertions.assertArrayEquals(containerIds.toArray(), copiedContainerIds.toArray());
 
-            assertEquals(containerIds.size(), destinations.size());
-            for (File destination : destinations) {
-                assertAbsolutePathEquals(targetDirectory, destination);
-            }
-        }};
+        ArgumentCaptor<File> archivesCapture = ArgumentCaptor.forClass(File.class);
+        ArgumentCaptor<File> destinationsCapture = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(archiveService, Mockito.times(containerIds.size())).extractDockerCopyArchive(archivesCapture.capture(), destinationsCapture.capture());
+
+        List<File> archives = archivesCapture.getAllValues();
+        Assertions.assertEquals(copiedArchives.size(), archives.size());
+        final Iterator<File> expectedArchiveIterator = copiedArchives.iterator();
+        for (File archive : archives) {
+            assertAbsolutePathEquals(expectedArchiveIterator.next(), archive);
+            Assertions.assertFalse(archive.exists());
+        }
+
+        List<File> destinations = destinationsCapture.getAllValues();
+        Assertions.assertEquals(containerIds.size(), destinations.size());
+        for (File destination : destinations) {
+            assertAbsolutePathEquals(targetDirectory, destination);
+        }
     }
 
     private void thenContainerIsRemoved(String containerId) throws DockerAccessException {
-        new Verifications() {{
-            final String removedContainerId;
-            runService.removeContainer(removedContainerId = withCapture(), anyBoolean);
-            times = 1;
-            assertEquals(containerId, removedContainerId);
-        }};
+        ArgumentCaptor<String> containerIdCapture = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(runService).removeContainer(containerIdCapture.capture(), Mockito.anyBoolean());
+        Assertions.assertEquals(containerId, containerIdCapture.getValue());
     }
 
     private void thenCopiedArchiveIsRemoved(String containerId, String containerPath) throws DockerAccessException {
-        new Verifications() {{
-            final File copied;
-            dockerAccess.copyArchiveFromContainer(containerId, containerPath, copied = withCapture());
-            times = 1;
-            assertNotNull(copied);
-            assertFalse(copied.exists());
-        }};
+        ArgumentCaptor<File> copiedCapture = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(dockerAccess).copyArchiveFromContainer(Mockito.eq(containerId), Mockito.eq(containerPath), copiedCapture.capture());
+
+        File copied = copiedCapture.getValue();
+        Assertions.assertNotNull(copied);
+        Assertions.assertFalse(copied.exists());
     }
 }

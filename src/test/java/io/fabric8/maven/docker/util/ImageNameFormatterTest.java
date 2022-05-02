@@ -16,168 +16,131 @@ package io.fabric8.maven.docker.util;
  * limitations under the License.
  */
 
+import org.apache.maven.project.MavenProject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.util.Date;
 import java.util.Properties;
-
-import mockit.Expectations;
-import mockit.FullVerifications;
-import mockit.Injectable;
-import mockit.Tested;
-import org.apache.maven.project.MavenProject;
-import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.fail;
 
 /**
  * @author roland
  * @since 07/06/16
  */
 
-public class ImageNameFormatterTest {
+@ExtendWith(MockitoExtension.class)
+class ImageNameFormatterTest {
 
-    @Injectable
+    @Mock
     private MavenProject project;
 
-    @Injectable
-    private Date now = new Date();
+    @Mock
+    private Date now;
 
-    @Tested
+    @InjectMocks
     private ImageNameFormatter formatter;
 
     @Test
-    public void simple() throws Exception {
-        assertThat(formatter.format("bla"),equalTo("bla"));
+    void simple() {
+        Assertions.assertEquals("bla", formatter.format("bla"));
     }
 
     @Test
-    public void invalidFormatChar() throws Exception {
-        try {
-            formatter.format("bla %z");
-            fail();
-        } catch (IllegalArgumentException exp) {
-            System.out.println(exp);
-            assertThat("Doesnt match", exp.getMessage(), containsString("%z"));
-        }
+    void invalidFormatChar() {
+        IllegalArgumentException exp = Assertions.assertThrows(IllegalArgumentException.class, () -> formatter.format("bla %z"));
+        Assertions.assertTrue(exp.getMessage().contains("%z"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "io.fabric8, fabric8",
+        "io.FABRIC8, fabric8",
+        "io.fabric8., fabric8",
+        "io.fabric8, fabric8",
+        "fabric8...., fabric8",
+        "io.fabric8___, fabric8__"
+    })
+    void defaultUserName(String groupId, String expected) {
+        Mockito.doReturn(new Properties()).when(project).getProperties();
+        Mockito.doReturn(groupId).when(project).getGroupId();
+
+        String value = formatter.format("%g");
+        Assertions.assertEquals(expected, value);
     }
 
     @Test
-    public void defaultUserName() throws Exception {
-
-        final String[] data = {
-            "io.fabric8", "fabric8",
-            "io.FABRIC8", "fabric8",
-            "io.fabric8.", "fabric8",
-            "io.fabric8", "fabric8",
-            "fabric8....", "fabric8",
-            "io.fabric8___", "fabric8__"
-        };
-
-        for (int i = 0; i < data.length; i+=2) {
-
-            final int finalI = i;
-            new Expectations() {{
-                project.getProperties(); result = new Properties();
-                project.getGroupId(); result = data[finalI];
-            }};
-
-            String value = formatter.format("%g");
-            assertThat("Idx. " + i / 2,value, equalTo(data[i+1]));
-        }
+    void artifact() {
+        Mockito.doReturn("Docker....Maven.....Plugin").when(project).getArtifactId();
+        Assertions.assertEquals("--> docker.maven.plugin <--", formatter.format("--> %a <--"));
     }
 
     @Test
-    public void artifact() throws Exception {
-        new Expectations() {{
-            project.getArtifactId(); result = "Docker....Maven.....Plugin";
-        }};
-
-        assertThat(formatter.format("--> %a <--"),equalTo("--> docker.maven.plugin <--"));
+    void tagWithProperty() {
+        Properties props = new Properties();
+        props.put("docker.image.tag", "1.2.3");
+        Mockito.doReturn(props).when(project).getProperties();
+        Assertions.assertEquals("1.2.3", formatter.format("%t"));
     }
 
     @Test
-    public void tagWithProperty() throws Exception {
-        new Expectations() {{
-            Properties props = new Properties();
-            props.put("docker.image.tag","1.2.3");
-            project.getProperties(); result = props;
+    void tag() {
+        Mockito.doReturn("docker-maven-plugin").when(project).getArtifactId();
+        Mockito.doReturn("io.fabric8").when(project).getGroupId();
+        Mockito.doReturn("1.2.3-SNAPSHOT").when(project).getVersion();
+        Mockito.doReturn(new Properties()).when(project).getProperties();
 
-        }};
-        assertThat(formatter.format("%t"),equalTo("1.2.3"));
-        new FullVerifications() {{ }};
+        Assertions.assertEquals("fabric8/docker-maven-plugin:latest", formatter.format("%g/%a:%l"));
+        Assertions.assertEquals("fabric8/docker-maven-plugin:1.2.3-SNAPSHOT", formatter.format("%g/%a:%v"));
+        Assertions.assertTrue(formatter.format("%g/%a:%t").matches(".*snapshot-[\\d-]+$"));
     }
 
     @Test
-    public void tag() throws Exception {
-        new Expectations() {{
-            project.getArtifactId(); result = "docker-maven-plugin";
-            project.getGroupId(); result = "io.fabric8";
-            project.getVersion(); result = "1.2.3-SNAPSHOT";
-            project.getProperties(); result = new Properties();
-        }};
-        assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:latest"));
-        assertThat(formatter.format("%g/%a:%v"), equalTo("fabric8/docker-maven-plugin:1.2.3-SNAPSHOT"));
-        assertThat(formatter.format("%g/%a:%t").matches(".*snapshot-[\\d-]+$"), is(true));
+    void timestamp() {
+        Mockito.doReturn("docker-maven-plugin").when(project).getArtifactId();
+        Mockito.doReturn("io.fabric8").when(project).getGroupId();
+        Mockito.doReturn(new Properties()).when(project).getProperties();
+
+        Assertions.assertTrue(formatter.format("%g/%a:%T").matches("^fabric8/docker-maven-plugin:[\\d-]+$"));
+        Assertions.assertTrue(formatter.format("%g/%a:test-%T").matches("^fabric8/docker-maven-plugin:test-[\\d-]+$"));
     }
 
     @Test
-    public void timestamp() throws Exception {
-        new Expectations() {{
-            project.getArtifactId(); result = "docker-maven-plugin";
-            project.getGroupId(); result = "io.fabric8";
-            project.getProperties(); result = new Properties();
-        }};
-        assertThat(formatter.format("%g/%a:%T").matches("^fabric8/docker-maven-plugin:[\\d-]+$"), is(true));
-        assertThat(formatter.format("%g/%a:test-%T").matches("^fabric8/docker-maven-plugin:test-[\\d-]+$"), is(true));
-    }
+    void tagWithDockerImageTagSet() {
+        Mockito.doReturn("docker-maven-plugin").when(project).getArtifactId();
+        Mockito.doReturn("io.fabric8").when(project).getGroupId();
+        Mockito.doReturn("1.2.3-SNAPSHOT").when(project).getVersion();
+        Mockito.doReturn(new Properties()).when(project).getProperties();
 
-    @Test
-    public void tagWithDockerImageTagSet() {
-        new Expectations() {{
-            project.getArtifactId(); result = "docker-maven-plugin";
-            project.getGroupId(); result = "io.fabric8";
-            project.getVersion(); result = "1.2.3-SNAPSHOT";
-            project.getProperties(); result = new Properties();
-        }};
         project.getProperties().setProperty("docker.image.tag", "%l");
 
-        assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:latest"));
+        Assertions.assertEquals("fabric8/docker-maven-plugin:latest", formatter.format("%g/%a:%l"));
     }
 
     @Test
-    public void nonSnapshotArtifact() throws Exception {
-        new Expectations() {{
-            project.getArtifactId(); result = "docker-maven-plugin";
-            project.getGroupId(); result = "io.fabric8";
-            project.getVersion(); result = "1.2.3";
-            project.getProperties(); result = new Properties();
-        }};
+    void nonSnapshotArtifact() {
+        Mockito.doReturn("docker-maven-plugin").when(project).getArtifactId();
+        Mockito.doReturn("io.fabric8").when(project).getGroupId();
+        Mockito.doReturn("1.2.3").when(project).getVersion();
+        Mockito.doReturn(new Properties()).when(project).getProperties();
 
-        assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:1.2.3"));
-        assertThat(formatter.format("%g/%a:%v"), equalTo("fabric8/docker-maven-plugin:1.2.3"));
-        assertThat(formatter.format("%g/%a:%t"), equalTo("fabric8/docker-maven-plugin:1.2.3"));
+        Assertions.assertEquals("fabric8/docker-maven-plugin:1.2.3", formatter.format("%g/%a:%l"));
+        Assertions.assertEquals("fabric8/docker-maven-plugin:1.2.3", formatter.format("%g/%a:%v"));
+        Assertions.assertEquals("fabric8/docker-maven-plugin:1.2.3", formatter.format("%g/%a:%t"));
     }
 
     @Test
-    public void groupIdWithProperty() throws Exception {
-        new Expectations() {{
-            Properties props = new Properties();
-            props.put("docker.image.user","this.it..is");
-            project.getProperties(); result = props;
+    void groupIdWithProperty() {
+        Properties props = new Properties();
+        props.put("docker.image.user", "this.it..is");
+        Mockito.doReturn(props).when(project).getProperties();
 
-        }};
-
-        assertThat(formatter.format("%g/name"),equalTo("this.it..is/name"));
-
-        new FullVerifications() {{ }};
-    }
-
-    private final class GroupIdExpectations extends Expectations {
-        GroupIdExpectations(String groupId) {
-        }
-
+        Assertions.assertEquals("this.it..is/name", formatter.format("%g/name"));
     }
 }

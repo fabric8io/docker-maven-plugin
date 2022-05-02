@@ -1,12 +1,6 @@
 package integration;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.common.collect.Lists;
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.ContainerHostConfig;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -19,26 +13,30 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-
-import com.google.common.collect.Lists;
-
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.condition.OS.LINUX;
+import static org.junit.jupiter.api.condition.OS.MAC;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
  *
  * it also assumes that 'removeImage' does what it's supposed to do as it's used in test setup.
  */
-@Ignore
-public class DockerAccessIT {
+@Disabled("debugging aid")
+@EnabledOnOs({ LINUX, MAC })
+class DockerAccessIT {
 
     private static final String CONTAINER_NAME = "integration-test";
     private static final String IMAGE = "busybox:buildroot-2014.02";
@@ -59,28 +57,18 @@ public class DockerAccessIT {
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
         DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false","false");
         return new DockerConnectionDetector(
-            Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(new DockerMachine(logger, machine)));
+            Collections.singletonList(new DockerMachine(logger, machine)));
     }
 
-    @Before
-    public void setup() throws DockerAccessException {
+    @BeforeEach
+    void setup() throws DockerAccessException {
         // yes - this is a big don't do for tests
         testRemoveImage(IMAGE);
         testRemoveImage(IMAGE_TAG);
     }
 
     @Test
-    @Ignore
-    public void testBuildImage() throws DockerAccessException {
-        File file = new File("src/test/resources/integration/busybox-test.tar");
-        dockerClient.buildImage(IMAGE_TAG, file, null);
-        assertTrue(hasImage(IMAGE_TAG));
-
-        testRemoveImage(IMAGE_TAG);
-    }
-
-    @Test
-    public void testPullStartStopRemove() throws DockerAccessException, InterruptedException {
+    void testPullStartStopRemove() throws DockerAccessException, InterruptedException {
         testDoesNotHave();
 
         try {
@@ -99,10 +87,10 @@ public class DockerAccessIT {
     }
 
     @Test
-    public void testLoadImage() throws DockerAccessException {
+    void testLoadImage() throws DockerAccessException {
         testDoesNotHave();
         dockerClient.loadImage(IMAGE_LATEST, new File("integration/busybox-image-test.tar.gz"));
-        assertTrue(hasImage(IMAGE_LATEST));
+        Assertions.assertTrue(hasImage(IMAGE_LATEST));
         testRemoveImage(IMAGE_LATEST);
     }
 
@@ -118,29 +106,29 @@ public class DockerAccessIT {
     }
 
     private void testCreateContainer() throws DockerAccessException {
-        PortMapping portMapping = new PortMapping(Arrays.asList(new String[] {PORT + ":" + PORT }), new Properties());
+        PortMapping portMapping = new PortMapping(Collections.singletonList(PORT + ":" + PORT), new Properties());
         ContainerHostConfig hostConfig = new ContainerHostConfig().portBindings(portMapping);
         ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command(new Arguments("ping google.com")).hostConfig(hostConfig);
 
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
-        assertNotNull(containerId);
+        Assertions.assertNotNull(containerId);
 
         String name = dockerClient.getContainer(containerId).getName();
-        assertEquals(CONTAINER_NAME, name);
+        Assertions.assertEquals(CONTAINER_NAME, name);
     }
 
     private void testDoesNotHave() throws DockerAccessException {
-        assertFalse(hasImage(IMAGE));
+        Assertions.assertFalse(hasImage(IMAGE));
     }
 
     private void testPullImage() throws DockerAccessException {
         dockerClient.pullImage(IMAGE, null, null, null);
-        assertTrue(hasImage(IMAGE));
+        Assertions.assertTrue(hasImage(IMAGE));
     }
 
     private void testQueryPortMapping() throws DockerAccessException {
         Map<String, PortBinding> portMap = dockerClient.getContainer(containerId).getPortBindings();
-        assertEquals(5677, portMap.values().iterator().next().getHostPort().intValue());
+        Assertions.assertEquals(5677, portMap.values().iterator().next().getHostPort().intValue());
     }
 
     private void testRemoveContainer() throws DockerAccessException {
@@ -149,12 +137,12 @@ public class DockerAccessIT {
 
     private void testRemoveImage(String image) throws DockerAccessException {
         dockerClient.removeImage(image, false);
-        assertFalse(hasImage(image));
+        Assertions.assertFalse(hasImage(image));
     }
 
     private void testStartContainer() throws DockerAccessException {
         dockerClient.startContainer(containerId);
-        assertTrue(dockerClient.getContainer(containerId).isRunning());
+        Assertions.assertTrue(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testExecContainer() throws DockerAccessException {
@@ -166,15 +154,15 @@ public class DockerAccessIT {
 
     private void testStopContainer() throws DockerAccessException {
         dockerClient.stopContainer(containerId, 0);
-        assertFalse(dockerClient.getContainer(containerId).isRunning());
+        Assertions.assertFalse(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testTagImage() throws DockerAccessException {
         dockerClient.tag(IMAGE, IMAGE_TAG,false);
-        assertTrue(hasImage(IMAGE_TAG));
+        Assertions.assertTrue(hasImage(IMAGE_TAG));
 
         dockerClient.removeImage(IMAGE_TAG, false);
-        assertFalse(hasImage(IMAGE_TAG));
+        Assertions.assertFalse(hasImage(IMAGE_TAG));
     }
 
     private boolean hasImage(String image) throws DockerAccessException {

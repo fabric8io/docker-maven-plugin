@@ -6,48 +6,47 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import io.fabric8.maven.docker.config.CopyConfiguration.Builder;
 import io.fabric8.maven.docker.config.CopyConfiguration.Entry;
 
 import static io.fabric8.maven.docker.config.CopyConfiguration.CONTAINER_PATH_PROPERTY;
 import static io.fabric8.maven.docker.config.CopyConfiguration.HOST_DIRECTORY_PROPERTY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-public class CopyConfigurationTest {
+
+class CopyConfigurationTest {
 
     @Test
-    public void entryGetters() {
+    void entryGetters() {
         final String containerPath = "container";
         final String hostDirectory = "host";
         final Entry entry = new Entry(containerPath, hostDirectory);
-        assertEquals(containerPath, entry.getContainerPath());
-        assertEquals(hostDirectory, entry.getHostDirectory());
+        Assertions.assertEquals(containerPath, entry.getContainerPath());
+        Assertions.assertEquals(hostDirectory, entry.getHostDirectory());
     }
 
     @Test
-    public void entrySetters() {
+    void entrySetters() {
         final String containerPath = "container";
         final String hostDirectory = "host";
         final Entry entry = new Entry();
         entry.setContainerPath(containerPath);
         entry.setHostDirectory(hostDirectory);
-        assertEquals(containerPath, entry.getContainerPath());
-        assertEquals(hostDirectory, entry.getHostDirectory());
+        Assertions.assertEquals(containerPath, entry.getContainerPath());
+        Assertions.assertEquals(hostDirectory, entry.getHostDirectory());
     }
 
     @Test
-    public void empty() {
+    void empty() {
         final CopyConfiguration cfg = new Builder().build();
         assertEntries(cfg, null);
         assertEntriesAsProperties(cfg, null);
     }
 
     @Test
-    public void notEmpty() {
+    void notEmpty() {
         final List<Entry> expected = entries();
         final CopyConfiguration cfg = new Builder().entries(expected).build();
         assertEntries(cfg, expected);
@@ -55,7 +54,7 @@ public class CopyConfigurationTest {
     }
 
     @Test
-    public void fromProperties() {
+    void fromProperties() {
         final List<Entry> expected = entries();
         final List<Properties> entriesAsProperties = entriesAsListOfProperties(expected);
         final CopyConfiguration cfg = new Builder().entriesAsListOfProperties(entriesAsProperties).build();
@@ -64,26 +63,28 @@ public class CopyConfigurationTest {
     }
 
     @Test
-    public void fromNullProperties() {
+    void fromNullProperties() {
         final CopyConfiguration cfg = new Builder().entriesAsListOfProperties(null).build();
         assertEntries(cfg, null);
         assertEntriesAsProperties(cfg, null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void fromBrokenProperties() {
-        new Builder().entriesAsListOfProperties(entriesAsListOfProperties(brokenEntries())).build();
+    @Test
+    void fromBrokenProperties() {
+        Builder builder = new Builder();
+        List<Properties> entries = entriesAsListOfProperties(brokenEntries());
+        Assertions.assertThrows(IllegalArgumentException.class, () -> builder.entriesAsListOfProperties(entries));
     }
 
     @Test
-    public void copyOfNull() {
+    void copyOfNull() {
         final CopyConfiguration copy = new Builder(null).build();
         assertEntries(copy, null);
         assertEntriesAsProperties(copy, null);
     }
 
     @Test
-    public void copyOfNotNull() {
+    void copyOfNotNull() {
         final List<Entry> expected = entries();
         final CopyConfiguration original = new Builder().entries(expected).build();
         final CopyConfiguration copy = new Builder(original).build();
@@ -135,32 +136,32 @@ public class CopyConfigurationTest {
     private void assertEntries(final CopyConfiguration cfg, Collection<Entry> expected) {
         final List<Entry> actual = cfg.getEntries();
         if (expected == null) {
-            assertNull(actual);
+            Assertions.assertNull(actual);
             return;
         }
-        assertNotNull(actual);
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expected.size(), actual.size());
         final Iterator<Entry> actualIterator = actual.iterator();
         for (Entry expectedEntry : expected) {
             final Entry actualEntry = actualIterator.next();
-            assertEquals(expectedEntry.getContainerPath(), actualEntry.getContainerPath());
-            assertEquals(expectedEntry.getHostDirectory(), actualEntry.getHostDirectory());
+            Assertions.assertEquals(expectedEntry.getContainerPath(), actualEntry.getContainerPath());
+            Assertions.assertEquals(expectedEntry.getHostDirectory(), actualEntry.getHostDirectory());
         }
     }
 
     private void assertEntriesAsProperties(final CopyConfiguration cfg, Collection<Entry> expected) {
         final List<Properties> actual = cfg.getEntriesAsListOfProperties();
         if (expected == null) {
-            assertNull(actual);
+            Assertions.assertNull(actual);
             return;
         }
-        assertNotNull(actual);
-        assertEquals(expected.size(), actual.size());
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expected.size(), actual.size());
         final Iterator<Properties> actualIterator = actual.iterator();
         for (Entry expectedEntry : expected) {
             final Properties actualEntry = actualIterator.next();
-            assertEquals(expectedEntry.getContainerPath(), actualEntry.get(CONTAINER_PATH_PROPERTY));
-            assertEquals(expectedEntry.getHostDirectory(), actualEntry.get(HOST_DIRECTORY_PROPERTY));
+            Assertions.assertEquals(expectedEntry.getContainerPath(), actualEntry.get(CONTAINER_PATH_PROPERTY));
+            Assertions.assertEquals(expectedEntry.getHostDirectory(), actualEntry.get(HOST_DIRECTORY_PROPERTY));
         }
     }
 }

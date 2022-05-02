@@ -1,29 +1,28 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.junit.Assert;
-import org.junit.Test;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class ImageArchiveManifestEntryAdapterTest {
+import java.util.Collections;
+
+class ImageArchiveManifestEntryAdapterTest {
     @Test
-    public void createFromEmptyJsonObject() {
+    void createFromEmptyJsonObject() {
         ImageArchiveManifestEntryAdapter entry = new ImageArchiveManifestEntryAdapter(new JsonObject());
 
-        Assert.assertNotNull(entry);
-        Assert.assertNull(entry.getConfig());
-        Assert.assertNull(entry.getId());
-        Assert.assertNotNull(entry.getRepoTags());
-        Assert.assertTrue(entry.getRepoTags().isEmpty());
-        Assert.assertNotNull(entry.getLayers());
-        Assert.assertTrue(entry.getLayers().isEmpty());
+        Assertions.assertNotNull(entry);
+        Assertions.assertNull(entry.getConfig());
+        Assertions.assertNull(entry.getId());
+        Assertions.assertNotNull(entry.getRepoTags());
+        Assertions.assertTrue(entry.getRepoTags().isEmpty());
+        Assertions.assertNotNull(entry.getLayers());
+        Assertions.assertTrue(entry.getLayers().isEmpty());
     }
 
     @Test
-    public void createFromValidJsonObject() {
+    void createFromValidJsonObject() {
         JsonObject entryJson = new JsonObject();
         entryJson.addProperty(ImageArchiveManifestEntryAdapter.CONFIG, "image-id-sha256.json");
 
@@ -37,17 +36,17 @@ public class ImageArchiveManifestEntryAdapterTest {
 
         ImageArchiveManifestEntryAdapter entry = new ImageArchiveManifestEntryAdapter(entryJson);
 
-        Assert.assertNotNull(entry);
-        Assert.assertEquals("image-id-sha256.json", entry.getConfig());
-        Assert.assertEquals("image-id-sha256", entry.getId());
-        Assert.assertNotNull(entry.getRepoTags());
-        Assert.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
-        Assert.assertNotNull(entry.getLayers());
-        Assert.assertEquals(Collections.singletonList("layer-id-sha256/layer.tar"), entry.getLayers());
+        Assertions.assertNotNull(entry);
+        Assertions.assertEquals("image-id-sha256.json", entry.getConfig());
+        Assertions.assertEquals("image-id-sha256", entry.getId());
+        Assertions.assertNotNull(entry.getRepoTags());
+        Assertions.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
+        Assertions.assertNotNull(entry.getLayers());
+        Assertions.assertEquals(Collections.singletonList("layer-id-sha256/layer.tar"), entry.getLayers());
     }
 
     @Test
-    public void createFromValidJsonObjectWithAdditionalFields() {
+    void createFromValidJsonObjectWithAdditionalFields() {
         JsonObject entryJson = new JsonObject();
         entryJson.addProperty("Random", "new feature");
 
@@ -63,17 +62,17 @@ public class ImageArchiveManifestEntryAdapterTest {
 
         ImageArchiveManifestEntryAdapter entry = new ImageArchiveManifestEntryAdapter(entryJson);
 
-        Assert.assertNotNull(entry);
-        Assert.assertEquals("image-id-sha256.json", entry.getConfig());
-        Assert.assertEquals("image-id-sha256", entry.getId());
-        Assert.assertNotNull(entry.getRepoTags());
-        Assert.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
-        Assert.assertNotNull(entry.getLayers());
-        Assert.assertEquals(Collections.singletonList("layer-id-sha256/layer.tar"), entry.getLayers());
+        Assertions.assertNotNull(entry);
+        Assertions.assertEquals("image-id-sha256.json", entry.getConfig());
+        Assertions.assertEquals("image-id-sha256", entry.getId());
+        Assertions.assertNotNull(entry.getRepoTags());
+        Assertions.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
+        Assertions.assertNotNull(entry.getLayers());
+        Assertions.assertEquals(Collections.singletonList("layer-id-sha256/layer.tar"), entry.getLayers());
     }
 
     @Test
-    public void createFromPartlyValidJsonObject() {
+    void createFromPartlyValidJsonObject() {
         JsonObject entryJson = new JsonObject();
 
         entryJson.addProperty(ImageArchiveManifestEntryAdapter.CONFIG, "image-id-sha256.json");
@@ -88,13 +87,13 @@ public class ImageArchiveManifestEntryAdapterTest {
 
         ImageArchiveManifestEntryAdapter entry = new ImageArchiveManifestEntryAdapter(entryJson);
 
-        Assert.assertNotNull(entry);
-        Assert.assertEquals("image-id-sha256.json", entry.getConfig());
-        Assert.assertEquals("image-id-sha256", entry.getId());
-        Assert.assertNotNull(entry.getRepoTags());
-        Assert.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
-        Assert.assertNotNull(entry.getLayers());
-        Assert.assertTrue(entry.getLayers().isEmpty());
+        Assertions.assertNotNull(entry);
+        Assertions.assertEquals("image-id-sha256.json", entry.getConfig());
+        Assertions.assertEquals("image-id-sha256", entry.getId());
+        Assertions.assertNotNull(entry.getRepoTags());
+        Assertions.assertEquals(Collections.singletonList("test/image:latest"), entry.getRepoTags());
+        Assertions.assertNotNull(entry.getLayers());
+        Assertions.assertTrue(entry.getLayers().isEmpty());
     }
 
 }

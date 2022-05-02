@@ -3,18 +3,18 @@ package io.fabric8.maven.docker.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.AuthConfig;
-import mockit.Mocked;
-import mockit.Tested;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-public class CredentialHelperClientTest {
+@ExtendWith(MockitoExtension.class)
+class CredentialHelperClientTest {
     private final Gson gson = new Gson();
 
-    @Mocked
+    @Mock
     private Logger logger;
 
     private CredentialHelperClient credentialHelperClient;
@@ -23,31 +23,31 @@ public class CredentialHelperClientTest {
 
     private AuthConfig authConfig;
 
-    @Before
-    public void givenCredentialHelperClient() {
+    @BeforeEach
+    void givenCredentialHelperClient() {
         this.credentialHelperClient = new CredentialHelperClient(logger, "desktop");
     }
 
     @Test
-    public void testUsernamePasswordAuthConfig() {
+    void testUsernamePasswordAuthConfig() {
         givenJson("{\"ServerURL\":\"registry.mycompany.com\",\"Username\":\"jane_doe\",\"Secret\":\"not-really\"}");
 
         whenJsonObjectConvertedToAuthConfig();
-        
-        assertEquals("username should match", "jane_doe", this.authConfig.getUsername());
-        assertEquals("password should match", "not-really", this.authConfig.getPassword());
-        assertNull("identityToken should not be set", this.authConfig.getIdentityToken());
+
+        Assertions.assertEquals("jane_doe", this.authConfig.getUsername(), "username should match");
+        Assertions.assertEquals("not-really", this.authConfig.getPassword(), "password should match");
+        Assertions.assertNull(this.authConfig.getIdentityToken(), "identityToken should not be set");
     }
 
     @Test
-    public void testTokenAuthConfig() {
+    void testTokenAuthConfig() {
         givenJson("{\"ServerURL\":\"registry.cloud-provider.com\",\"Username\":\"<token>\",\"Secret\":\"gigantic-mess-of-jwt\"}");
 
         whenJsonObjectConvertedToAuthConfig();
 
-        assertNull("username should not be set", this.authConfig.getUsername());
-        assertNull("password should not be set", this.authConfig.getPassword());
-        assertEquals("identity token should match", "gigantic-mess-of-jwt", this.authConfig.getIdentityToken());
+        Assertions.assertNull(this.authConfig.getUsername(), "username should not be set");
+        Assertions.assertNull(this.authConfig.getPassword(), "password should not be set");
+        Assertions.assertEquals("gigantic-mess-of-jwt", this.authConfig.getIdentityToken(), "identity token should match");
     }
 
     private void givenJson(String json) {

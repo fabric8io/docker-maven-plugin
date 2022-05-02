@@ -165,10 +165,10 @@ public class ApacheHttpClientDelegate {
         }
     }
 
-    private static class StatusCodeCheckerResponseHandler<T> implements ResponseHandler<T> {
+    static class StatusCodeCheckerResponseHandler<T> implements ResponseHandler<T> {
 
-        private int[] statusCodes;
-        private ResponseHandler<T> delegate;
+        int[] statusCodes;
+        ResponseHandler<T> delegate;
 
         StatusCodeCheckerResponseHandler(ResponseHandler<T> delegate, int... statusCodes) {
             this.statusCodes = statusCodes;

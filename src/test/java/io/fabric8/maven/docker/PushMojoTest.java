@@ -1,29 +1,24 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.util.ProjectPaths;
-import mockit.Deencapsulation;
-import mockit.Mocked;
-import mockit.Tested;
-import mockit.Verifications;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
-import java.util.Collection;
 
-public class PushMojoTest extends BaseMojoTest {
-  @Tested
+@ExtendWith(MockitoExtension.class)
+class PushMojoTest extends MojoTestBase {
+  @InjectMocks
   private PushMojo pushMojo;
 
-  @Mocked
-  private RegistryService registryService;
-
   @Test
-  public void executeInternal_whenSkipPomEnabledInPomPackaging_thenImagePushSkipped() throws MojoExecutionException, IOException {
-    Deencapsulation.setField(serviceHub, "registryService", registryService);
+  void executeInternal_whenSkipPomEnabledInPomPackaging_thenImagePushSkipped() throws MojoExecutionException, IOException {
     givenMavenProject(pushMojo);
     givenPackaging("pom");
     givenSkipPom(true);
@@ -34,8 +29,7 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   @Test
-  public void executeInternal_whenPomPackaging_thenImageIsPushed() throws MojoExecutionException, IOException {
-    Deencapsulation.setField(serviceHub, "registryService", registryService);
+  void executeInternal_whenPomPackaging_thenImageIsPushed() throws MojoExecutionException, IOException {
     givenMavenProject(pushMojo);
     givenPackaging("pom");
     givenSkipPom(false);
@@ -46,8 +40,7 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   @Test
-  public void executeInternal_whenJarPackaging_thenImageIsPushed() throws MojoExecutionException, IOException {
-    Deencapsulation.setField(serviceHub, "registryService", registryService);
+  void executeInternal_whenJarPackaging_thenImageIsPushed() throws MojoExecutionException, IOException {
     givenMavenProject(pushMojo);
     givenPackaging("jar");
 
@@ -57,8 +50,7 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   @Test
-  public void executeInternal_whenSkipEnabled_thenImageIsPushed() throws MojoExecutionException, IOException {
-    Deencapsulation.setField(serviceHub, "registryService", registryService);
+  void executeInternal_whenSkipEnabled_thenImageIsPushed() throws MojoExecutionException, IOException {
     givenMavenProject(pushMojo);
     givenPackaging("jar");
     givenSkipPush(true);
@@ -69,8 +61,7 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   @Test
-  public void executeInternal_whenSkipDisabled_thenImageIsPushed() throws MojoExecutionException, IOException {
-    Deencapsulation.setField(serviceHub, "registryService", registryService);
+  void executeInternal_whenSkipDisabled_thenImageIsPushed() throws MojoExecutionException, IOException {
     givenMavenProject(pushMojo);
     givenPackaging("jar");
     givenSkipPush(false);
@@ -81,17 +72,16 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   private void thenImagePushed() throws MojoExecutionException, DockerAccessException {
-    new Verifications() {{
-      registryService.pushImages((ProjectPaths) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
-      times = 1;
-    }};
+    verifyPush(1);
   }
 
   private void thenImageNotPushed() throws DockerAccessException, MojoExecutionException {
-    new Verifications() {{
-      registryService.pushImages((ProjectPaths) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
-      times = 0;
-    }};
+    verifyPush(0);
+  }
+
+  private void verifyPush(int wantedNumberOfInvocations) throws DockerAccessException, MojoExecutionException {
+    Mockito.verify(registryService, Mockito.times(wantedNumberOfInvocations))
+        .pushImages(Mockito.any(ProjectPaths.class), Mockito.anyCollection(), Mockito.anyInt(), Mockito.any(RegistryService.RegistryConfig.class), Mockito.anyBoolean());
   }
 
   private void whenMojoExecutes() throws IOException, MojoExecutionException {
@@ -99,15 +89,14 @@ public class PushMojoTest extends BaseMojoTest {
   }
 
   private void givenPackaging(String packaging) {
-    Deencapsulation.setField(pushMojo, "packaging", packaging);
+    pushMojo.packaging= packaging;
   }
 
   private void givenSkipPom(boolean skipPom) {
-    Deencapsulation.setField(pushMojo, "skipPom", skipPom);
+    pushMojo.skipPom= skipPom;
   }
 
   private void givenSkipPush(boolean skip) {
-    Deencapsulation.setField(pushMojo, "skipPush", skip);
+    pushMojo.skipPush= skip;
   }
-
 }

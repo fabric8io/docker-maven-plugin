@@ -23,7 +23,7 @@ public class PushMojo extends AbstractDockerMojo {
     private String pushRegistry;
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
-    private boolean skipPush;
+    boolean skipPush;
     
     /** 
      * Skip building tags

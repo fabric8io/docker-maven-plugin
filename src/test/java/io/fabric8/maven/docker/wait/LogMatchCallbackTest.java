@@ -3,108 +3,94 @@ package io.fabric8.maven.docker.wait;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.TimestampFactory;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class LogMatchCallbackTest {
+import java.time.ZonedDateTime;
 
-    private final String defaultPattern = "Hello, world!";
+@ExtendWith(MockitoExtension.class)
+class LogMatchCallbackTest {
 
-    @Mocked
+    private static final String HELLO_WORLD = "Hello, world!";
+
+    @Mock
     private Logger logger;
 
-    @Mocked
+    @Mock
     private LogWaitCheckerCallback callback;
 
-    @Test(expected = LogCallback.DoneException.class)
-    public void matchingSingleLineSucceeds() throws Exception {
+    @Test
+    void matchingSingleLineSucceeds() {
         final String patternString = "The start has finished right now";
         final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, patternString);
-
-        new Expectations() {{
-            callback.matched();
-            times = 1;
-        }};
-
-        logMatchCallback.log(1, TimestampFactory.createTimestamp(), patternString);
+        
+        Assertions.assertThrows(LogCallback.DoneException.class,
+            ()-> logMatchCallback.log(1, TimestampFactory.createTimestamp(), patternString));
+        Mockito.verify(callback).matched();
     }
 
-    @Test(expected = LogCallback.DoneException.class)
-    public void matchingMultipleLinesSucceeds() throws Exception {
+    @Test
+    void matchingMultipleLinesSucceeds() throws LogCallback.DoneException {
         final String patterString = "(?s)ready to accept connections.*\\n.*ready to accept connections";
         final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, patterString);
-
-        new Expectations() {{
-            callback.matched();
-            times = 1;
-        }};
 
         logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections" );
         logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  autovacuum launcher started");
         logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is shut down");
-        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections");
+
+        Assertions.assertThrows(LogCallback.DoneException.class,
+            ()-> logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections"));
+
+        Mockito.verify(callback).matched();
     }
 
     @Test
-    public void matchingLinesNonConformantToThePatternFails() throws Exception {
+    void matchingLinesNonConformantToThePatternFails() throws LogCallback.DoneException {
         final String patterString = "The start has started right now";
         final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, patterString);
 
-        new Expectations() {{
-            callback.matched();
-            times = 0;
-        }};
-
         logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections" );
-    }
 
-    @Test(expected = LogCallback.DoneException.class)
-    public void matchingPartitialLineSucceeds() throws Exception {
-        final String patterString = "waiting for connections";
-        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, patterString);
-
-        new Expectations() {{
-            callback.matched();
-            times = 1;
-        }};
-
-        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "2017-11-21T12:44:43.678+0000 I NETWORK  [initandlisten] waiting for connections on port 27017" );
+        Mockito.verify(callback, Mockito.never()).matched();
     }
 
     @Test
-    public void errorMethodProducesLogMessage() {
-        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, defaultPattern);
+    void matchingPartitialLineSucceeds() {
+        final String pattern = "waiting for connections";
+        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, pattern);
 
-        new Expectations() {{
-            logger.error(anyString, anyString);
-            times = 1;
-        }};
+        ZonedDateTime timestamp = TimestampFactory.createTimestamp();
+        Assertions.assertThrows(LogCallback.DoneException.class, 
+            ()-> logMatchCallback.log(1, timestamp, "2017-11-21T12:44:43.678+0000 I NETWORK  [initandlisten] waiting for connections on port 27017" ));
+
+        Mockito.verify(callback).matched();
+    }
+
+    @Test
+    void errorMethodProducesLogMessage() {
+        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, HELLO_WORLD);
 
         logMatchCallback.error("The message");
+        Mockito.verify(logger).error(Mockito.anyString(), Mockito.anyString());
     }
 
     @Test
-    public void openMethodProducesLogMessage() {
+    void openMethodProducesLogMessage() {
         final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, "");
-
-        new Expectations() {{
-            logger.debug(anyString);
-            times = 1;
-        }};
 
         logMatchCallback.open();
+        Mockito.verify(logger).debug(Mockito.anyString());
     }
 
     @Test
-    public void closeMethodProducesLogMessage() {
+    void closeMethodProducesLogMessage() {
         final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, "");
 
-        new Expectations() {{
-            logger.debug(anyString);
-            times = 1;
-        }};
-
         logMatchCallback.close();
+        Mockito.verify(logger).debug(Mockito.anyString());
     }
 }

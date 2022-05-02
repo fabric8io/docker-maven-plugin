@@ -54,19 +54,19 @@ public class RemoveMojo extends AbstractDockerMojo {
     // Should all configured images should be removed?
     @Parameter(property = "docker.removeAll")
     @Deprecated
-    private Boolean removeAll;
+    Boolean removeAll;
 
     @Parameter(property = "docker.removeMode")
-    private String removeMode;
+    String removeMode;
     
     /** 
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
-    private boolean skipTag;
+    boolean skipTag;
 
     @Parameter(property = "docker.removeNamePattern")
-    private String removeNamePattern;
+    String removeNamePattern;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {

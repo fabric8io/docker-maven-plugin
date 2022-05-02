@@ -21,25 +21,26 @@ import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
-import mockit.VerificationsInOrder;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Settings;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * @author roland
  * @since 23.11.17
  */
-public class RegistryServiceTest {
+@ExtendWith(MockitoExtension.class)
+class RegistryServiceTest {
 
     private Exception actualException;
 
@@ -53,32 +54,29 @@ public class RegistryServiceTest {
     private String registry;
     private Map<String, String> authConfig;
 
-    private File projectBaseDir = new File(System.getProperty("java.io.tmpdir"));
+    @TempDir
+    private File projectBaseDir;
 
     // push
     private ImageConfiguration imageConfiguration;
 
-    @Mocked
+    @Mock
     private DockerAccess docker;
 
-    @Mocked
+    @Mock
     private Logger logger;
 
-    @Mocked
+    @Mock
     private AuthConfigFactory authConfigFactory;
 
-    @Mocked
+    @Mock
     private QueryService queryService;
 
-    @Mocked
+    @Mock
     private BuildXService.Exec exec;
 
-    @Before
-    public void setup() {
-        reset();
-    }
-
-    private void reset() {
+    @BeforeEach
+    void setup() {
         BuildXService buildXService = new BuildXService(docker, logger, exec);
         registryService = new RegistryService(docker, queryService, buildXService, logger);
         cacheStore = new TestCacheStore();
@@ -91,30 +89,26 @@ public class RegistryServiceTest {
         registry = null;
     }
 
-    @Test
-    public void pullImagePullPolicyAlways() throws Exception {
-        for (boolean hasImage : new boolean[]{ false, true }) {
-            reset();
-            givenAnImage();
-            givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
-            givenImagePullPolicy(ImagePullPolicy.Always);
-            givenHasImage(hasImage);
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void pullImagePullPolicyAlways(boolean hasImage) throws Exception {
+        givenAnImage();
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
+        givenImagePullPolicy(ImagePullPolicy.Always);
+        givenHasImage(hasImage);
 
-            checkPulledButNotTagged();
-        }
+        checkPulledButNotTagged();
     }
 
-    @Test
-    public void pullImageAutopullAlways() throws Exception {
-        for (boolean hasImage : new boolean[]{ false, true }) {
-            reset();
-            givenAnImage();
-            givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
-            givenAutoPullMode(AutoPullMode.ALWAYS);
-            givenHasImage(hasImage);
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void pullImageAutopullAlways(boolean hasImage) throws Exception {
+        givenAnImage();
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
+        givenAutoPullMode(AutoPullMode.ALWAYS);
+        givenHasImage(hasImage);
 
-            checkPulledButNotTagged();
-        }
+        checkPulledButNotTagged();
     }
 
     private void checkPulledButNotTagged() throws DockerAccessException {
@@ -127,13 +121,12 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pullImageAlwaysWhenPreviouslyPulled() throws Exception {
+    void pullImageAlwaysWhenPreviouslyPulled() throws Exception {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(true);
         givenImagePullPolicy(ImagePullPolicy.Always);
-
 
         checkNotPulledAndNotTagged();
     }
@@ -147,7 +140,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void alreadyPulled() throws DockerAccessException {
+    void alreadyPulled() throws DockerAccessException {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenPreviousPulled(true);
@@ -160,7 +153,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void policyNeverWithImageAvailable() throws DockerAccessException {
+    void policyNeverWithImageAvailable() throws DockerAccessException {
         givenAnImage();
         givenHasImage(true);
         givenPreviousPulled(false);
@@ -174,7 +167,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void policyNeverWithImageNotAvailable() throws DockerAccessException {
+    void policyNeverWithImageNotAvailable() throws DockerAccessException {
         givenAnImage();
         givenHasImage(false);
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
@@ -189,12 +182,12 @@ public class RegistryServiceTest {
     }
 
     private void thenExceptionThrown() {
-        assertNotNull(actualException);
-        assertTrue(actualException.getMessage().contains(imageName));
+        Assertions.assertNotNull(actualException);
+        Assertions.assertTrue(actualException.getMessage().contains(imageName));
     }
 
     @Test
-    public void pullWithCustomRegistry() throws DockerAccessException {
+    void pullWithCustomRegistry() throws DockerAccessException {
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("myregistry.com/user/test:1.0.1");
         givenHasImage(false);
@@ -210,7 +203,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pullImageWithPolicy_pullPolicyAlwaysAndBuildConfiguration_shouldPull() throws DockerAccessException {
+    void pullImageWithPolicy_pullPolicyAlwaysAndBuildConfiguration_shouldPull() throws DockerAccessException {
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
             .createImageOptions(Collections.singletonMap("platform", "linux/amd64"))
             .build();
@@ -225,23 +218,22 @@ public class RegistryServiceTest {
 
         whenAutoPullImage();
 
-        new Verifications() {{
-            String pulledImage;
-            CreateImageOptions createImageOptions;
-            docker.pullImage(pulledImage = withCapture(), (AuthConfig) any, anyString, createImageOptions = withCapture());
-            times = 1;
+        ArgumentCaptor<String> pulledImage = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<CreateImageOptions> imageCapture = ArgumentCaptor.forClass(CreateImageOptions.class);
+        Mockito.verify(docker).pullImage(pulledImage.capture(), Mockito.any(), Mockito.anyString(), imageCapture.capture());
 
-            assertEquals("myregistry.com/user/test:1.0.1", pulledImage);
-            assertNotNull(createImageOptions);
-            assertEquals(3, createImageOptions.getOptions().size());
-            assertEquals("linux/amd64", createImageOptions.getOptions().get("platform"));
-            assertEquals("1.0.1", createImageOptions.getOptions().get("tag"));
-            assertEquals("myregistry.com/user/test", createImageOptions.getOptions().get("fromImage"));
-        }};
+        Assertions.assertEquals("myregistry.com/user/test:1.0.1", pulledImage.getValue());
+        CreateImageOptions createImageOptions = imageCapture.getValue();
+
+        Assertions.assertNotNull(createImageOptions);
+        Assertions.assertEquals(3, createImageOptions.getOptions().size());
+        Assertions.assertEquals("linux/amd64", createImageOptions.getOptions().get("platform"));
+        Assertions.assertEquals("1.0.1", createImageOptions.getOptions().get("tag"));
+        Assertions.assertEquals("myregistry.com/user/test", createImageOptions.getOptions().get("fromImage"));
     }
 
     @Test
-    public void tagForCustomRegistry() throws DockerAccessException {
+    void tagForCustomRegistry() throws DockerAccessException {
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("user/test:1.0.1");
         givenHasImage(false);
@@ -257,7 +249,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pushImage() throws DockerAccessException {
+    void pushImage() throws DockerAccessException {
         givenAnImageConfiguration("user/test:1.0.1");
 
         whenPushImage();
@@ -267,7 +259,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pushBuildXImage() throws MojoExecutionException {
+    void pushBuildXImage() throws MojoExecutionException {
         givenBuildxImageConfiguration("user/test:1.0.1", null);
         givenCredentials("skroob", "12345");
 
@@ -278,7 +270,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pushBuildXImageProvidedBuilder() throws MojoExecutionException {
+    void pushBuildXImageProvidedBuilder() throws MojoExecutionException {
         givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder");
         givenCredentials("King_Roland_of_Druidia", "12345");
 
@@ -289,7 +281,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pushImageWithoutBuildConfig() throws DockerAccessException {
+    void pushImageWithoutBuildConfig() throws DockerAccessException {
         givenAnImageConfigurationWithoutBuildConfig("user/test:1.0.1");
 
         whenPushImage();
@@ -299,7 +291,7 @@ public class RegistryServiceTest {
     }
 
     @Test
-    public void pushImageSkipped() throws DockerAccessException {
+    void pushImageSkipped() throws DockerAccessException {
         givenAnImageConfiguration("user/test:1.0.1");
         givenPushSkipped(true);
 
@@ -312,24 +304,19 @@ public class RegistryServiceTest {
     // ====================================================================================================
 
     private void thenNoExceptionThrown() {
-        assertNull(actualException);
+        Assertions.assertNull(actualException);
     }
+
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
-        new Verifications() {{
-            docker.pullImage(anyString, withNotNull(), anyString, (CreateImageOptions) any); times = 0;
-        }};
+        Mockito.verify(docker, Mockito.never()).pullImage(Mockito.anyString(), Mockito.any(AuthConfig.class), Mockito.anyString(), Mockito.any(CreateImageOptions.class));
     }
 
     private void thenImageHasNotBeenPushed() throws DockerAccessException {
-        new Verifications() {{
-            docker.pushImage(anyString, withNotNull(), anyString, anyInt); times = 0;
-        }};
+        Mockito.verify(docker, Mockito.never()).pushImage(Mockito.anyString(), Mockito.any(AuthConfig.class), Mockito.anyString(), Mockito.anyInt());
     }
 
     private void thenImageHasBeenPushed() throws DockerAccessException {
-        new Verifications() {{
-            docker.pushImage(anyString, withNotNull(), anyString, anyInt);
-        }};
+        Mockito.verify(docker).pushImage(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyInt());
     }
 
     private void thenBuildxImageHasBeenPushed(String providedBuilder) throws MojoExecutionException {
@@ -339,24 +326,22 @@ public class RegistryServiceTest {
         String buildDir = getOsDependentBuild(buildPath, "build");
         String builderName = providedBuilder!=null ? providedBuilder : "dmp_user_test_1.0.1";
 
-        new VerificationsInOrder() {{
-            if (providedBuilder == null) {
-                exec.process(Arrays.asList("docker", "--config", config, "buildx"),
-                    "create", "--driver", "docker-container", "--name", builderName);
-            }
+        if (providedBuilder == null) {
+            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
+                "create", "--driver", "docker-container", "--name", builderName);
+        }
 
-            exec.process(Arrays.asList("docker", "--config", config, "buildx",
-                "build", "--progress=plain", "--builder", builderName,
-                "--platform", "linux/amd64,linux/arm64",
-                "--tag", "user/test:1.0.1", "--push",
-                "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
-                buildDir));
+        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
+            "build", "--progress=plain", "--builder", builderName,
+            "--platform", "linux/amd64,linux/arm64",
+            "--tag", "user/test:1.0.1", "--push",
+            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
+            buildDir));
 
-            if (providedBuilder == null) {
-                exec.process(Arrays.asList("docker", "--config", config, "buildx"),
-                    "rm", builderName);
-            }
-        }};
+        if (providedBuilder == null) {
+            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
+                "rm", builderName);
+        }
     }
 
     private static String getOsDependentBuild(Path buildPath, String docker) {
@@ -364,16 +349,11 @@ public class RegistryServiceTest {
     }
 
     private void thenImageHasBeenTagged() throws DockerAccessException {
-        new Verifications() {{
-            docker.tag(new ImageName(imageName).getFullName(registry), imageName, false);
-        }};
+        Mockito.verify(docker).tag(new ImageName(imageName).getFullName(registry), imageName, false);
     }
 
-
     private void thenImageHasNotBeenTagged() throws DockerAccessException {
-        new Verifications() {{
-            docker.tag(anyString, anyString, anyBoolean); times = 0;
-        }};
+        Mockito.verify(docker, Mockito.never()).tag(Mockito.anyString(), Mockito.anyString(), Mockito.anyBoolean());
     }
 
     private void thenImageHasBeenPulled() throws DockerAccessException {
@@ -381,10 +361,8 @@ public class RegistryServiceTest {
     }
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
-        new Verifications() {{
-            docker.pullImage(imageName, withNotNull(), registry, (CreateImageOptions) any);
-        }};
-        assertNotNull(cacheStore.get(imageName));
+        Mockito.verify(docker).pullImage(Mockito.eq(imageName), Mockito.any(), Mockito.eq(registry), Mockito.any(CreateImageOptions.class));
+        Assertions.assertNotNull(cacheStore.get(imageName));
     }
 
     private void whenAutoPullImage() {
@@ -392,11 +370,11 @@ public class RegistryServiceTest {
         try {
             String iPolicyS = imagePullPolicy != null ? imagePullPolicy.toString() : null;
             String autoPullModeS = autoPullMode != null ? autoPullMode.toString() : null;
-            ImagePullManager pullManager = new ImagePullManager(cacheStore,iPolicyS, autoPullModeS);
+            ImagePullManager pullManager = new ImagePullManager(cacheStore, iPolicyS, autoPullModeS);
             RegistryService.RegistryConfig.Builder registryConfigBuilder =
                 new RegistryService.RegistryConfig.Builder()
-                .authConfigFactory(authConfigFactory)
-                .authConfig(authConfig);
+                    .authConfigFactory(authConfigFactory)
+                    .authConfig(authConfig);
             if (registry != null) {
                 registryConfigBuilder.registry(registry);
             }
@@ -470,10 +448,9 @@ public class RegistryServiceTest {
         authConfig.put(AuthConfig.AUTH_USERNAME, username);
         authConfig.put(AuthConfig.AUTH_PASSWORD, password);
 
-        new Expectations() {{
-            authConfigFactory.createAuthConfig(true, false, authConfig, (Settings) any, "user", null);
-            result = new AuthConfig(authConfig);
-        }};
+        Mockito.doReturn(new AuthConfig(authConfig))
+            .when(authConfigFactory)
+            .createAuthConfig(Mockito.eq(true), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.eq("user"), Mockito.any());
     }
 
     private void givenAnImageConfigurationWithoutBuildConfig(String imageName) {

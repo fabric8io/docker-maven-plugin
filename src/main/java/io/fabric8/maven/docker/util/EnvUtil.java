@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,9 +38,6 @@ public class EnvUtil {
     public static final String DOCKER_HTTP_PORT = "2375";
 
     public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
-
-    // injection point for unit tests
-    private static UnaryOperator<String> systemGetEnv = System::getenv;
 
     private EnvUtil() {}
 
@@ -497,7 +493,7 @@ public class EnvUtil {
      * @return a String value for user's home directory
      */
     public static String getUserHome() {
-        String homeDir = systemGetEnv.apply("HOME");
+        String homeDir = System.getenv("HOME");
         if (homeDir == null) {
             homeDir =  System.getProperty("user.home");
         }

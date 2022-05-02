@@ -17,23 +17,23 @@ package io.fabric8.maven.docker.service;
  * limitations under the License.
  */
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojoExecutionException;
+import org.apache.maven.plugin.BuildPluginManager;
+import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A service for executing goals on configured plugins.
- *
+ * <p>
  * Inspired by and partly reused from
  * https://github.com/TimMoore/mojo-executor but adapted to newer Maven versions.
  *
@@ -58,15 +58,15 @@ public class MojoExecutionService {
     public void callPluginGoal(String fullGoal) throws MojoFailureException, MojoExecutionException {
         String[] parts = splitGoalSpec(fullGoal);
         Plugin plugin = project.getPlugin(parts[0]);
-        String goal = parts[1];
 
         if (plugin == null) {
             throw new MojoFailureException("No goal " + fullGoal + " found in pom.xml");
         }
 
         try {
+            String goal = parts[1];
             String executionId = null;
-            if (goal != null && goal.length() > 0 && goal.indexOf('#') > -1) {
+            if (goal.indexOf('#') > -1) {
                 int pos = goal.indexOf('#');
                 executionId = goal.substring(pos + 1);
                 goal = goal.substring(0, pos);
@@ -75,13 +75,12 @@ public class MojoExecutionService {
             PluginDescriptor pluginDescriptor = getPluginDescriptor(project, plugin);
             MojoDescriptor mojoDescriptor = pluginDescriptor.getMojo(goal);
             if (mojoDescriptor == null) {
-                throw new MojoExecutionException("Could not find goal '" + goal + "' in plugin "
-                                                 + plugin.getGroupId() + ":"
-                                                 + plugin.getArtifactId() + ":"
-                                                 + plugin.getVersion());
+                throw new MojoExecutionException("Could not find goal '" + goal + "' in " + plugin);
             }
             MojoExecution exec = getMojoExecution(executionId, mojoDescriptor);
             pluginManager.executeMojo(session, exec);
+        } catch (AbstractMojoExecutionException e) {
+            throw e;
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to execute mojo", e);
         }
@@ -96,36 +95,21 @@ public class MojoExecutionService {
     }
 
     PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
-        throws InvocationTargetException, IllegalAccessException, MojoFailureException {
-
+        throws MojoFailureException {
         try {
-            Method loadPlugin = pluginManager.getClass().getMethod("loadPluginDescriptor",
-                                                            plugin.getClass(),
-                                                            project.getClass(),
-                                                            session.getClass());
-            return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project, session);
-        } catch (NoSuchMethodException exp) {
-            try {
-                // Fallback for older Maven versions
-                RepositorySystemSession repositorySession = session.getRepositorySession();
-                Method loadPlugin = pluginManager.getClass().getMethod("loadPlugin",
-                                                                       plugin.getClass(),
-                                                                       project.getRemotePluginRepositories().getClass(),
-                                                                       repositorySession.getClass());
-                return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project.getRemotePluginRepositories(), repositorySession);
-            } catch (NoSuchMethodException exp2) {
-                throw new MojoFailureException("Cannot load plugin descriptor for plugin " + plugin.getGroupId() + ":" + plugin.getArtifactId(),exp2);
-            }
+            return pluginManager.loadPlugin(plugin, project.getRemotePluginRepositories(), session.getRepositorySession());
+        } catch (Exception e) {
+            throw new MojoFailureException("Could not load " + plugin, e);
         }
     }
 
     private String[] splitGoalSpec(String fullGoal) throws MojoFailureException {
-        String parts[] = StringUtils.split(fullGoal, ":");
+        String[] parts = StringUtils.split(fullGoal, ":");
         if (parts.length != 3) {
             throw new MojoFailureException("Cannot parse " + fullGoal + " as a maven plugin goal. " +
-                                           "It must be fully qualified as in <groupId>:<artifactId>:<goal>");
+                "It must be fully qualified as in <groupId>:<artifactId>:<goal>");
         }
-        return new String[]{parts[0] + ":" + parts[1], parts[2]};
+        return new String[] { parts[0] + ":" + parts[1], parts[2] };
     }
 
     private Xpp3Dom toXpp3Dom(PlexusConfiguration config) {

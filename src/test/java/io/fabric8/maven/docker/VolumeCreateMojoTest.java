@@ -3,30 +3,29 @@ package io.fabric8.maven.docker;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.Logger;
-import mockit.Injectable;
-import mockit.Mocked;
-import mockit.Tested;
-import mockit.Verifications;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class VolumeCreateMojoTest {
+@ExtendWith(MockitoExtension.class)
+class VolumeCreateMojoTest {
 
-    @Injectable
+    @Mock
     AnsiLogger log;
 
-    @Tested(fullyInitialized = false)
+    @InjectMocks
     private VolumeCreateMojo volumeCreateMojo;
 
-    @Mocked
+    @Mock
     ServiceHub serviceHub;
 
     @Test
-    public void createVolumeGetVolumesReturnsNull() throws DockerAccessException, MojoExecutionException {
+    void createVolumeGetVolumesReturnsNull() throws DockerAccessException, MojoExecutionException {
         volumeCreateMojo.executeInternal(serviceHub);
-        new Verifications(){{
-            log.info("No volume configuration found."); times = 1;
-        }};
+        Mockito.verify(log).info("No volume configuration found.");
     }
 }

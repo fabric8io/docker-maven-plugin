@@ -2,17 +2,18 @@ package io.fabric8.maven.docker.access.log;
 
 import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
-import io.fabric8.maven.docker.access.util.RequestUtil;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -25,42 +26,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+ 
 import java.time.ZonedDateTime;
 
-public class LogRequestorTest {
+@ExtendWith(MockitoExtension.class)
+class LogRequestorTest {
     private static final String containerId = new RandomStringGenerator.Builder().build().generate(64);
 
-    @Mocked(stubOutClassInitialization = true)
-    final RequestUtil unused = null;
-
-    @Mocked
+    @Mock
     CloseableHttpResponse httpResponse;
 
-    @Mocked
+    @Mock
     UrlBuilder urlBuilder;
 
-    @Mocked
+    @Mock
     StatusLine statusLine;
 
-    @Mocked
+    @Mock
     HttpEntity httpEntity;
 
-    @Mocked
+    @Mock
     HttpUriRequest httpUriRequest;
 
-    @Mocked
+    @Mock
     LogCallback callback;
 
-    @Mocked
+    @Mock
     CloseableHttpClient client;
 
     @Test
-    public void testEmptyMessage() throws Exception {
+    void testEmptyMessage() throws Exception {
         final Streams type = Streams.STDOUT;
         final ByteBuffer headerBuffer = ByteBuffer.allocate(8);
         headerBuffer.put((byte) type.type);
@@ -70,14 +65,11 @@ public class LogRequestorTest {
         setupMocks(inputStream);
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            callback.log(type.type, (ZonedDateTime) any, anyString);
-            times = 0;
-        }};
+        Mockito.verify(callback, Mockito.never()).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.anyString());
     }
 
     @Test
-    public void testStdoutMessage() throws Exception {
+    void testStdoutMessage() throws Exception {
         final Streams type = Streams.STDOUT;
         RandomStringGenerator randomGenerator = new RandomStringGenerator.Builder().build();
         final String message0 = randomGenerator.generate(257);
@@ -90,15 +82,13 @@ public class LogRequestorTest {
         setupMocks(inputStream);
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            callback.log(type.type, (ZonedDateTime) any, message0);
-            callback.log(type.type, (ZonedDateTime) any, message1);
-            callback.log(type.type, (ZonedDateTime) any, message2);
-        }};
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message0));
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message1));
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message2));
     }
 
     @Test
-    public void testMessageWithLeadingWhitespace() throws Exception {
+    void testMessageWithLeadingWhitespace() throws Exception {
         final Streams type = Streams.STDOUT;
         final String message0 = " I have a leading space";
         final String message1 = "\tI have a leading tab";
@@ -109,15 +99,13 @@ public class LogRequestorTest {
         setupMocks(inputStream);
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            callback.log(type.type, (ZonedDateTime) any, message0);
-            callback.log(type.type, (ZonedDateTime) any, message1);
-        }};
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message0));
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message1));
     }
 
 
     @Test
-    public void testAllStreams() throws Exception {
+    void testAllStreams() throws Exception {
         final Random rand = new Random();
         final int upperBound = 1024;
 
@@ -141,15 +129,13 @@ public class LogRequestorTest {
         setupMocks(inputStream);
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            callback.log(type0.type, (ZonedDateTime) any, msg0);
-            callback.log(type1.type, (ZonedDateTime) any, msg1);
-            callback.log(type2.type, (ZonedDateTime) any, msg2);
-        }};
+        Mockito.verify(callback).log(Mockito.eq(type0.type), Mockito.any(ZonedDateTime.class), Mockito.eq(msg0));
+        Mockito.verify(callback).log(Mockito.eq(type1.type), Mockito.any(ZonedDateTime.class), Mockito.eq(msg1));
+        Mockito.verify(callback).log(Mockito.eq(type2.type), Mockito.any(ZonedDateTime.class), Mockito.eq(msg2));
     }
 
     @Test
-    public void testGarbageMessage() throws Exception {
+    void testGarbageMessage() throws Exception {
         final Streams type = Streams.STDERR;
         final ByteBuffer buf0 = messageToBuffer(type, "This is a test message");
         final ByteBuffer buf1 = messageToBuffer(type, "This is another test message!");
@@ -174,17 +160,14 @@ public class LogRequestorTest {
 
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            // Should have called log() one time (for the first message). The message itself would
-            // have been incorrect, since we gave it the wrong buffer length. The second message
-            // fails to parse as the buffer runs out.
-            callback.log(type.type, (ZonedDateTime) any, anyString);
-            times = 1;
-        }};
+        // Should have called log() one time (for the first message). The message itself would
+        // have been incorrect, since we gave it the wrong buffer length. The second message
+        // fails to parse as the buffer runs out.
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.anyString());
     }
 
     @Test
-    public void testMessageTooShort() throws Exception {
+    void testMessageTooShort() throws Exception {
         final Streams type = Streams.STDIN;
         final ByteBuffer buf = messageToBuffer(type, "A man, a plan, a canal, Panama!");
 
@@ -197,15 +180,12 @@ public class LogRequestorTest {
 
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        new Verifications() {{
-            // No calls to .log() should be made, as message parsing fails.
-            callback.log(type.type, (ZonedDateTime) any, anyString);
-            times = 0;
-        }};
+        // No calls to .log() should be made, as message parsing fails.
+        Mockito.verify(callback, Mockito.never()).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.anyString());
     }
 
     @Test
-    public void testMessageWithExtraBytes() throws Exception {
+    void testMessageWithExtraBytes() throws Exception {
         final Streams type = Streams.STDOUT;
         final String message = "A man, a plan, a canal, Panama!";
         final ByteBuffer buf = messageToBuffer(type, message);
@@ -214,52 +194,31 @@ public class LogRequestorTest {
         int l = buf.getInt(4);
         buf.putInt(4, l - 1);
 
-        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        final ByteArrayInputStream inputStream = new ByteArrayInputStream(buf.array());
         setupMocks(inputStream);
 
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
-        assertThat("Entire InputStream read.", ((ByteArrayInputStream) inputStream).available(), equalTo(0));
-        new Verifications() {{
+        Assertions.assertEquals(0, inputStream.available(), "Entire InputStream read.");
+
             // .log() is only called once. The one byte that is left off is lost and never recorded.
-            callback.log(type.type, (ZonedDateTime) any, message.substring(0, message.length() - 1));
-            times = 1;
-        }};
+        Mockito.verify(callback)
+            .log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(message.substring(0, message.length() - 1)));
     }
 
     @Test
-    public void checkMutlilinePattern() {
+    void checkMutlilinePattern() {
         String line = "2016-07-15T20:34:06.024029849Z remote: Compressing objects:   4% (1/23)           \n" +
                       "remote: Compressing objects:   8% (2/23)           \n";
         String matched = "remote: Compressing objects:   4% (1/23)           \n" +
                       "remote: Compressing objects:   8% (2/23)";
-        Matcher matcher = LogRequestor.LOG_LINE.matcher(line);;
-        assertTrue(matcher.matches());
-        assertEquals(matched, matcher.group("entry"));
+        Matcher matcher = LogRequestor.LOG_LINE.matcher(line);
+        Assertions.assertTrue(matcher.matches());
+        Assertions.assertEquals(matched, matcher.group("entry"));
     }
 
     @Test
-    public void runCallsOpenAndCloseOnHandler() throws Exception {
-        final Streams type = Streams.STDOUT;
-        final String message = "";
-        final ByteBuffer buf = messageToBuffer(type, message);
-        final InputStream inputStream = new ByteArrayInputStream(buf.array());
-        setupMocks(inputStream);
-
-        new Expectations() {{
-            callback.open();
-            times = 1;
-
-            callback.close();
-            times = 1;
-
-        }};
-
-        new LogRequestor(client, urlBuilder, containerId, callback).run();
-    }
-
-    @Test
-    public void runCanConsumeEmptyStream() throws Exception {
+    void runCallsOpenAndCloseOnHandler() throws IOException {
         final Streams type = Streams.STDOUT;
         final String message = "";
         final ByteBuffer buf = messageToBuffer(type, message);
@@ -267,53 +226,53 @@ public class LogRequestorTest {
         setupMocks(inputStream);
 
         new LogRequestor(client, urlBuilder, containerId, callback).run();
+
+        Mockito.verify(callback).open();
+        Mockito.verify(callback).close();
     }
 
     @Test
-    public void runCanConsumeSingleLineStream() throws Exception {
+    void runCanConsumeEmptyStream() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        LogRequestor logRequestor = new LogRequestor(client, urlBuilder, containerId, callback);
+        Assertions.assertDoesNotThrow(()->logRequestor.run());
+    }
+
+    @Test
+    void runCanConsumeSingleLineStream() throws Exception {
         final Streams type = Streams.STDOUT;
         final String message = "Hello, world!";
         final ByteBuffer buf = messageToBuffer(type, message);
         final InputStream inputStream = new ByteArrayInputStream(buf.array());
         setupMocks(inputStream);
 
-        new Expectations() {{
-            callback.log(type.type, (ZonedDateTime) any, anyString);
-            times = 1;
-        }};
-
         new LogRequestor(client, urlBuilder, containerId, callback).run();
+
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.anyString());
     }
 
     @Test
-    public void runCanHandleIOException() throws Exception {
-        final IOExcpetionStream stream = new IOExcpetionStream();
+    void runCanHandleIOException() throws Exception {
+        final IOExceptionStream stream = new IOExceptionStream();
         setupMocks(stream);
 
-        new Expectations() {{
-            callback.error(anyString);
-            times = 1;
-        }};
-
         new LogRequestor(client, urlBuilder, containerId, callback).run();
+        Mockito.verify(callback).error(Mockito.anyString());
     }
 
-    private void setupMocks(final InputStream inputStream) throws Exception {
-        new Expectations() {{
-            RequestUtil.newGet(anyString);
+    private void setupMocks(final InputStream inputStream) throws IOException {
+        Mockito.doReturn(httpResponse).when(client).execute(Mockito.any(HttpUriRequest.class));
+        Mockito.doReturn(statusLine).when(httpResponse).getStatusLine();
+        Mockito.doReturn(200).when(statusLine).getStatusCode();
+        Mockito.doReturn(httpEntity).when(httpResponse).getEntity();
+        Mockito.doReturn(inputStream).when(httpEntity).getContent();
 
-            client.execute((HttpUriRequest) any);
-
-            httpResponse.getStatusLine();
-
-            statusLine.getStatusCode();
-            result = 200;
-
-            httpResponse.getEntity();
-
-            httpEntity.getContent();
-            result = inputStream;
-        }};
+        Mockito.doReturn("url").when(urlBuilder).containerLogs(Mockito.anyString(), Mockito.anyBoolean());
     }
 
     private enum Streams {
@@ -359,7 +318,7 @@ public class LogRequestorTest {
     /**
      * Create a bytebuffer for a single string message. A timestamp will be added.
      */
-    private static ByteBuffer messageToBuffer(Streams stream, String message) throws Exception {
+    private static ByteBuffer messageToBuffer(Streams stream, String message) throws IOException {
         String logMessage = logMessage(message);
 
         CharsetEncoder encoder = Charsets.UTF_8.newEncoder();
@@ -385,7 +344,7 @@ public class LogRequestorTest {
         return String.format("[2015-08-05T12:34:56Z] %s", message);
     }
 
-    private class IOExcpetionStream extends InputStream {
+    private class IOExceptionStream extends InputStream {
         public int read() throws IOException {
             throw new IOException("Something bad happened");
         }

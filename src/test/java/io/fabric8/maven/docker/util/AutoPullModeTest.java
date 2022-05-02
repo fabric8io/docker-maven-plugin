@@ -15,28 +15,29 @@ package io.fabric8.maven.docker.util;/*
  * limitations under the License.
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static io.fabric8.maven.docker.util.AutoPullMode.*;
-import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author roland
  * @since 01/03/15
  */
-public class AutoPullModeTest {
+class AutoPullModeTest {
 
     @Test
-    public void simple() {
-        assertEquals(ON, fromString("on"));
-        assertEquals(ON, fromString("true"));
-        assertEquals(OFF, fromString("Off"));
-        assertEquals(OFF, fromString("falsE"));
-        assertEquals(ALWAYS, fromString("alWays"));
+    void simple() {
+        Assertions.assertEquals(ON, fromString("on"));
+        Assertions.assertEquals(ON, fromString("true"));
+        Assertions.assertEquals(OFF, fromString("Off"));
+        Assertions.assertEquals(OFF, fromString("falsE"));
+        Assertions.assertEquals(ALWAYS, fromString("alWays"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void unknown() {
-        fromString("unknown");
+    @Test
+    void unknown() {
+        Assertions.assertThrows( IllegalArgumentException.class, () ->fromString("unknown"));
     }
 }

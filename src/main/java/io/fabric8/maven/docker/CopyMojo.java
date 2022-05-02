@@ -52,22 +52,22 @@ public class CopyMojo extends AbstractDockerMojo {
      * Whether to create containers or to copy from existing containers.
      */
     @Parameter(property = "docker.createContainers", defaultValue = "false")
-    private boolean createContainers;
+    boolean createContainers;
 
     @Parameter(property = "docker.pull.registry")
-    private String pullRegistry;
+    String pullRegistry;
 
     /**
      * Naming pattern for how to name containers when created.
      */
     @Parameter(property = "docker.containerNamePattern")
-    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+    String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     /**
      * Whether to copy from all containers matching configured images or only from the newest ones.
      */
     @Parameter(property = "docker.copyAll", defaultValue = "false")
-    private boolean copyAll;
+    boolean copyAll;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws IOException, MojoExecutionException {

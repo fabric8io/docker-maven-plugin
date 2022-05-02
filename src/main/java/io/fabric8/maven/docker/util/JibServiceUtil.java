@@ -134,7 +134,7 @@ public class JibServiceUtil {
             }
         } catch (IllegalStateException e) {
             log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
-            throw new IllegalStateException(e.getMessage(), e);
+            throw e;
         } catch (InterruptedException e) {
             log.error("Thread interrupted", e);
             Thread.currentThread().interrupt();

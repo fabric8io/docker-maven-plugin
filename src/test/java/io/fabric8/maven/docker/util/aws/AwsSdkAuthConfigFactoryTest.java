@@ -2,71 +2,76 @@ package io.fabric8.maven.docker.util.aws;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
-import mockit.Mocked;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-public class AwsSdkAuthConfigFactoryTest {
+@ExtendWith(MockitoExtension.class)
+@ExtendWith(SystemStubsExtension.class)
+class AwsSdkAuthConfigFactoryTest {
 
-    @Rule
-    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
-    @Mocked
+    @Mock
     private Logger log;
+
+    @SystemStub
+    private EnvironmentVariables environmentVariables;
+
     private AwsSdkAuthConfigFactory objectUnderTest;
 
-
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         objectUnderTest = new AwsSdkAuthConfigFactory(log);
     }
 
     @Test
-    public void nullValueIsPassedOn() {
+    void nullValueIsPassedOn() {
         AuthConfig authConfig = objectUnderTest.createAuthConfig();
 
-        assertNull(authConfig);
+        Assertions.assertNull(authConfig);
     }
 
     @Test
-    public void reflectionWorksForBasicCredentials() {
+    void reflectionWorksForBasicCredentials() {
         String accessKey = randomUUID().toString();
         String secretKey = randomUUID().toString();
-        environmentVariables.set("AWSCredentials.AWSAccessKeyId", accessKey);
-        environmentVariables.set("AWSCredentials.AWSSecretKey", secretKey);
+        environmentVariables
+            .set("AWSCredentials.AWSAccessKeyId", accessKey)
+            .set("AWSCredentials.AWSSecretKey", secretKey);
 
         AuthConfig authConfig = objectUnderTest.createAuthConfig();
 
-        assertNotNull(authConfig);
-        assertEquals(accessKey, authConfig.getUsername());
-        assertEquals(secretKey, authConfig.getPassword());
-        assertNull(authConfig.getAuth());
-        assertNull(authConfig.getIdentityToken());
+        Assertions.assertNotNull(authConfig);
+        Assertions.assertEquals(accessKey, authConfig.getUsername());
+        Assertions.assertEquals(secretKey, authConfig.getPassword());
+        Assertions.assertNull(authConfig.getAuth());
+        Assertions.assertNull(authConfig.getIdentityToken());
     }
 
     @Test
-    public void reflectionWorksForSessionCredentials() {
+    void reflectionWorksForSessionCredentials() {
         String accessKey = randomUUID().toString();
         String secretKey = randomUUID().toString();
         String sessionToken = randomUUID().toString();
-        environmentVariables.set("AWSCredentials.AWSAccessKeyId", accessKey);
-        environmentVariables.set("AWSCredentials.AWSSecretKey", secretKey);
-        environmentVariables.set("AWSSessionCredentials.SessionToken", sessionToken);
+        environmentVariables
+            .set("AWSCredentials.AWSAccessKeyId", accessKey)
+            .set("AWSCredentials.AWSSecretKey", secretKey)
+            .set("AWSSessionCredentials.SessionToken", sessionToken);
 
         AuthConfig authConfig = objectUnderTest.createAuthConfig();
 
-        assertNotNull(authConfig);
-        assertEquals(accessKey, authConfig.getUsername());
-        assertEquals(secretKey, authConfig.getPassword());
-        assertEquals(sessionToken, authConfig.getAuth());
-        assertNull(authConfig.getIdentityToken());
+        Assertions.assertNotNull(authConfig);
+        Assertions.assertEquals(accessKey, authConfig.getUsername());
+        Assertions.assertEquals(secretKey, authConfig.getPassword());
+        Assertions.assertEquals(sessionToken, authConfig.getAuth());
+        Assertions.assertNull(authConfig.getIdentityToken());
     }
 
 }

@@ -1,24 +1,20 @@
 package io.fabric8.maven.docker.service;
 
-
 import com.google.gson.JsonObject;
-
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.util.JsonFactory;
-import mockit.Delegate;
-import mockit.Expectations;
-import mockit.Mocked;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *  Basic Unit Tests for {@link VolumeService}
@@ -26,10 +22,11 @@ import static org.junit.Assert.assertThat;
  *  @author Tom Burton
  *  @version Dec 16, 2016
  */
-public class VolumeServiceTest {
+@ExtendWith(MockitoExtension.class)
+class VolumeServiceTest {
    private VolumeCreateConfig volumeConfig;
 
-   @Mocked
+   @Mock
    private DockerAccess docker;
 
    /*
@@ -40,7 +37,7 @@ public class VolumeServiceTest {
     */
 
    private Map<String, String > withMap(String what) {
-      Map<String, String> map = new HashMap<String, String>();
+      Map<String, String> map = new HashMap<>();
       map.put(what + "Key1", "value1");
       map.put(what + "Key2", "value2");
 
@@ -48,7 +45,7 @@ public class VolumeServiceTest {
    }
 
    @Test
-   public void testCreateVolumeConfig() throws Exception {
+   void testCreateVolumeConfig() throws Exception {
       final VolumeConfiguration config =
           new VolumeConfiguration.Builder()
               .name("testVolume")
@@ -57,56 +54,50 @@ public class VolumeServiceTest {
               .labels(withMap("labels"))
               .build();
 
-      new Expectations() {{
-         // Use a 'delegate' to verify the argument given directly. No need
-         // for an 'intermediate' return method in the service just to check this.
-         docker.createVolume(with(new Delegate<VolumeCreateConfig>() {
-            void check(VolumeCreateConfig vcc) {
-               assertThat(vcc.getName(), is("testVolume"));
-               JsonObject vccJson = JsonFactory.newJsonObject(vcc.toJson());
-               assertEquals("test", vccJson.get("Driver").getAsString());
-            }
-         })); result = "testVolume";
-      }};
+      Mockito.doReturn("testVolume").when(docker).createVolume(Mockito.any(VolumeCreateConfig.class));
 
       String volume = new VolumeService(docker).createVolume(config);
-      assertEquals(volume, "testVolume");
+      Assertions.assertEquals("testVolume", volume);
+
+      ArgumentCaptor<VolumeCreateConfig> volumeCreateConfigCaptor = ArgumentCaptor.forClass(VolumeCreateConfig.class);
+      Mockito.verify(docker).createVolume(volumeCreateConfigCaptor.capture());
+      VolumeCreateConfig vcc= volumeCreateConfigCaptor.getValue();
+      Assertions.assertEquals("testVolume", vcc.getName());
+      JsonObject vccJson = JsonFactory.newJsonObject(vcc.toJson());
+      Assertions.assertEquals("test", vccJson.get("Driver").getAsString());
    }
 
    @Test
-   public void testCreateVolume() throws Exception {
+   void testCreateVolume() throws Exception {
       VolumeConfiguration vc = new VolumeConfiguration.Builder()
                                      .name("testVolume")
                                      .driver("test").opts(withMap("opts"))
                                      .labels(withMap("labels"))
                                      .build();
 
-      new Expectations() {{
-         docker.createVolume((VolumeCreateConfig)any); result = "testVolume";
-      }};
+      Mockito.doReturn("testVolume")
+          .when(docker).createVolume(Mockito.any(VolumeCreateConfig.class));
 
-      assertThat(vc.getName(), is("testVolume"));
+      Assertions.assertEquals("testVolume", vc.getName());
       String name = new VolumeService(docker).createVolume(vc);
-
-      assertThat(name, is("testVolume"));
+      Assertions.assertEquals("testVolume", name);
    }
 
    @Test
-   public void testRemoveVolume() throws Exception {
+   void testRemoveVolume() throws Exception {
       VolumeConfiguration vc = new VolumeConfiguration.Builder()
             .name("testVolume")
             .driver("test").opts(withMap("opts"))
             .labels(withMap("labels"))
             .build();
 
-      new Expectations() {{
-         docker.createVolume((VolumeCreateConfig) any); result = "testVolume";
-         docker.removeVolume("testVolume");
-      }};
+      Mockito.doReturn("testVolume").when(docker).createVolume(Mockito.any(VolumeCreateConfig.class));
 
       VolumeService volumeService = new VolumeService(docker);
       String name = volumeService.createVolume(vc);
       volumeService.removeVolume(name);
+
+      Mockito.verify(docker).removeVolume("testVolume");
    }
 
 }

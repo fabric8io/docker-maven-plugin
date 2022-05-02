@@ -3,19 +3,42 @@ package io.fabric8.maven.docker.service;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.StopMode;
+import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpec;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.PortBindingException;
 import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.JsonFactory;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,52 +51,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import io.fabric8.maven.docker.access.ContainerCreateConfig;
-import io.fabric8.maven.docker.access.ContainerHostConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.config.WaitConfiguration;
-import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.util.JsonFactory;
-import io.fabric8.maven.docker.util.Logger;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
  * few tests ...
  */
-public class RunServiceTest {
+@ExtendWith(MockitoExtension.class)
+class RunServiceTest {
 
     private ContainerCreateConfig containerConfig;
 
-    @Mocked
+    @Mock
     private MavenProject project;
 
-    @Mocked
+    @Mock
     private MavenSession session;
 
-    @Mocked
+    @Mock
     private DockerAccess docker;
 
-    @Mocked
+    @Mock
     private Logger log;
 
-    @Mocked
+    @Mock
     private QueryService queryService;
 
     private Properties properties;
@@ -86,8 +85,8 @@ public class RunServiceTest {
 
     private ContainerTracker tracker;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         tracker = new ContainerTracker();
         properties = new Properties();
         LogOutputSpecFactory logOutputSpecFactory = new LogOutputSpecFactory(true, true, null);
@@ -96,7 +95,7 @@ public class RunServiceTest {
     }
 
     @Test
-    public void testCreateContainerAllConfig() throws Exception {
+    void testCreateContainerAllConfig() throws IOException {
         /*-
          * this is really two tests in one
          *  - verify the start dockerRunner calls all the methods to build the container configs
@@ -105,12 +104,10 @@ public class RunServiceTest {
          * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
-        new Expectations() {{
-            queryService.getContainerName("redisContainer1"); result = "db1";
-            queryService.getContainerName("redisContainer2"); result = "db2";
-            queryService.getContainerName("parentContainer"); result = "parentContainer";
-            queryService.getContainerName("otherContainer"); result = "otherContainer";
-        }};
+        Mockito.doReturn("db1").when(queryService).getContainerName("redisContainer1");
+        Mockito.doReturn("db2").when(queryService).getContainerName("redisContainer2");
+        Mockito.doReturn("parentContainer").when(queryService).getContainerName("parentContainer");
+        Mockito.doReturn("otherContainer").when(queryService).getContainerName("otherContainer");
 
         givenARunConfiguration();
         givenAnImageConfiguration("redis3", "db1", "redisContainer1");
@@ -118,7 +115,6 @@ public class RunServiceTest {
 
         givenAnImageConfiguration("parent", "parentName", "parentContainer");
         givenAnImageConfiguration("other_name", "other:ro", "otherContainer");
-
 
         whenCreateContainerConfig("base");
 
@@ -132,161 +128,112 @@ public class RunServiceTest {
     private int SHUTDOWN_WAIT = 500;
     private int KILL_AFTER = 1000;
     private VolumeConfiguration volumeConfiguration = new VolumeConfiguration.Builder()
-            .name("sqlserver-backup-dev")
-            .driver("rexray")
-            .opts(Collections.singletonMap("size", "50"))
-            .build();
+        .name("sqlserver-backup-dev")
+        .driver("rexray")
+        .opts(Collections.singletonMap("size", "50"))
+        .build();
 
     @Test
-    public void shutdownWithoutKeepingContainers() throws Exception {
-        new Expectations() {{
-            docker.stopContainer(container, 0);
-            log.debug(anyString, (Object[]) any); minTimes = 1;
-            docker.removeContainer(container, false);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withSubstring("removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
-
+    void shutdownWithoutKeepingContainers() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
-        assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
-                System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+        Assertions.assertTrue(System.currentTimeMillis() - start >= SHUTDOWN_WAIT, "Waited for at least " + SHUTDOWN_WAIT + " ms");
+        verifyStopAndRemove(0, false);
     }
-    @Test
-    @Ignore
-    public void killafterAndShutdownWithoutKeepingContainers() throws Exception {
-        long start = System.currentTimeMillis();
-        setupForKillWait();
 
+    @Test
+    void killafterAndShutdownWithoutKeepingContainers() throws DockerAccessException, ExecException {
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, KILL_AFTER), false, false);
-        assertTrue("Waited for at least " + (SHUTDOWN_WAIT + KILL_AFTER) + " ms",
-                System.currentTimeMillis() - start >= SHUTDOWN_WAIT + KILL_AFTER);
+        verifyStopAndRemove((KILL_AFTER + 500) / 1000, false);
     }
 
     @Test
-    @Ignore
-    public void killafterWithoutKeepingContainers() throws Exception {
-        long start = System.currentTimeMillis();
-        setupForKillWait();
-
+    void killafterWithoutKeepingContainers() throws DockerAccessException, ExecException {
         runService.stopContainer(container, createImageConfig(0, KILL_AFTER), false, false);
-        assertTrue("Waited for at least " + (KILL_AFTER) + " ms",
-                   System.currentTimeMillis() - start >= KILL_AFTER);
+        verifyStopAndRemove((KILL_AFTER + 500) / 1000, false);
     }
 
-    private void setupForKillWait() throws DockerAccessException {
-        // use this to simulate something happened - timers need to be started before this method gets invoked
-        // This used to work:
-        // docker = new MockUp<DockerAccess>() {
-        //    @Mock
-        //    public void stopContainer(String contaierId, int wait) {
-        //        WaitUtil.sleep(KILL_AFTER);
-        //    }
-        ///}.getMockInstance();
+    private void verifyStopAndRemove(int killWait, boolean removeVolumes) throws DockerAccessException {
+        verifyStop(killWait);
+        verifyRemove("Stop", removeVolumes);
+    }
 
-        new Expectations() {{
+    private void verifyRemove(String mode, boolean removeVolumes) throws DockerAccessException {
+        Mockito.verify(docker).removeContainer(container, removeVolumes);
+        Assertions.assertTrue(verifyLog(mode).contains("removed"));
+    }
 
-            docker.stopContainer(container, (KILL_AFTER + 500) / 1000);
-            log.debug(anyString, (Object[]) any); minTimes = 1;
-            docker.removeContainer(container, false);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withSubstring("removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
+    private void verifyStopAndKeep(int killWait) throws DockerAccessException {
+        verifyStop(killWait);
+
+        Assertions.assertFalse(verifyLog("Stop").contains(" and removed"));
+    }
+
+    private void verifyStop(int killWait) throws DockerAccessException {
+        Mockito.verify(docker).stopContainer(container, killWait);
+    }
+
+    private String verifyLog(String mode) {
+        ArgumentCaptor<String> formatCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Object> argsCaptor = ArgumentCaptor.forClass(Object.class);
+        Mockito.verify(log).info(formatCaptor.capture(), argsCaptor.capture());
+
+        Assertions.assertTrue(formatCaptor.getValue().contains(mode));
+        List<Object> args = argsCaptor.getAllValues();
+        Assertions.assertEquals(container.substring(0, 12), args.get(2));
+        return (String)args.get(1);
     }
 
     @Test
-    public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
-        new Expectations() {{
-
-            docker.stopContainer(container, 0);
-            log.debug(anyString, (Object[]) any); minTimes = 1;
-            docker.removeContainer(container, true);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withSubstring("removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
-
+    void shutdownWithoutKeepingContainersAndRemovingVolumes() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, true);
-        assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
-                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+        Assertions.assertTrue(System.currentTimeMillis() - start >= SHUTDOWN_WAIT, "Waited for at least " + SHUTDOWN_WAIT + " ms");
+
+        verifyStopAndRemove(0, true);
     }
 
     @Test
-    public void shutdownWithKeepingContainer() throws Exception {
-        new Expectations() {{
-            docker.stopContainer(container, 0);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withNotEqual(" and removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
-
+    void shutdownWithKeepingContainer() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), true, false);
-        assertTrue("No wait",
-                   System.currentTimeMillis() - start < SHUTDOWN_WAIT);
-
+        Assertions.assertTrue(System.currentTimeMillis() - start < SHUTDOWN_WAIT, "No wait");
+        verifyStopAndKeep(0);
     }
 
-    @Test
-    public void shutdownWithPreStopExecConfig() throws Exception {
 
-        new Expectations() {{
-            docker.createExecContainer(container, (Arguments) withNotNull());result = "execContainerId";
-            docker.startExecContainer("execContainerId", (LogOutputSpec) any);
-            docker.stopContainer(container, 0);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withNotEqual(" and removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
+    @Test
+    void shutdownWithPreStopExecConfig() throws DockerAccessException, ExecException {
+        Mockito.doReturn("execContainerId")
+            .when(docker)
+            .createExecContainer(Mockito.eq(container), Mockito.any(Arguments.class));
+
+        Mockito.doReturn(new ExecDetails(JsonFactory.newJsonObject("{\"Running\":true}"))).when(docker).getExecContainer("execContainerId");
+
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfigWithExecConfig(SHUTDOWN_WAIT), true, false);
-        assertTrue("No wait",
-                   System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+        Assertions.assertTrue(System.currentTimeMillis() - start < SHUTDOWN_WAIT, "No wait");
+
+        verifyStop(0);
     }
 
     @Test
-    public void testWithoutWait() throws Exception {
-        new Expectations() {{
-            docker.stopContainer(container, 0);
-            log.debug(anyString); times = 0;
-            docker.removeContainer(container, false);
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withSubstring("removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }};
-
+    void testWithoutWait() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(0, 0), false, false);
-        assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
-    }
-
-    @Test(expected = DockerAccessException.class)
-    public void testWithException() throws Exception {
-
-        new Expectations() {{
-            docker.stopContainer(container, 0); result = new DockerAccessException("Test");
-        }};
-
-        runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
+        Assertions.assertTrue(System.currentTimeMillis() - start < SHUTDOWN_WAIT, "No wait");
+        verifyStopAndRemove(0, false);
     }
 
     @Test
-    public void testWithMultipleStopExceptions() throws Exception {
+    void testWithException() throws DockerAccessException {
+        Mockito.doThrow(new DockerAccessException("Test")).when(docker).stopContainer(container, 0);
+        ImageConfiguration imageConfig = createImageConfig(SHUTDOWN_WAIT, 0);
+        Assertions.assertThrows(DockerAccessException.class, () -> runService.stopContainer(container, imageConfig, false, false));
+    }
+
+    @Test
+    void testWithMultipleStopExceptions() throws DockerAccessException {
         GavLabel testLabel = new GavLabel("Im:A:Test");
 
         String firstName = "first-container:latest";
@@ -302,167 +249,174 @@ public class RunServiceTest {
 
         LogOutputSpecFactory logOutputSpecFactory = new LogOutputSpecFactory(true, true, null);
 
-        new Expectations(){{
-           docker.stopContainer(firstName, 0); result = new DockerAccessException("TEST one");
-           docker.stopContainer(secondName, 0); result = new DockerAccessException("TEST two");
-        }};
+        Mockito.doThrow(new DockerAccessException("TEST one")).when(docker).stopContainer(firstName,0);
+        Mockito.doThrow(new DockerAccessException("TEST two")).when(docker).stopContainer(secondName,0);
 
         runService = new RunService(docker, queryService, tracker, logOutputSpecFactory, log);
 
-        Exception thrownException = assertThrows(DockerAccessException.class, () -> runService.stopStartedContainers(false, true, true, testLabel));
-        assertEquals("(TEST two,TEST one)", thrownException.getLocalizedMessage());
+        Exception thrownException = Assertions.assertThrows(DockerAccessException.class, () -> runService.stopStartedContainers(false, true, true, testLabel));
+        Assertions.assertEquals("(TEST two,TEST one)", thrownException.getLocalizedMessage());
     }
 
     @Test
-    public void testVolumesDuringStart() throws DockerAccessException {
+    void testVolumesDuringStart() throws DockerAccessException {
         ServiceHub hub = new ServiceHubFactory().createServiceHub(project, session, docker, log, new LogOutputSpecFactory(true, true, null));
         List<String> volumeBinds = Collections.singletonList("sqlserver-backup-dev:/var/opt/mssql/data");
         List<VolumeConfiguration> volumeConfigurations = Collections.singletonList(volumeConfiguration);
 
         List<String> createdVolumes = runService.createVolumesAsPerVolumeBinds(hub, volumeBinds, volumeConfigurations);
 
-        assertEquals(createdVolumes.get(0), volumeConfigurations.get(0).getName());
-        assertTrue(createdVolumes.contains(volumeConfigurations.get(0).getName()));
+        Assertions.assertEquals(createdVolumes.get(0), volumeConfigurations.get(0).getName());
+        Assertions.assertTrue(createdVolumes.contains(volumeConfigurations.get(0).getName()));
     }
 
     @Test
-    public void testStopModeWithKill() throws DockerAccessException, ExecException {
-        new Expectations() {{
-            docker.killContainer(container);
-            log.debug(anyString); times = 0;
-            docker.removeContainer(container, false);
-            log.info(withSubstring("Killed"),
-                    anyString,
-                    withSubstring(" removed"),
-                    withSubstring(container.substring(0,12)));
-        }};
-
+    void testStopModeWithKill() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
-        runService.stopContainer(container, createImageConfigWithStopMode(StopMode.kill), false, false);
-        assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
-    }
-    
-    @Test
-    public void retryIfInsufficientPortBindingInformation(
-            @Mocked Container container,
-            @Mocked ImageConfiguration imageConfiguration,
-            @Mocked PortMapping portMapping
-    ) throws DockerAccessException {
-        new Expectations() {{
-            docker.createContainer(withAny(new ContainerCreateConfig("img")), anyString); result = "containerId";
-            portMapping.needsPropertiesUpdate(); result = true;
-            queryService.getMandatoryContainer("containerId"); result = container; times = 2;
-            container.isRunning(); result = true;
-            container.getPortBindings(); result = new PortBindingException("5432/tcp", new Gson().fromJson("{\"5432/tcp\": []}", JsonObject.class));
-            returns(ImmutableMap.of("5432/tcp", new Container.PortBinding(56741, "0.0.0.0")), ImmutableMap.of("5432/tcp", new Container.PortBinding(56741, "0.0.0.0")));
-        }};
-        String containerId = runService.createAndStartContainer(imageConfiguration, portMapping, new GavLabel("Im:A:Test"), properties, getBaseDirectory(), "blah", new Date());
-        new Verifications() {{
-            assertEquals("containerId", containerId);
-        }};
+        runService.stopContainer(container, createImageConfigWithStopMode(), false, false);
+        Assertions.assertTrue(System.currentTimeMillis() - start < SHUTDOWN_WAIT, "No wait");
+
+        Mockito.verify(docker).killContainer(container);
+        verifyRemove("Killed", false);
+
     }
 
-    @Test(expected = PortBindingException.class)
-    public void failAfterRetryingIfInsufficientPortBindingInformation(
-            @Mocked Container container,
-            @Mocked ImageConfiguration imageConfiguration,
-            @Mocked PortMapping portMapping
+    @Test
+    void retryIfInsufficientPortBindingInformation(
+        @Mock Container container,
+        @Mock ImageConfiguration imageConfiguration,
+        @Mock PortMapping portMapping
     ) throws DockerAccessException {
-        new Expectations() {{
-            docker.createContainer(withAny(new ContainerCreateConfig("img")), anyString); result = "containerId";
-            portMapping.needsPropertiesUpdate(); result = true;
-            queryService.getMandatoryContainer("containerId"); result = container; times = 20;
-            container.isRunning(); result = true;
-            container.getPortBindings(); result = new PortBindingException("5432/tcp", new Gson().fromJson("{\"5432/tcp\": []}", JsonObject.class));
-        }};
-        runService.createAndStartContainer(imageConfiguration, portMapping, new GavLabel("Im:A:Test"), properties, getBaseDirectory(), "blah", new Date());
+
+        Mockito.doReturn("containerId")
+            .when(docker).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
+
+        Mockito.doReturn(true).when(portMapping).needsPropertiesUpdate();
+        Mockito.doReturn(container).when(queryService).getMandatoryContainer("containerId");
+        Mockito.doReturn(true).when(container).isRunning();
+        Mockito.doReturn(new RunImageConfiguration()).when(imageConfiguration).getRunConfiguration();
+
+        Mockito.doThrow(new PortBindingException("5432/tcp", new Gson().fromJson("{\"5432/tcp\": []}", JsonObject.class)))
+            .doReturn(ImmutableMap.of("5432/tcp", new Container.PortBinding(56741, "0.0.0.0")))
+            .when(container).getPortBindings();
+
+        String containerId = runService.createAndStartContainer(imageConfiguration, portMapping, new GavLabel("Im:A:Test"), properties, getBaseDirectory(), "blah", new Date());
+        Assertions.assertEquals("containerId", containerId);
+    }
+
+    @Test
+    void failAfterRetryingIfInsufficientPortBindingInformation(
+        @Mock Container container,
+        @Mock ImageConfiguration imageConfiguration,
+        @Mock PortMapping portMapping
+    ) throws DockerAccessException {
+
+        Mockito.doReturn("containerId")
+            .when(docker).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
+
+        Mockito.doReturn(true).when(portMapping).needsPropertiesUpdate();
+        Mockito.doReturn(container).when(queryService).getMandatoryContainer("containerId");
+        Mockito.doReturn(true).when(container).isRunning();
+        Mockito.doReturn(new RunImageConfiguration()).when(imageConfiguration).getRunConfiguration();
+        Mockito.doThrow(new PortBindingException("5432/tcp", new Gson().fromJson("{\"5432/tcp\": []}", JsonObject.class)))
+            .when(container).getPortBindings();
+
+        GavLabel gavLabel = new GavLabel("Im:A:Test");
+        File baseDirectory = getBaseDirectory();
+        Date buildTimestamp = new Date();
+        Assertions.assertThrows(PortBindingException.class,
+            () -> runService.createAndStartContainer(imageConfiguration, portMapping, gavLabel, properties, baseDirectory, "blah", buildTimestamp));
     }
 
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
-                .name("test_name")
-                .alias("testAlias")
-                .runConfig(new RunImageConfiguration.Builder()
-                                   .wait(new WaitConfiguration.Builder()
-                                                 .shutdown(wait)
-                                                 .kill(kill)
-                                                 .build())
-                                   .build())
-                .build();
+            .name("test_name")
+            .alias("testAlias")
+            .runConfig(new RunImageConfiguration.Builder()
+                .wait(new WaitConfiguration.Builder()
+                    .shutdown(wait)
+                    .kill(kill)
+                    .build())
+                .build())
+            .build();
     }
 
-    private ImageConfiguration createImageConfigWithStopMode(StopMode stopMode) {
+    private ImageConfiguration createImageConfigWithStopMode() {
         return new ImageConfiguration.Builder()
-                .name("test_name")
-                .alias("testAlias")
-                .runConfig(new RunImageConfiguration.Builder()
-                        .stopMode(StopMode.kill)
-                        .build())
-                .build();
+            .name("test_name")
+            .alias("testAlias")
+            .runConfig(new RunImageConfiguration.Builder()
+                .stopMode(StopMode.kill)
+                .build())
+            .build();
     }
 
     private ImageConfiguration createImageConfigWithExecConfig(int wait) {
         return new ImageConfiguration.Builder()
-                .name("test_name")
-                .alias("testAlias")
-                .runConfig(new RunImageConfiguration.Builder()
-                                   .wait(new WaitConfiguration.Builder()
-                                                 .shutdown(wait)
-                                                 .preStop("pre-stop-command")
-                                                 .postStart("post-start-command")
-                                                 .build())
-                                   .build())
-                .build();
+            .name("test_name")
+            .alias("testAlias")
+            .runConfig(new RunImageConfiguration.Builder()
+                .wait(new WaitConfiguration.Builder()
+                    .shutdown(wait)
+                    .preStop("pre-stop-command")
+                    .postStart("post-start-command")
+                    .build())
+                .build())
+            .build();
     }
 
-    private void addToTracker(String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
-        Field field = tracker.getClass().getDeclaredField(varName);
-        field.setAccessible(true);
-        Map<String, String> map = (Map<String, String>) field.get(tracker);
-        map.put(key, value);
+    private void addToTracker(String varName, String key, String value) {
+        try {
+            Field field = tracker.getClass().getDeclaredField(varName);
+            field.setAccessible(true);
+            Map<String, String> map = (Map<String, String>) field.get(tracker);
+            map.put(key, value);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new AssertionError(e);
+        }
     }
 
     // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
-    private void givenAnImageConfiguration(String name, String alias, String containerId) throws Exception {
+    private void givenAnImageConfiguration(String name, String alias, String containerId)  {
         addToTracker("imageToContainerMap", name, containerId);
         addToTracker("aliasToContainerMap", alias, containerId);
     }
 
     private void givenARunConfiguration() {
         runConfig =
-                new RunImageConfiguration.Builder()
-                        .hostname("hostname")
-                        .domainname("domain.com")
-                        .user("user")
-                        .shmSize(1024L)
-                        .memory(1L)
-                        .memorySwap(1L)
-                        .cpus(1000000000L)
-                        .cpuSet("0,1")
-                        .isolation("default")
-                        .cpuShares(1L)
-                        .env(env())
-                        .cmd("date")
-                        .entrypoint(new Arguments("entrypoint"))
-                        .extraHosts(extraHosts())
-                        .ulimits(ulimits())
-                        .workingDir("/foo")
-                        .ports(ports())
-                        .links(links())
-                        .volumes(volumeConfiguration())
-                        .dns(dns())
-                        .dnsSearch(dnsSearch())
-                        .privileged(true)
-                        .capAdd(capAdd())
-                        .capDrop(capDrop())
-                        .sysctls(sysctls())
-                        .securityOpts(securityOpts())
-                        .restartPolicy(restartPolicy())
-                        .net("custom_network")
-                        .network(networkConfiguration())
-                        .readOnly(false)
-                        .autoRemove(false)
-                        .build();
+            new RunImageConfiguration.Builder()
+                .hostname("hostname")
+                .domainname("domain.com")
+                .user("user")
+                .shmSize(1024L)
+                .memory(1L)
+                .memorySwap(1L)
+                .cpus(1000000000L)
+                .cpuSet("0,1")
+                .isolation("default")
+                .cpuShares(1L)
+                .env(env())
+                .cmd("date")
+                .entrypoint(new Arguments("entrypoint"))
+                .extraHosts(extraHosts())
+                .ulimits(ulimits())
+                .workingDir("/foo")
+                .ports(ports())
+                .links(links())
+                .volumes(volumeConfiguration())
+                .dns(dns())
+                .dnsSearch(dnsSearch())
+                .privileged(true)
+                .capAdd(capAdd())
+                .capDrop(capDrop())
+                .sysctls(sysctls())
+                .securityOpts(securityOpts())
+                .restartPolicy(restartPolicy())
+                .net("custom_network")
+                .network(networkConfiguration())
+                .readOnly(false)
+                .autoRemove(false)
+                .build();
     }
 
     private NetworkConfig networkConfiguration() {
@@ -470,14 +424,15 @@ public class RunServiceTest {
         config.addAlias("net-alias");
         return config;
     }
+
     private void thenContainerConfigIsValid() throws IOException {
         JsonObject expectedConfig = JsonFactory.newJsonObject(loadFile("docker/containerCreateConfigAll.json"));
-        assertEquals(expectedConfig.toString(), containerConfig.toJson());
+        Assertions.assertEquals(expectedConfig.toString(), containerConfig.toJson());
     }
 
     private void thenStartConfigIsValid() throws IOException {
         JsonObject expectedHostConfig = JsonFactory.newJsonObject(loadFile("docker/containerHostConfigAll.json"));
-        assertEquals(expectedHostConfig.toString(), startConfig.toJson());
+        Assertions.assertEquals(expectedHostConfig.toString(), startConfig.toJson());
     }
 
     private void whenCreateContainerConfig(String imageName) throws DockerAccessException {
@@ -521,7 +476,8 @@ public class RunServiceTest {
 
         return env;
     }
-    private List<UlimitConfig> ulimits(){
+
+    private List<UlimitConfig> ulimits() {
         return Collections.singletonList(new UlimitConfig("memlock=1024:2048"));
     }
 
@@ -551,23 +507,12 @@ public class RunServiceTest {
 
     private RunVolumeConfiguration volumeConfiguration() {
         return new RunVolumeConfiguration.Builder()
-                .bind(bind())
-                .from(volumesFrom())
-                .build();
+            .bind(bind())
+            .from(volumesFrom())
+            .build();
     }
 
     private List<String> volumesFrom() {
         return Arrays.asList("parent", "other:ro");
     }
-
-    final class LogInfoMatchingExpectations extends Expectations {
-        LogInfoMatchingExpectations(String container, boolean withRemove) {
-            log.info(withSubstring("Stop"),
-                     anyString,
-                     withRemove ? withSubstring("removed") : withNotEqual(" and removed"),
-                     withSubstring(container.substring(0,12)),
-                     anyLong);
-        }
-    }
-
 }

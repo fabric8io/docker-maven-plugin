@@ -1,39 +1,38 @@
 package io.fabric8.maven.docker.config;
 
-import java.io.File;
-
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import mockit.Expectations;
-import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.io.File;
 
 /**
  * @author roland
  * @since 2019-04-21
  */
-public class BuildImageConfigurationWithMavenDepsTest {
+@ExtendWith(MockitoExtension.class)
+class BuildImageConfigurationWithMavenDepsTest {
 
-    @Mocked
+    @Mock
     private MojoParameters params;
 
-    @Mocked
+    @Mock
     private MavenProject project;
 
-    @Mocked
+    @Mock
     Logger logger;
 
     @Test
-    public void simpleDockerfileWithoutParentDir() {
-        new Expectations() {{
-           params.getSourceDirectory(); result = "src/main/docker";
-           params.getProject(); result = project;
-           project.getBasedir(); result = "/project";
-        }};
+    void simpleDockerfileWithoutParentDir() {
+        Mockito.doReturn("src/main/docker").when(params).getSourceDirectory();
+        Mockito.doReturn(project).when(params).getProject();
+        Mockito.doReturn(new File("/project")).when(project).getBasedir();
 
         String[] data = new String[] {
             null, "Dockerfile", "/project/src/main/docker", "/project/src/main/docker/Dockerfile",
@@ -64,8 +63,8 @@ public class BuildImageConfigurationWithMavenDepsTest {
                     .dockerFile(data[i + 1]).build();
             config.initAndValidate(logger);
 
-            assertEquals(data[i + 2], config.getAbsoluteContextDirPath(params).getAbsolutePath());
-            assertEquals(data[i + 3], config.getAbsoluteDockerFilePath(params).getAbsolutePath());
+            Assertions.assertEquals(data[i + 2], config.getAbsoluteContextDirPath(params).getAbsolutePath());
+            Assertions.assertEquals(data[i + 3], config.getAbsoluteDockerFilePath(params).getAbsolutePath());
         }
     }
 

@@ -3,34 +3,33 @@ package io.fabric8.maven.docker.util;
 import java.util.*;
 
 import io.fabric8.maven.docker.service.QueryService;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * @author roland
  * @since 16.10.14
  */
-public class StartOrderResolverTest {
+@ExtendWith(MockitoExtension.class)
+class StartOrderResolverTest {
 
-    @Mocked
+    @Mock
     private QueryService queryService;
     
-    @Before
-    @SuppressWarnings("unused")
-    public void setup() throws Exception {
-        new Expectations() {{
-            queryService.hasContainer((String) withNotNull());
-            result = false;
-            minTimes = 1;
-        }};
+    @BeforeEach
+    void setup() throws Exception {
+        Mockito.doReturn(false)
+            .when(queryService)
+            .hasContainer(Mockito.anyString());
     }
     
     @Test
-    public void simple() {
+    void simple() {
         checkData(new Object[][]{
                 { new T[]{new T("1")}, new T[]{new T("1")}},
                 { new T[]{new T("1", "2"), new T("2")}, new T[]{new T("2"), new T("1", "2")} },
@@ -38,12 +37,12 @@ public class StartOrderResolverTest {
         });
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void circularDep() {
-        checkData(new Object[][] {
-                {new T[]{new T("1", "2"), new T("2", "1")}, new T[]{new T("1", "2"), new T("2", "1")}}
-        });
-        fail();
+    @Test
+    void circularDep() {
+        Object[][] data = {
+            { new T[] { new T("1", "2"), new T("2", "1") }, new T[] { new T("1", "2"), new T("2", "1") } }
+        };
+        Assertions.assertThrows(IllegalStateException.class, () -> checkData(data));
     }
 
     private void checkData(Object[][] data) {
@@ -51,7 +50,7 @@ public class StartOrderResolverTest {
             StartOrderResolver.Resolvable[] input = (StartOrderResolver.Resolvable[]) aData[0];
             StartOrderResolver.Resolvable[] expected = (StartOrderResolver.Resolvable[]) aData[1];
             List<StartOrderResolver.Resolvable> result = StartOrderResolver.resolve(queryService, Arrays.asList(input));
-            assertArrayEquals(expected, new ArrayList(result).toArray());
+            Assertions.assertArrayEquals(expected, new ArrayList<>(result).toArray());
         }
     }
 

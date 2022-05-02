@@ -1,154 +1,132 @@
 package io.fabric8.maven.docker.access.hc;
 
+import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.StatusCodeCheckerResponseHandler;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
+import org.apache.http.Header;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.assertj.core.groups.Tuple;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.function.BiConsumer;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"rawtypes", "unused"})
-public class ApacheHttpClientDelegateTest {
+@ExtendWith(MockitoExtension.class)
+class ApacheHttpClientDelegateTest {
 
-    @Mocked
+    @Mock
     private ClientBuilder clientBuilder;
-    @Mocked
+    @Mock
     private CloseableHttpClient httpClient;
 
     private ApacheHttpClientDelegate apacheHttpClientDelegate;
 
-    @Before
-    public void setUp() throws Exception {
-        // @formatter:off
-        new Expectations() {{
-            clientBuilder.buildBasicClient();
-            result = httpClient;
-        }};
-        // @formatter:on
+    @BeforeEach
+    void setUp() throws IOException {
+        Mockito.doReturn(httpClient).when(clientBuilder).buildBasicClient();
         apacheHttpClientDelegate = new ApacheHttpClientDelegate(clientBuilder, false);
     }
 
     @Test
-    public void createBasicClient() {
+    void createBasicClient() {
         final CloseableHttpClient result = apacheHttpClientDelegate.createBasicClient();
-        assertThat(result).isNotNull();
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void delete() throws IOException {
+    void delete() throws IOException {
         // Given
-        // @formatter:off
-        new Expectations() {{
-            httpClient.execute((HttpUriRequest) any, (ResponseHandler) any);
-            result = 1337;
-        }};
-        // @formatter:on
+        Mockito.doReturn(1337)
+            .when(httpClient)
+            .execute(Mockito.any(HttpUriRequest.class), Mockito.any(ResponseHandler.class));
         // When
         final int result = apacheHttpClientDelegate.delete("http://example.com");
         // Then
-        assertThat(result).isEqualTo(1337);
+        Assertions.assertEquals(1337, result);
         verifyHttpClientExecute((request, responseHandler) ->
-                assertThat(request.getAllHeaders())
-                        .hasSize(1)
-                        .extracting("name", "value")
-                        .containsOnly(new Tuple("Accept", "*/*"))
+            Assertions.assertEquals(Collections.singletonMap("Accept", "*/*"), headersAsMap(request.getAllHeaders()))
         );
     }
 
+    private static Map<String,String> headersAsMap(Header[] headers) {
+       return Arrays.stream(headers).collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+    }
+
     @Test
-    public void get() throws IOException {
+    void get() throws IOException {
         // Given
-        // @formatter:off
-        new Expectations() {{
-            httpClient.execute((HttpUriRequest) any, (ResponseHandler) any);
-            result = "Response";
-        }};
-        // @formatter:on
+        Mockito.doReturn("Response")
+            .when(httpClient)
+            .execute(Mockito.any(HttpUriRequest.class), Mockito.any(ResponseHandler.class));
         // When
         final String response = apacheHttpClientDelegate.get("http://example.com");
         // Then
-        assertThat(response).isEqualTo("Response");
-        verifyHttpClientExecute((request, responseHandler) -> {
-            assertThat(request.getAllHeaders())
-                    .hasSize(1)
-                    .extracting("name", "value")
-                    .containsOnly(new Tuple("Accept", "*/*"));
-            assertThat(responseHandler)
-                    .extracting("delegate")
-                    .hasSize(1)
-                    .hasOnlyElementsOfType(ApacheHttpClientDelegate.BodyResponseHandler.class);
+        Assertions.assertEquals("Response", response);
+        verifyHttpClientExecute((HttpUriRequest request, ResponseHandler responseHandler) -> {
+            Assertions.assertEquals(Collections.singletonMap("Accept", "*/*"), headersAsMap(request.getAllHeaders()));
+            StatusCodeCheckerResponseHandler statusCodeChecker = (StatusCodeCheckerResponseHandler) responseHandler;
+            Assertions.assertTrue(statusCodeChecker.delegate instanceof ApacheHttpClientDelegate.BodyResponseHandler);
+            Assertions.assertArrayEquals(new int[]{}, statusCodeChecker.statusCodes);
         });
     }
 
     @Test
-    public void postWithStringBody() throws IOException {
+    void postWithStringBody() throws IOException {
         // Given
-        // @formatter:off
-        new Expectations() {{
-            httpClient.execute((HttpUriRequest) any, (ResponseHandler) any);
-            result = "Response";
-        }};
-        // @formatter:on
+        Mockito.doReturn("Response")
+            .when(httpClient)
+            .execute(Mockito.any(HttpUriRequest.class), Mockito.any(ResponseHandler.class));
         // When
         final String response = apacheHttpClientDelegate.post(
                 "http://example.com", "{body}", Collections.singletonMap("EXTRA", "HEADER"), null);
         // Then
-        assertThat(response).isEqualTo("Response");
+        Assertions.assertEquals("Response", response);
+        
         verifyHttpClientExecute((request, responseHandler) ->
-                assertThat(request.getAllHeaders())
-                        .hasSize(3)
-                        .extracting("name", "value")
-                        .containsOnly(
-                                new Tuple("Accept", "*/*"),
-                                new Tuple("Content-Type", "application/json"),
-                                new Tuple("EXTRA", "HEADER"))
+            Assertions.assertEquals(ImmutableMap.of("Accept", "*/*", "Content-Type", "application/json", "EXTRA", "HEADER"),
+                headersAsMap(request.getAllHeaders()))
         );
     }
 
     @Test
-    public void postWithFileBody() throws IOException {
+    void postWithFileBody() throws IOException {
         // Given
-        // @formatter:off
-        new Expectations() {{
-            httpClient.execute((HttpUriRequest) any, (ResponseHandler) any);
-            result = "Response";
-        }};
-        // @formatter:on
+        Mockito.doReturn("Response")
+            .when(httpClient)
+            .execute(Mockito.any(HttpUriRequest.class), Mockito.any(ResponseHandler.class));
         // When
         final String response = apacheHttpClientDelegate.post(
                 "http://example.com", new File("fake-file.tar"), null);
         // Then
-        assertThat(response).isEqualTo("Response");
+        Assertions.assertEquals("Response", response);
+
         verifyHttpClientExecute((request, responseHandler) ->
-                assertThat(request.getAllHeaders())
-                        .hasSize(2)
-                        .extracting("name", "value")
-                        .containsOnly(
-                                new Tuple("Accept", "*/*"),
-                                new Tuple("Content-Type", "application/x-tar"))
+            Assertions.assertEquals(ImmutableMap.of("Accept", "*/*", "Content-Type", "application/x-tar"),
+                headersAsMap(request.getAllHeaders()))
         );
     }
 
     private <H extends ResponseHandler> void verifyHttpClientExecute(BiConsumer<HttpUriRequest, H> consumer) throws IOException {
-        // @formatter:off
-        new Verifications() {{
-            HttpUriRequest request;
-            H responseHandler;
-            httpClient.execute(request = withCapture(), responseHandler = withCapture());
-            consumer.accept(request, responseHandler);
-        }};
-        // @formatter:on
+        ArgumentCaptor<HttpUriRequest> requestCaptor = ArgumentCaptor.forClass(HttpUriRequest.class);
+        ArgumentCaptor<ResponseHandler> responseHandlerCaptor = ArgumentCaptor.forClass(ResponseHandler.class);
+        Mockito.verify(httpClient)
+            .execute(requestCaptor.capture(), responseHandlerCaptor.capture());
+        consumer.accept(requestCaptor.getValue(), (H)responseHandlerCaptor.getValue());
     }
 
 }

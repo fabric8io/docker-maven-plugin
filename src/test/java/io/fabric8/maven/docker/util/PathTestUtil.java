@@ -1,9 +1,9 @@
 package io.fabric8.maven.docker.util;
 
+import org.junit.jupiter.api.Assertions;
+
 import java.io.File;
 import java.io.IOException;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Utility methods and constants for path-related tests
@@ -46,7 +46,7 @@ public class PathTestUtil {
      * @return the joined strings
      */
     public static String join(String joinWith, boolean prefix, boolean postfix, String... objects) {
-        StringBuilder sb = null;
+        StringBuilder sb;
         if (prefix) {
             sb = new StringBuilder(joinWith);
         } else {
@@ -125,17 +125,17 @@ public class PathTestUtil {
      *
      * @param nameHint a string used to help create the temporary file name, may be {@code null}
      * @param preserveMode mechanism for handling the clean up of files created by this method, may be {@code null}
-     *                     which is equivalent to {@link TMP_FILE_PRESERVE_MODE#DELETE_ON_EXIT}
+     * which is equivalent to {@link TMP_FILE_PRESERVE_MODE#DELETE_ON_EXIT}
      * @return the absolute temporary file, which may not exist depending on the {@code preserveMode}
      */
     public static File createTmpFile(String nameHint, TMP_FILE_PRESERVE_MODE preserveMode) {
         try {
             File tmpFile = File.createTempFile(nameHint, ".tmp");
-            assertTrue("The created temporary file " + tmpFile + " is not absolute!", tmpFile.isAbsolute());
+            Assertions.assertTrue(tmpFile.isAbsolute(), "The created temporary file " + tmpFile + " is not absolute!");
             if (preserveMode != null) {
                 switch (preserveMode) {
                     case DELETE_IMMEDIATELY:
-                        assertTrue("Unable to delete temporary file " + tmpFile, tmpFile.delete());
+                        Assertions.assertTrue(tmpFile.delete(), "Unable to delete temporary file " + tmpFile);
                         break;
                     case DELETE_ON_EXIT:
                         tmpFile.deleteOnExit();
@@ -180,5 +180,5 @@ public class PathTestUtil {
          * Preserve the file, do not delete it.  The caller is responsible for clean up.
          */
         PRESERVE
-    };
+    }
 }

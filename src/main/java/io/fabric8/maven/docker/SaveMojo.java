@@ -25,22 +25,22 @@ public class SaveMojo extends AbstractDockerMojo {
 	private static final ArchiveCompression STANDARD_ARCHIVE_COMPRESSION = ArchiveCompression.gzip;
 
 	@Component
-	private MavenProjectHelper projectHelper;
+	MavenProjectHelper projectHelper;
 
 	@Parameter(property = "docker.save.name")
-	private String saveName;
+	String saveName;
 
 	@Parameter(property = "docker.save.alias")
-	private String saveAlias;
+	String saveAlias;
 
 	@Parameter
-	private String saveFile;
+	String saveFile;
 
 	@Parameter(property = "docker.skip.save", defaultValue = "false")
-	private boolean skipSave;
+	boolean skipSave;
 
 	@Parameter(property = "docker.save.classifier")
-	private String saveClassifier;
+	String saveClassifier;
 
 	@Override
 	protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {

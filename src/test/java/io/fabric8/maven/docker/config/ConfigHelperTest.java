@@ -22,55 +22,51 @@ import io.fabric8.maven.docker.util.AnsiLogger;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author roland
  * @since 17/05/16
  */
-public class ConfigHelperTest {
+class ConfigHelperTest {
 
     private boolean resolverCalled;
     private boolean customizerCalled;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         resolverCalled = false;
         customizerCalled = false;
     }
 
     @Test
-    public void noName() throws Exception {
-        try {
-            List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().build());
-            ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
-            fail();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("name"));
-        }
+    void noName() {
+        List<ImageConfiguration> configs = Collections.singletonList(new ImageConfiguration.Builder().build());
+        ConfigHelper.Resolver resolver = createResolver();
+        ConfigHelper.Customizer customizer = createCustomizer();
+        IllegalArgumentException exp = Assertions.assertThrows(IllegalArgumentException.class,
+            () -> ConfigHelper.resolveImages(null, configs, resolver, null, customizer));
+        Assertions.assertTrue(exp.getMessage().contains("name"));
     }
 
     @Test
-    public void externalPropertyActivation() throws MojoFailureException {
+    void externalPropertyActivation() throws MojoFailureException {
         MavenProject project = new MavenProject();
         project.getProperties().put(ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, "anything");
 
-        List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
+        List<ImageConfiguration> images = Collections.singletonList(new ImageConfiguration.Builder().name("test").build());
         ConfigHelper.validateExternalPropertyActivation(project, images);
 
         images = Arrays.asList(
-                new ImageConfiguration.Builder().name("test").build(),
-                new ImageConfiguration.Builder().name("test2").build());
+            new ImageConfiguration.Builder().name("test").build(),
+            new ImageConfiguration.Builder().name("test2").build());
 
-        try {
-            ConfigHelper.validateExternalPropertyActivation(project, images);
-            fail();
-        }catch(MojoFailureException ex) {
-            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
-        }
+        List<ImageConfiguration> finalImages = images;
+        MojoFailureException ex = Assertions.assertThrows(MojoFailureException.class,
+            () -> ConfigHelper.validateExternalPropertyActivation(project, finalImages));
+        Assertions.assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
 
         // When one of the images are configured externally from other source, it is OK with two images.
         Map<String, String> externalConfig = new HashMap<>();
@@ -88,12 +84,10 @@ public class ConfigHelperTest {
         // But with default prefix it fails
         externalConfig.remove("prefix");
 
-        try {
-            ConfigHelper.validateExternalPropertyActivation(project, images);
-            fail();
-        }catch(MojoFailureException ex) {
-            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
-        }
+        List<ImageConfiguration> finalImages1 = images;
+        ex = Assertions.assertThrows(MojoFailureException.class,
+            () -> ConfigHelper.validateExternalPropertyActivation(project, finalImages1));
+        Assertions.assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
 
         // With no external properly, it works.
         project.getProperties().clear();
@@ -105,76 +99,66 @@ public class ConfigHelperTest {
     }
 
     @Test
-    public void simple() throws Exception {
-        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
+    void simple() {
+        List<ImageConfiguration> configs = Collections.singletonList(new ImageConfiguration.Builder().name("test").build());
         List<ImageConfiguration> result = ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
-        assertEquals(1,result.size());
-        assertTrue(resolverCalled);
-        assertTrue(customizerCalled);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertTrue(resolverCalled);
+        Assertions.assertTrue(customizerCalled);
     }
 
     @Test
-    public void registry() throws Exception {
-        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().registry("docker.io").name("test").build());
+    void registry() {
+        List<ImageConfiguration> configs = Collections.singletonList(new ImageConfiguration.Builder().registry("docker.io").name("test").build());
         List<ImageConfiguration> result = ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
-        assertEquals(1,result.size());
-        assertTrue(resolverCalled);
-        assertTrue(customizerCalled);
-        assertEquals("docker.io", configs.get(0).getRegistry());
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertTrue(resolverCalled);
+        Assertions.assertTrue(customizerCalled);
+        Assertions.assertEquals("docker.io", configs.get(0).getRegistry());
     }
 
     @Test
-    public void filter() throws Exception {
-        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
+    void filter() {
+        List<ImageConfiguration> configs = Collections.singletonList(new ImageConfiguration.Builder().name("test").build());
         CatchingLog logCatcher = new CatchingLog();
         List<ImageConfiguration> result = ConfigHelper.resolveImages(
             new AnsiLogger(logCatcher, true, "build"),
             configs, createResolver(), "bla", createCustomizer());
-        assertEquals(0,result.size());
-        assertTrue(resolverCalled);
-        assertTrue(customizerCalled);
-        assertTrue(logCatcher.getWarnMessage().contains("test"));
-        assertTrue(logCatcher.getWarnMessage().contains("bla"));
+        Assertions.assertEquals(0, result.size());
+        Assertions.assertTrue(resolverCalled);
+        Assertions.assertTrue(customizerCalled);
+        Assertions.assertTrue(logCatcher.getWarnMessage().contains("test"));
+        Assertions.assertTrue(logCatcher.getWarnMessage().contains("bla"));
     }
 
     @Test
-    public void initAndValidate() throws Exception {
-        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
+    void initAndValidate() {
+        List<ImageConfiguration> configs = Collections.singletonList(new ImageConfiguration.Builder().name("test").build());
         String api = ConfigHelper.initAndValidate(configs, "v1.16", ConfigHelper.NameFormatter.IDENTITY, null);
-        assertEquals("v1.16",api);
+        Assertions.assertEquals("v1.16", api);
     }
 
     private ConfigHelper.Customizer createCustomizer() {
-        return new ConfigHelper.Customizer() {
-            @Override
-            public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-                customizerCalled = true;
-                return configs;
-            }
+        return configs -> {
+            customizerCalled = true;
+            return configs;
         };
     }
 
     private ConfigHelper.Resolver createResolver() {
-        return new ConfigHelper.Resolver() {
-            @Override
-            public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                resolverCalled = true;
-                return Collections.singletonList(image);
-            }
+        return image -> {
+            resolverCalled = true;
+            return Collections.singletonList(image);
         };
     }
 
-    private class CatchingLog extends SystemStreamLog {
+    private static class CatchingLog extends SystemStreamLog {
         private String warnMessage;
 
         @Override
         public void warn(CharSequence content) {
             this.warnMessage = content.toString();
             super.warn(content);
-        }
-
-        void reset() {
-            warnMessage = null;
         }
 
         public String getWarnMessage() {
