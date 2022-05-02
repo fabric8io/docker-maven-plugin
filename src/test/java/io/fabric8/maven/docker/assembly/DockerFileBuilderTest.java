@@ -7,16 +7,13 @@ import java.util.regex.Pattern;
 import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-
-public class DockerFileBuilderTest {
+ class DockerFileBuilderTest {
 
     @Test
-    public void testBuildDockerFile() throws Exception {
+     void testBuildDockerFile() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         Arguments b = Arguments.Builder.get().withParam("/bin/sh").withParam("-c").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
@@ -33,11 +30,11 @@ public class DockerFileBuilderTest {
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
-    public void testBuildDockerShellArgumentsForShell() throws Exception {
+     void testBuildDockerShellArgumentsForShell() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         Arguments b = new Arguments("/bin/sh -c");
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
@@ -54,11 +51,11 @@ public class DockerFileBuilderTest {
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
-    public void testBuildDockerFileMultilineLabel() throws Exception {
+     void testBuildDockerFileMultilineLabel() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         String dockerfileContent = new DockerFileBuilder()
                 .add("/src", "/dest")
@@ -70,19 +67,19 @@ public class DockerFileBuilderTest {
                         "some-json", "{\n  \"key\": \"value\"\n}\n"))
                 .content();
         String expected = loadFile("docker/Dockerfile.multiline_label.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
-    public void testBuildLabelWithSpace() throws Exception {
+     void testBuildLabelWithSpace()  {
         String dockerfileContent = new DockerFileBuilder()
                 .labels(ImmutableMap.of("key", "label with space"))
                 .content();
-        assertTrue(stripCR(dockerfileContent).contains("LABEL key=\"label with space\""));
+        Assertions.assertTrue(stripCR(dockerfileContent).contains("LABEL key=\"label with space\""));
     }
 
     @Test
-    public void testBuildDockerFileUDPPort() throws Exception {
+     void testBuildDockerFileUDPPort() throws IOException {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
                 .baseImage("image")
@@ -95,11 +92,11 @@ public class DockerFileBuilderTest {
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile_udp.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
-    public void testBuildDockerFileExplicitTCPPort() throws Exception {
+    void testBuildDockerFileExplicitTCPPort() throws IOException {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
                 .baseImage("image")
@@ -112,177 +109,164 @@ public class DockerFileBuilderTest {
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile_tcp.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testBuildDockerFileBadPort() throws Exception {
+    private static DockerFileBuilder getFileBuilder() {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
-        new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .cmd(a)
-                .env(ImmutableMap.of("foo", "bar"))
-                .basedir("/export")
-                .expose(Collections.singletonList("8080aaa/udp"))
-                .maintainer("maintainer@example.com")
-                .workdir("/tmp")
-                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
-                .content();
-    }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void testBuildDockerFileBadProtocol() throws Exception {
-        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
-        new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .cmd(a)
-                .env(ImmutableMap.of("foo", "bar"))
-                .basedir("/export")
-                .expose(Collections.singletonList("8080/bogusdatagram"))
-                .maintainer("maintainer@example.com")
-                .workdir("/tmp")
-                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
-                .content();
+        DockerFileBuilder builder = new DockerFileBuilder().add("/src", "/dest")
+            .baseImage("image")
+            .cmd(a)
+            .env(ImmutableMap.of("foo", "bar"))
+            .basedir("/export")
+            .maintainer("maintainer@example.com")
+            .workdir("/tmp")
+            .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+            .volumes(Collections.singletonList("/vol1"))
+            .run(Arrays.asList("echo something", "echo second"));
+        return builder;
     }
 
     @Test
-    public void testDockerFileOptimisation() throws Exception {
-        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
-        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .cmd(a)
-                .env(ImmutableMap.of("foo", "bar"))
-                .basedir("/export")
-                .expose(Collections.singletonList("8080"))
-                .maintainer("maintainer@example.com")
-                .workdir("/tmp")
-                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second", "echo third", "echo fourth", "echo fifth"))
-                .optimise()
-                .content();
+     void testBuildDockerFileBadPort() {
+        DockerFileBuilder builder = getFileBuilder().expose(Collections.singletonList("8080aaa/udp"));
+        Assertions.assertThrows(IllegalArgumentException.class, builder::content);
+    }
+
+    @Test
+     void testBuildDockerFileBadProtocol() {
+        DockerFileBuilder builder = getFileBuilder().expose(Collections.singletonList("8080/bogusdatagram"));
+        Assertions.assertThrows(IllegalArgumentException.class, builder::content);
+    }
+
+    @Test
+    void testDockerFileOptimisation() throws Exception {
+        String dockerfileContent = getFileBuilder()
+            .expose(Collections.singletonList("8080"))
+            .run(Arrays.asList("echo third", "echo fourth", "echo fifth"))
+            .optimise()
+            .content();
         String expected = loadFile("docker/Dockerfile_optimised.test");
-        assertEquals(expected, stripCR(dockerfileContent));
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
-    public void testMaintainer() {
+    void testMaintainer() {
         String dockerfileContent = new DockerFileBuilder().maintainer("maintainer@example.com").content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("MAINTAINER", "maintainer@example.com"));
+        Assertions.assertEquals("maintainer@example.com", dockerfileToMap(dockerfileContent).get("MAINTAINER"));
     }
 
     @Test
-    public void testOptimise() {
+    void testOptimise() {
         String dockerfileContent = new DockerFileBuilder().optimise().run(Arrays.asList("echo something", "echo two")).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("RUN", "echo something && echo two"));
+        Assertions.assertEquals("echo something && echo two", dockerfileToMap(dockerfileContent).get("RUN"));
     }
 
     @Test
-    public void testOptimiseOnEmptyRunCommandListDoesNotThrowException() {
-        new DockerFileBuilder().optimise().content();
+    void testOptimiseOnEmptyRunCommandListDoesNotThrowException() {
+        DockerFileBuilder builder = new DockerFileBuilder().optimise();
+        Assertions.assertDoesNotThrow(builder::content);
     }
 
     @Test
-    public void testEntryPointShell() {
+    void testEntryPointShell() {
         Arguments a = Arguments.Builder.get().withShell("java -jar /my-app-1.1.1.jar server").build();
         String dockerfileContent = new DockerFileBuilder().entryPoint(a).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("ENTRYPOINT", "java -jar /my-app-1.1.1.jar server"));
+        Assertions.assertEquals("java -jar /my-app-1.1.1.jar server", dockerfileToMap(dockerfileContent).get("ENTRYPOINT"));
     }
 
     @Test
-    public void testEntryPointParams() {
+    void testEntryPointParams() {
         Arguments a = Arguments.Builder.get().withParam("java").withParam("-jar").withParam("/my-app-1.1.1.jar").withParam("server").build();
         String dockerfileContent = new DockerFileBuilder().entryPoint(a).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("ENTRYPOINT", "[\"java\",\"-jar\",\"/my-app-1.1.1.jar\",\"server\"]"));
+        Assertions.assertEquals("[\"java\",\"-jar\",\"/my-app-1.1.1.jar\",\"server\"]", dockerfileToMap(dockerfileContent).get("ENTRYPOINT"));
     }
 
     @Test
-    public void testHealthCheckCmdParams() {
+    void testHealthCheckCmdParams() {
         HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd(new Arguments("echo hello")).interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello"));
+        Assertions.assertEquals("--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello", dockerfileToMap(dockerfileContent).get("HEALTHCHECK"));
     }
 
     @Test
-    public void testHealthCheckNone() {
+    void testHealthCheckNone() {
         HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "NONE"));
+        Assertions.assertEquals("NONE", dockerfileToMap(dockerfileContent).get("HEALTHCHECK"));
     }
 
     @Test
-    public void testNoRootExport() {
-        assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void illegalNonAbsoluteBaseDir() {
-        new DockerFileBuilder().basedir("blub").content();
+    void testNoRootExport() {
+        Assertions.assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
     }
 
     @Test
-    public void testAssemblyUserWithChown() {
-        String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss")
+    void illegalNonAbsoluteBaseDir() {
+        DockerFileBuilder builder = new DockerFileBuilder();
+        Assertions.assertThrows(IllegalArgumentException.class, () -> builder.basedir("blub"));
+    }
+
+    @Test
+    void testAssemblyUserWithChown() {
+        String dockerfileContent = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
-        assertThat(dockerfileToMap(dockerFile), hasEntry("COPY", "--chown=jboss:jboss b /maven/b/deeper/nested"));
+        Assertions.assertEquals("--chown=jboss:jboss b /maven/b/deeper/nested", dockerfileToMap(dockerfileContent).get("COPY"));
     }
 
     @Test
-    public void testUser() {
+    void testUser() {
         String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss").user("bob")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
         String EXPECTED_REGEXP = "USER bob$";
         Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
-        assertTrue(pattern.matcher(dockerFile).find());
+        Assertions.assertTrue(pattern.matcher(dockerFile).find());
     }
 
     @Test
-    public void testAssemblyWithTargetSettings() {
+    void testAssemblyWithTargetSettings() {
         String dockerFile = new DockerFileBuilder().assemblyUser("test:test:test")
                 .add("a","a/nested", null, null, true)
                 .add("b","b/deeper/nested", null, "jboss:jboss:jboss", false)
                 .content();
-        assertThat(dockerfileToList(dockerFile), hasItem("COPY --chown=test:test a /maven/a/nested"));
-        assertThat(dockerfileToList(dockerFile), hasItem("COPY --chown=jboss:jboss b /maven/b/deeper/nested"));
-        assertThat(dockerfileToList(dockerFile), hasItem("VOLUME [\"/maven\"]"));
+        List<String> dockerfile = dockerfileToList(dockerFile);
+        Assertions.assertTrue(dockerfile.contains("COPY --chown=test:test a /maven/a/nested"));
+        Assertions.assertTrue(dockerfile.contains("COPY --chown=jboss:jboss b /maven/b/deeper/nested"));
+        Assertions.assertTrue(dockerfile.contains("VOLUME [\"/maven\"]"));
     }
 
 
     @Test
-    public void testExportBaseDir() {
-        assertTrue(new DockerFileBuilder().basedir("/export").content().contains("/export"));
-        assertFalse(new DockerFileBuilder().baseImage("java").basedir("/export").content().contains("/export"));
-        assertTrue(new DockerFileBuilder().baseImage("java").exportTargetDir(true).basedir("/export").content().contains("/export"));
-        assertFalse(new DockerFileBuilder().baseImage("java").exportTargetDir(false).basedir("/export").content().contains("/export"));
+    void testExportBaseDir() {
+        Assertions.assertTrue(new DockerFileBuilder().basedir("/export").content().contains("/export"));
+        Assertions.assertFalse(new DockerFileBuilder().baseImage("java").basedir("/export").content().contains("/export"));
+        Assertions.assertTrue(new DockerFileBuilder().baseImage("java").exportTargetDir(true).basedir("/export").content().contains("/export"));
+        Assertions.assertFalse(new DockerFileBuilder().baseImage("java").exportTargetDir(false).basedir("/export").content().contains("/export"));
     }
 
     @Test
-    public void testTargetDirStartsWithEnvVar() {
-        assertTrue(new DockerFileBuilder().basedir("${FOO}").content().contains("${FOO}"));
-        assertTrue(new DockerFileBuilder().basedir("$FOO").content().contains("$FOO"));
-        assertTrue(new DockerFileBuilder().basedir("${FOO}/").content().contains("${FOO}"));
-        assertTrue(new DockerFileBuilder().basedir("$FOO/").content().contains("$FOO"));
-        assertTrue(new DockerFileBuilder().basedir("${FOO}/bar").content().contains("${FOO}/bar"));
-        assertTrue(new DockerFileBuilder().basedir("$FOO/bar").content().contains("$FOO/bar"));
+    void testTargetDirStartsWithEnvVar() {
+        Assertions.assertTrue(new DockerFileBuilder().basedir("${FOO}").content().contains("${FOO}"));
+        Assertions.assertTrue(new DockerFileBuilder().basedir("$FOO").content().contains("$FOO"));
+        Assertions.assertTrue(new DockerFileBuilder().basedir("${FOO}/").content().contains("${FOO}"));
+        Assertions.assertTrue(new DockerFileBuilder().basedir("$FOO/").content().contains("$FOO"));
+        Assertions.assertTrue(new DockerFileBuilder().basedir("${FOO}/bar").content().contains("${FOO}/bar"));
+        Assertions.assertTrue(new DockerFileBuilder().basedir("$FOO/bar").content().contains("$FOO/bar"));
     }
 
     @Test
-    public void testDockerFileKeywords() {
+    void testDockerFileKeywords() {
         StringBuilder b = new StringBuilder();
         DockerFileKeyword.RUN.addTo(b, "apt-get", "update");
-        assertEquals("RUN apt-get update\n", b.toString());
+        Assertions.assertEquals("RUN apt-get update\n", b.toString());
 
         b = new StringBuilder();
         DockerFileKeyword.EXPOSE.addTo(b, new String[]{"1010", "2020"});
-        assertEquals("EXPOSE 1010 2020\n",b.toString());
+        Assertions.assertEquals("EXPOSE 1010 2020\n",b.toString());
 
         b = new StringBuilder();
         DockerFileKeyword.USER.addTo(b, "roland");
-        assertEquals("USER roland\n",b.toString());
+        Assertions.assertEquals("USER roland\n",b.toString());
     }
 
     private String stripCR(String input){

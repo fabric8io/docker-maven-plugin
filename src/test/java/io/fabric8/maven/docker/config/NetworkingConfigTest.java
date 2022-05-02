@@ -18,9 +18,8 @@ package io.fabric8.maven.docker.config;
 
 import java.util.Arrays;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static io.fabric8.maven.docker.config.NetworkConfig.Mode.*;
 
@@ -28,10 +27,10 @@ import static io.fabric8.maven.docker.config.NetworkConfig.Mode.*;
  * @author roland
  * @since 12/02/16
  */
-public class NetworkingConfigTest {
+class NetworkingConfigTest {
 
     @Test
-    public void simple() {
+    void simple() {
         Object[] data = {
             bridge, null, "BRiDge", "bridge", "true", "false", null, null,
             host, null, "host", "host", "true", "false", null, null,
@@ -45,43 +44,37 @@ public class NetworkingConfigTest {
                 new NetworkConfig((NetworkConfig.Mode) data[i],(String) data[i + 1]),
                 new NetworkConfig((String) data[i + 2])}) {
                 if (config.isStandardNetwork()) {
-                    assertEquals(data[i + 3], config.getStandardMode("containerId"));
+                    Assertions.assertEquals(data[i + 3], config.getStandardMode("containerId"));
                 } else {
-                    try {
-                        config.getStandardMode("fail");
-                        fail("Test " + i % 8);
-                    } catch (IllegalArgumentException exp) {
-                        // expected
-                    }
+                    Assertions.assertThrows(IllegalArgumentException.class, () ->config.getStandardMode("fail"));
                 }
-                assertEquals(Boolean.parseBoolean((String) data[i + 4]), config.isStandardNetwork());
-                assertEquals(Boolean.parseBoolean((String) data[i + 5]), config.isCustomNetwork());
-                assertEquals(data[i + 6], config.getContainerAlias());
-                assertEquals(data[i + 7], config.getCustomNetwork());
+                Assertions.assertEquals(Boolean.parseBoolean((String) data[i + 4]), config.isStandardNetwork());
+                Assertions.assertEquals(Boolean.parseBoolean((String) data[i + 5]), config.isCustomNetwork());
+                Assertions.assertEquals(data[i + 6], config.getContainerAlias());
+                Assertions.assertEquals(data[i + 7], config.getCustomNetwork());
             }
         }
     }
 
     @Test
-    public void empty() {
+    void empty() {
         for (String str : new String[]{ null, "" }) {
             NetworkConfig config = new NetworkConfig(str);
-            assertFalse(config.isStandardNetwork());
-            assertFalse(config.isCustomNetwork());
-            assertNull(config.getContainerAlias());
-            assertNull(config.getCustomNetwork());
+            Assertions.assertFalse(config.isStandardNetwork());
+            Assertions.assertFalse(config.isCustomNetwork());
+            Assertions.assertNull(config.getContainerAlias());
+            Assertions.assertNull(config.getCustomNetwork());
         }
     }
 
     @Test
-    public void builder() {
+    void builder() {
         NetworkConfig config = new NetworkConfig.Builder().build();
-        assertNull(config);
+        Assertions.assertNull(config);
 
         config = new NetworkConfig.Builder().name("hello").aliases(Arrays.asList("alias1", "alias2")).build();
-        assertTrue(config.isCustomNetwork());
-        assertEquals("hello",config.getCustomNetwork());
-        assertEquals(2,config.getAliases().size());
-
+        Assertions.assertTrue(config.isCustomNetwork());
+        Assertions.assertEquals("hello",config.getCustomNetwork());
+        Assertions.assertEquals(2,config.getAliases().size());
     }
 }

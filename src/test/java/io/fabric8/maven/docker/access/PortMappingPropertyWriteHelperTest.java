@@ -1,34 +1,32 @@
 package io.fabric8.maven.docker.access;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import io.fabric8.maven.docker.model.Container;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import io.fabric8.maven.docker.model.Container;
-import org.junit.Before;
-import org.junit.Test;
-
-public class PortMappingPropertyWriteHelperTest {
+class PortMappingPropertyWriteHelperTest {
 
     private Properties loadedProperties;
     private Properties projProperties;
 
     private PortMapping.PropertyWriteHelper propertyWriteHelper;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         projProperties = new Properties();
     }
 
     @Test
-    public void testWriteGlobalOnly() throws Exception {
+    void testWriteGlobalOnly() throws IOException {
         String globalFile = createTmpFile();
         PortMapping mapping = createPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "127.0.0.1:other.port:5678");
 
@@ -43,7 +41,7 @@ public class PortMappingPropertyWriteHelperTest {
     }
 
     @Test
-    public void testWriteImageAndGlobal() throws Exception {
+    void testWriteImageAndGlobal() throws IOException {
         String imageFile = createTmpFile();
         String globalFile = createTmpFile();
 
@@ -92,7 +90,7 @@ public class PortMappingPropertyWriteHelperTest {
     
     
     @Test
-    public void testWriteImageOnly() throws Exception {
+    void testWriteImageOnly() throws Exception {
         String imageFile = createTmpFile();
         PortMapping mapping = createPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "127.0.0.1:other.port:5678");
 
@@ -130,19 +128,19 @@ public class PortMappingPropertyWriteHelperTest {
     }
 
     private void thenPropsContains(String variable, Object port) {
-        assertEquals(String.valueOf(port), loadedProperties.get(variable));
+        Assertions.assertEquals(String.valueOf(port), loadedProperties.get(variable));
     }
 
-    private void thenPropsFileExists(String propertyFile) throws Exception {
+    private void thenPropsFileExists(String propertyFile) throws IOException {
         File file = new File(propertyFile);
-        assertTrue(file.exists());
+        Assertions.assertTrue(file.exists());
 
         loadedProperties = new Properties();
-        loadedProperties.load(new FileInputStream(file));
+        loadedProperties.load(Files.newInputStream(file.toPath()));
     }
 
     private void thenPropsSizeIs(int size) {
-        assertEquals(size, loadedProperties.size());
+        Assertions.assertEquals(size, loadedProperties.size());
     }
 
     private void whenUpdateDynamicMapping(PortMapping mapping, String ip, int... ports) {

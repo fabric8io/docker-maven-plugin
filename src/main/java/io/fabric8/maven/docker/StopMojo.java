@@ -58,7 +58,7 @@ public class StopMojo extends AbstractDockerMojo {
     protected boolean autoCreateCustomNetworks;
 
     @Parameter( property = "docker.allContainers", defaultValue = "false" )
-    private boolean allContainers;
+    boolean allContainers;
 
     @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
     private boolean sledgeHammer;
@@ -67,10 +67,10 @@ public class StopMojo extends AbstractDockerMojo {
      * Naming pattern for how to name containers when started
      */
     @Parameter(property = "docker.containerNamePattern")
-    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+    String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     @Parameter(property = "docker.stopNamePattern")
-    private String stopNamePattern;
+    String stopNamePattern;
 
     /**
      * If true, the containers are not stopped right away, but when the build is finished (success or failed).

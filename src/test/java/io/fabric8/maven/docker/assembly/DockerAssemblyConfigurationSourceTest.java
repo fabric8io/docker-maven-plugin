@@ -1,67 +1,61 @@
 package io.fabric8.maven.docker.assembly;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.util.Arrays;
-
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.project.MavenProject;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class DockerAssemblyConfigurationSourceTest {
+import java.io.File;
+import java.util.Arrays;
+
+class DockerAssemblyConfigurationSourceTest {
 
     private AssemblyConfiguration assemblyConfig;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         // set 'ignorePermissions' to something other then default
         this.assemblyConfig = new AssemblyConfiguration.Builder()
-                .descriptor("assembly.xml")
-                .descriptorRef("project")
-                .permissions("keep")
-                .build();
+            .descriptor("assembly.xml")
+            .descriptorRef("project")
+            .permissions("keep")
+            .build();
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void permissionMode() {
-        try {
-            new AssemblyConfiguration.Builder().permissions("blub").build();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("blub"));
-        }
+    void permissionMode() {
+        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder();
+        IllegalArgumentException exp = Assertions.assertThrows(IllegalArgumentException.class, () -> builder.permissions("blub"));
+        Assertions.assertTrue(exp.getMessage().contains("blub"));
 
         AssemblyConfiguration config = new AssemblyConfiguration.Builder().ignorePermissions(false).permissions("ignore").build();
-        assertTrue(config.isIgnorePermissions());;
+        Assertions.assertTrue(config.isIgnorePermissions());
     }
 
     @Test
-    public void testCreateSourceAbsolute() {
+    void testCreateSourceAbsolute() {
         testCreateSource(buildParameters(".", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
     }
 
     @Test
-    public void testCreateSourceRelative() {
-        testCreateSource(buildParameters(".","src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
+    void testCreateSourceRelative() {
+        testCreateSource(buildParameters(".", "src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
     }
 
     @Test
-    public void testOutputDirHasImage() {
+    void testOutputDirHasImage() {
         String image = "image";
         MojoParameters params = buildParameters(".", "src/docker", "output/docker");
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
-                                                                                         new BuildDirs(image, params),assemblyConfig);
+            new BuildDirs(image, params), assemblyConfig);
 
-        assertTrue(containsDir(image, source.getOutputDirectory()));
-        assertTrue(containsDir(image, source.getWorkingDirectory()));
-        assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
+        Assertions.assertTrue(containsDir(image, source.getOutputDirectory()));
+        Assertions.assertTrue(containsDir(image, source.getWorkingDirectory()));
+        Assertions.assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
     }
 
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
@@ -71,28 +65,28 @@ public class DockerAssemblyConfigurationSourceTest {
     }
 
     @Test
-    public void testEmptyAssemblyConfig() {
+    void testEmptyAssemblyConfig() {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", null),
-               null,null
+            new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", null),
+            null, null
         );
-        assertEquals(0,source.getDescriptors().length);
+        Assertions.assertEquals(0, source.getDescriptors().length);
     }
 
     private void testCreateSource(MojoParameters params) {
         DockerAssemblyConfigurationSource source =
-                new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params), assemblyConfig);
+            new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params), assemblyConfig);
 
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();
 
-        assertEquals("count of descriptors", 1, descriptors.length);
-        Assert.assertEquals("directory of assembly", EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
+        Assertions.assertEquals(1, descriptors.length);
+        Assertions.assertEquals(EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
 
-        assertEquals("count of descriptors references", 1, descriptorRefs.length);
-        assertEquals("reference must be project", "project", descriptorRefs[0]);
+        Assertions.assertEquals(1, descriptorRefs.length);
+        Assertions.assertEquals("project", descriptorRefs[0]);
 
-        assertFalse("we must not ignore permissions when creating the archive", source.isIgnorePermissions());
+        Assertions.assertFalse(source.isIgnorePermissions(), "we must not ignore permissions when creating the archive");
 
         String outputDir = new File(params.getOutputDirectory()).getAbsolutePath();
 
@@ -108,21 +102,21 @@ public class DockerAssemblyConfigurationSourceTest {
     private void assertStartsWithDir(String outputDir, File path) {
         String expectedStartsWith = outputDir + File.separator;
         int length = expectedStartsWith.length();
-        assertEquals(expectedStartsWith, path.toString().substring(0, length));
+        Assertions.assertEquals(expectedStartsWith, path.toString().substring(0, length));
     }
 
     @Test
-    public void testReactorProjects() {
-    	MavenProject reactorProject1 = new MavenProject();
-    	reactorProject1.setFile(new File("../reactor-1"));
+    void testReactorProjects() {
+        MavenProject reactorProject1 = new MavenProject();
+        reactorProject1.setFile(new File("../reactor-1"));
 
         MavenProject reactorProject2 = new MavenProject();
         reactorProject2.setFile(new File("../reactor-2"));
 
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", Arrays.asList(new MavenProject[] { reactorProject1, reactorProject2 })),
-               null,null
+            new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", Arrays.asList(reactorProject1, reactorProject2)),
+            null, null
         );
-        assertEquals(2,source.getReactorProjects().size());
+        Assertions.assertEquals(2, source.getReactorProjects().size());
     }
 }

@@ -3,27 +3,23 @@ package io.fabric8.maven.docker.model;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-public class ContainerListElementTest {
+class ContainerListElementTest {
 
     private Container container;
 
     private JsonObject json;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         json = new JsonObject();
     }
 
     @Test
-    public void testContaierWithMappedPorts() {
+    void testContainerWithMappedPorts() {
         givenAContainerWithMappedPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(2);
@@ -32,7 +28,7 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContaierWithPorts() {
+    void testContainerWithPorts() {
         givenAContainerWithPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(2);
@@ -41,7 +37,7 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContainerWithLabels() {
+    void testContainerWithLabels() {
         givenAContainerWithLabels();
         whenCreateContainer();
         thenLabelsSizeIs(2);
@@ -50,29 +46,30 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContainerWithoutLabels() {
+    void testContainerWithoutLabels() {
         givenContainerData();
         whenCreateContainer();
         thenLabelsSizeIs(0);
     }
 
     @Test
-    public void testContainerWithoutPorts() {
+    void testContainerWithoutPorts() {
         givenAContainerWithoutPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(0);
     }
 
     @Test
-    public void testCreateContainer() throws Exception {
+    void testCreateContainer() {
         givenContainerData();
         whenCreateContainer();
         thenValidateContainer();
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testNoNameInListElement() {
-        new ContainersListElement(new JsonObject()).getName();
+    @Test
+    void testNoNameInListElement() {
+        ContainersListElement element = new ContainersListElement(new JsonObject());
+        Assertions.assertThrows(UnsupportedOperationException.class, element::getName);
     }
 
     private void addToArray(JsonArray array, int index, String key, String value) {
@@ -99,7 +96,6 @@ public class ContainerListElementTest {
         json.add(ContainersListElement.PORTS, array);
     }
 
-
     private void givenAContainerWithLabels() {
         JsonObject labels = new JsonObject();
         labels.addProperty("key1", "value1");
@@ -125,7 +121,7 @@ public class ContainerListElementTest {
     }
 
     private void givenContainerData() {
-        json.addProperty(ContainersListElement.CREATED,1420559251485L);
+        json.addProperty(ContainersListElement.CREATED, 1420559251485L);
         json.addProperty(ContainersListElement.ID, "1234AF1234AF");
         json.addProperty(ContainersListElement.IMAGE, "9876CE");
         json.addProperty(ContainersListElement.STATUS, "Up 16 seconds");
@@ -133,37 +129,37 @@ public class ContainerListElementTest {
     }
 
     private void thenLabelsContains(String key, String value) {
-        assertTrue(container.getLabels().containsKey(key));
-        assertEquals(value, container.getLabels().get(key));
+        Assertions.assertTrue(container.getLabels().containsKey(key));
+        Assertions.assertEquals(value, container.getLabels().get(key));
     }
 
     private void thenLabelsSizeIs(int size) {
-        assertEquals(size, container.getLabels().size());
+        Assertions.assertEquals(size, container.getLabels().size());
     }
 
     private void thenMapContainsPortSpecOnly(String key) {
-        assertTrue(container.getPortBindings().containsKey(key));
-        assertNull(container.getPortBindings().get(key));
+        Assertions.assertTrue(container.getPortBindings().containsKey(key));
+        Assertions.assertNull(container.getPortBindings().get(key));
     }
 
     private void thenMapContainsSpecAndBinding(String key, int port, String ip) {
-        assertTrue(container.getPortBindings().containsKey(key));
-        assertNotNull(container.getPortBindings().get(key));
+        Assertions.assertTrue(container.getPortBindings().containsKey(key));
+        Assertions.assertNotNull(container.getPortBindings().get(key));
 
-        assertEquals(ip, container.getPortBindings().get(key).getHostIp());
-        assertEquals(port, container.getPortBindings().get(key).getHostPort().intValue());
+        Assertions.assertEquals(ip, container.getPortBindings().get(key).getHostIp());
+        Assertions.assertEquals(port, container.getPortBindings().get(key).getHostPort().intValue());
     }
 
     private void thenPortBindingSizeIs(int size) {
-        assertEquals(size, container.getPortBindings().size());
+        Assertions.assertEquals(size, container.getPortBindings().size());
     }
 
     private void thenValidateContainer() {
-        assertEquals(1420559251485L, container.getCreated());
-        assertEquals("1234AF1234AF", container.getId());
-        assertEquals("9876CE", container.getImage());
-        assertTrue(container.isRunning());
-        assertTrue(container.getPortBindings().isEmpty());
+        Assertions.assertEquals(1420559251485L, container.getCreated());
+        Assertions.assertEquals("1234AF1234AF", container.getId());
+        Assertions.assertEquals("9876CE", container.getImage());
+        Assertions.assertTrue(container.isRunning());
+        Assertions.assertTrue(container.getPortBindings().isEmpty());
     }
 
     private void whenCreateContainer() {

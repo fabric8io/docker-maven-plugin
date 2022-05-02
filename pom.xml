@@ -38,6 +38,7 @@
       </roles>
     </developer>
   </developers>
+
   <prerequisites>
     <maven>3.0.3</maven>
   </prerequisites>
@@ -68,14 +69,17 @@
   </distributionManagement>
 
   <properties>
-    <excludedGroups>io.fabric8.maven.docker.UnixOnlyTests</excludedGroups>
+    <byte-buddy.version>1.12.10</byte-buddy.version>
     <httpclient.version>4.5.13</httpclient.version>
     <jib-core.version>0.18.0</jib-core.version>
     <jmockit.version>1.43</jmockit.version>
+    <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <maven.version>3.3.9</maven.version>
+    <mockito.version>4.5.1</mockito.version>
     <project.build.outputTimestamp>2020-11-14T11:57:00Z</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.version>3.0.0-M2</surefire.version>
+    <system-stubs.version>2.0.1</system-stubs.version>
   </properties>
 
   <dependencies>
@@ -84,13 +88,6 @@
       <groupId>com.github.jnr</groupId>
       <artifactId>jnr-unixsocket</artifactId>
       <version>0.38.17</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.stefanbirkner</groupId>
-      <artifactId>system-rules</artifactId>
-      <version>1.19.0</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -112,9 +109,9 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+      <version>${byte-buddy.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -135,8 +132,6 @@
       <artifactId>commons-text</artifactId>
       <version>1.1</version>
     </dependency>
-
-    <!-- =============================================================================== -->
 
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -164,6 +159,7 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
@@ -193,13 +189,6 @@
           <artifactId>google-collections</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>2.6.0</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -234,26 +223,45 @@
       <version>1.16</version>
     </dependency>
 
-    <!-- =============================================================================== -->
-
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-all</artifactId>
-      <version>1.3</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jmockit</groupId>
-      <artifactId>jmockit</artifactId>
-      <version>${jmockit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.skyscreamer</groupId>
-      <artifactId>jsonassert</artifactId>
-      <version>1.5.0</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -271,11 +279,19 @@
     </dependency>
 
     <dependency>
-      <groupId>pl.pragmatists</groupId>
-      <artifactId>JUnitParams</artifactId>
-      <version>1.1.0</version>
+      <groupId>uk.org.webcompere</groupId>
+      <artifactId>system-stubs-core</artifactId>
+      <version>${system-stubs.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>uk.org.webcompere</groupId>
+      <artifactId>system-stubs-jupiter</artifactId>
+      <version>${system-stubs.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -299,28 +315,25 @@
         </plugin>
 
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.2.0</version>
         </plugin>
+
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
           <version>3.0.0-M1</version>
         </plugin>
 
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
           <version>3.2.0</version>
         </plugin>
 
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire.version}</version>
           <configuration>
-            <argLine>-javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar</argLine>
+            <argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar</argLine>
           </configuration>
         </plugin>
 
@@ -365,7 +378,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
         <version>3.6.0</version>
         <configuration>
@@ -576,6 +588,7 @@
               </systemPropertyVariables>
             </configuration>
           </plugin>
+
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
@@ -645,17 +658,7 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>unix-test</id>
-      <activation>
-        <os>
-          <family>unix</family>
-        </os>
-      </activation>
-      <properties>
-        <excludedGroups></excludedGroups>
-      </properties>
-    </profile>
+
     <profile>
       <id>sonar</id>
       <properties>

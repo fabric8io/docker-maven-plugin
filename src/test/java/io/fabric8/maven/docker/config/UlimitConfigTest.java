@@ -16,18 +16,17 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author roland
  * @since 19/07/16
  */
-public class UlimitConfigTest {
+class UlimitConfigTest {
 
     @Test
-    public void simple() {
+    void simple() {
         Object[] data = new Object[] {
             "memlock=1024:2048", "memlock", 1024, 2048,
             "memlock=:2048", "memlock", null, 2048,
@@ -37,44 +36,34 @@ public class UlimitConfigTest {
 
         for (int i = 0; i < data.length; i+=4) {
             UlimitConfig config = new UlimitConfig(data[0].toString());
-            assertEquals(data[1], config.getName());
-            assertEquals(data[2], config.getHard());
-            assertEquals(data[3], config.getSoft());
+            Assertions.assertEquals(data[1], config.getName());
+            Assertions.assertEquals(data[2], config.getHard());
+            Assertions.assertEquals(data[3], config.getSoft());
         }
     }
 
     @Test
-    public void illegalFormat() {
-        String data[] = new String[] {
+    void illegalFormat() {
+        String[] data = new String[] {
             "memlock",
             "memlock:1024",
         };
 
         for (String test : data) {
-            try {
-                new UlimitConfig(test);
-                fail();
-            } catch (IllegalArgumentException exp) {
-                // expected
-            }
+            Assertions.assertThrows(IllegalArgumentException.class, () -> new UlimitConfig(test));
         }
     }
 
     @Test
-    public void invalidNumber() {
-        String data[] = new String[] {
+    void invalidNumber() {
+        String[] data = new String[] {
             "memlock=bla",
             "memlock=bla:blub",
             "memlock=1024:blub"
         };
 
         for (String test : data) {
-            try {
-                new UlimitConfig(test);
-                fail();
-            } catch (NumberFormatException exp) {
-                // expected
-            }
+            Assertions.assertThrows(NumberFormatException.class, () -> new UlimitConfig(test));
         }
     }
 }

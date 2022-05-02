@@ -4,22 +4,25 @@ import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.service.ContainerTracker;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.WaitService;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
-
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,245 +30,241 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+@ExtendWith(MockitoExtension.class)
+class StartContainerExecutorTest {
 
-public class StartContainerExecutorTest {
+    @Test
+    void getExposedPropertyKeyPart_withoutRunConfig() {
 
-  @Test
-  public void getExposedPropertyKeyPart_withoutRunConfig() {
+        // Given
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .build();
 
-    // Given
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .build();
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .build();
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .build();
+        // When
+        final String actual = executor.getExposedPropertyKeyPart();
 
-    // When
-    final String actual = executor.getExposedPropertyKeyPart();
+        // Then
+        Assertions.assertEquals("alias", actual);
+    }
 
-    // Then
-    assertEquals("alias", actual);
+    @Test
+    void getExposedPropertyKeyPart_withRunConfig() {
 
-  }
+        // Given
+        final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+            .exposedPropertyKey("key")
+            .build();
 
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .runConfig(runConfig)
+            .build();
 
-  @Test
-  public void getExposedPropertyKeyPart_withRunConfig() {
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .build();
 
-    // Given
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
-        .exposedPropertyKey("key")
-        .build();
+        // When
+        final String actual = executor.getExposedPropertyKeyPart();
 
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .runConfig(runConfig)
-        .build();
+        // Then
+        Assertions.assertEquals("key", actual);
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .build();
+    }
 
-    // When
-    final String actual = executor.getExposedPropertyKeyPart();
+    @Test
+    void showLogs_withoutRunConfig() {
 
-    // Then
-    assertEquals("key", actual);
+        // Given
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .build();
 
-  }
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .build();
 
-  @Test
-  public void showLogs_withoutRunConfig() {
+        // When
+        final boolean actual = executor.showLogs();
 
-    // Given
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .build();
+        // Then
+        Assertions.assertFalse(actual);
+    }
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .build();
+    @Test
+    void showLogs_withoutLogConfigButFollowTrue() {
 
-    // When
-    final boolean actual = executor.showLogs();
+        // Given
+        final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+            .exposedPropertyKey("key")
+            .build();
 
-    // Then
-    assertFalse(actual);
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .runConfig(runConfig)
+            .build();
 
-  }
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .follow(true)
+            .build();
 
-  @Test
-  public void showLogs_withoutLogConfigButFollowTrue() {
+        // When
+        final boolean actual = executor.showLogs();
 
-    // Given
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
-        .exposedPropertyKey("key")
-        .build();
+        // Then
+        Assertions.assertTrue(actual);
 
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .runConfig(runConfig)
-        .build();
+    }
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .follow(true)
-        .build();
+    @Test
+    void showLogs_withLogConfigDisabled() {
 
-    // When
-    final boolean actual = executor.showLogs();
+        // Given
+        final LogConfiguration logConfig = new LogConfiguration.Builder()
+            .enabled(false)
+            .build();
 
-    // Then
-    assertTrue(actual);
+        final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+            .exposedPropertyKey("key")
+            .log(logConfig)
+            .build();
 
-  }
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .runConfig(runConfig)
+            .build();
 
-  @Test
-  public void showLogs_withLogConfigDisabled() {
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .build();
 
-    // Given
-    final LogConfiguration logConfig = new LogConfiguration.Builder()
-        .enabled(false)
-        .build();
+        // When
+        final boolean actual = executor.showLogs();
 
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
-        .exposedPropertyKey("key")
-        .log(logConfig)
-        .build();
+        // Then
+        Assertions.assertFalse(actual);
 
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .runConfig(runConfig)
-        .build();
+    }
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .build();
+    @Test
+    void showLogs_withLogConfigEnabled() {
 
-    // When
-    final boolean actual = executor.showLogs();
+        // Given
+        final LogConfiguration logConfig = new LogConfiguration.Builder()
+            .enabled(true)
+            .build();
 
-    // Then
-    assertFalse(actual);
+        final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+            .exposedPropertyKey("key")
+            .log(logConfig)
+            .build();
 
-  }
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .runConfig(runConfig)
+            .build();
 
-  @Test
-  public void showLogs_withLogConfigEnabled() {
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .imageConfig(imageConfig)
+            .build();
 
-    // Given
-    final LogConfiguration logConfig = new LogConfiguration.Builder()
-        .enabled(true)
-        .build();
+        // When
+        final boolean actual = executor.showLogs();
 
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
-        .exposedPropertyKey("key")
-        .log(logConfig)
-        .build();
+        // Then
+        Assertions.assertTrue(actual);
 
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .runConfig(runConfig)
-        .build();
+    }
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .imageConfig(imageConfig)
-        .build();
+    @Test
+    void showLogs_withShowLogsTrue() {
 
-    // When
-    final boolean actual = executor.showLogs();
+        // Given
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .showLogs("true")
+            .build();
 
-    // Then
-    assertTrue(actual);
+        // When
+        final boolean actual = executor.showLogs();
 
-  }
+        // Then
+        Assertions.assertTrue(actual);
+    }
 
-  @Test
-  public void showLogs_withShowLogsTrue() {
+    @Test
+    void showLogs_withShowLogsMatchRandomImage() {
 
-    // Given
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .showLogs("true")
-        .build();
+        // Given
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .build();
 
-    // When
-    final boolean actual = executor.showLogs();
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .showLogs("some_random_string")
+            .imageConfig(imageConfig)
+            .build();
 
-    // Then
-    assertTrue(actual);
-  }
+        // When
+        final boolean actual = executor.showLogs();
 
-  @Test
-  public void showLogs_withShowLogsMatchRandomImage() {
+        // Then
+        Assertions.assertFalse(actual);
+    }
 
-    // Given
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .build();
+    @Test
+    void showLogs_withShowLogsMatchImage() {
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .showLogs("some_random_string")
-        .imageConfig(imageConfig)
-        .build();
+        // Given
+        final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
+            .name("name")
+            .alias("alias")
+            .build();
 
-    // When
-    final boolean actual = executor.showLogs();
+        final StartContainerExecutor executor = new StartContainerExecutor.Builder()
+            .showLogs("name, alias")
+            .imageConfig(imageConfig)
+            .build();
 
-    // Then
-    assertFalse(actual);
-  }
+        // When
+        final boolean actual = executor.showLogs();
 
-  @Test
-  public void showLogs_withShowLogsMatchImage() {
+        // Then
+        Assertions.assertTrue(actual);
+    }
 
-    // Given
-    final ImageConfiguration imageConfig = new ImageConfiguration.Builder()
-        .name("name")
-        .alias("alias")
-        .build();
+    @Test
+    void testStartContainers(@Mock ServiceHub hub, @Mock WaitService waitService, @Mock DockerAccess dockerAccess, @Mock ContainerTracker containerTracker, @Mock Logger log)
+        throws IOException, ExecException {
+        // Given
+        Mockito.doReturn(waitService).when(hub).getWaitService();
 
-    final StartContainerExecutor executor = new StartContainerExecutor.Builder()
-        .showLogs("name, alias")
-        .imageConfig(imageConfig)
-        .build();
+        Mockito.doReturn("container-name")
+            .when(dockerAccess).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
 
-    // When
-    final boolean actual = executor.showLogs();
+        Mockito.doReturn(new ContainerDetails(JsonFactory.newJsonObject("{\"NetworkSettings\":{\"IPAddress\":\"192.168.1.2\"}}")))
+            .when(dockerAccess).getContainer(Mockito.anyString());
 
-    // Then
-    assertTrue(actual);
-  }
+        QueryService queryService = new QueryService(dockerAccess);
+        RunService runService = new RunService(dockerAccess, queryService, containerTracker, new LogOutputSpecFactory(true, true, null), log);
 
-  @Test
-  public void testStartContainers(@Mocked ServiceHub hub, @Mocked DockerAccess dockerAccess, @Mocked ContainerTracker containerTracker, @Mocked Logger log) throws IOException, ExecException {
-    // Given
-    new Expectations() {{
-      dockerAccess.createContainer((ContainerCreateConfig) any, anyString);
-      result = "container-name";dockerAccess.getContainer(anyString);
-      result = new ContainerDetails(JsonFactory.newJsonObject("{\"NetworkSettings\":{\"IPAddress\":\"192.168.1.2\"}}"));
+        Mockito.doReturn(queryService).when(hub).getQueryService();
+        Mockito.doReturn(runService).when(hub).getRunService();
 
-      QueryService queryService = new QueryService(dockerAccess);
-      hub.getQueryService();
-      result = queryService;
-
-      hub.getRunService();
-      result = new RunService(dockerAccess, queryService, containerTracker, new LogOutputSpecFactory(true, true, null), log);
-    }};
-    Properties projectProps = new Properties();
-    StartContainerExecutor startContainerExecutor = new StartContainerExecutor.Builder()
+        Properties projectProps = new Properties();
+        StartContainerExecutor startContainerExecutor = new StartContainerExecutor.Builder()
             .serviceHub(hub)
             .projectProperties(projectProps)
             .portMapping(new PortMapping(Collections.emptyList(), projectProps))
@@ -275,18 +274,18 @@ public class StartContainerExecutorTest {
             .buildTimestamp(new Date())
             .exposeContainerProps("docker.container")
             .imageConfig(new ImageConfiguration.Builder()
-                    .name("name")
-                    .alias("alias")
-                    .runConfig(new RunImageConfiguration.Builder()
-                            .build())
+                .name("name")
+                .alias("alias")
+                .runConfig(new RunImageConfiguration.Builder()
                     .build())
+                .build())
             .build();
 
-    // When
-    String containerId = startContainerExecutor.startContainer();
-    // Then
-    assertEquals("container-name", containerId);
-    assertEquals("container-name", projectProps.getProperty("docker.container.alias.id"));
-    assertEquals("192.168.1.2", projectProps.getProperty("docker.container.alias.ip"));
-  }
+        // When
+        String containerId = startContainerExecutor.startContainer();
+        // Then
+        Assertions.assertEquals("container-name", containerId);
+        Assertions.assertEquals("container-name", projectProps.getProperty("docker.container.alias.id"));
+        Assertions.assertEquals("192.168.1.2", projectProps.getProperty("docker.container.alias.ip"));
+    }
 }

@@ -4,12 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +17,6 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.util.JsonFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /*
  *
@@ -43,72 +39,73 @@ import static org.junit.Assert.assertTrue;
  * @author roland
  * @since 27/03/15
  */
-public class ContainerCreateConfigTest {
+class ContainerCreateConfigTest {
 
     @Test
-    public void testEnvironment() throws Exception {
+    void testEnvironment() throws Exception {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         Map<String, String> envMap = getEnvMap();
         cc.environment(copyPropsToFile(), envMap, Collections.<String, String>emptyMap());
         JsonArray env = getEnvArray(cc);
-        assertNotNull(env);
-        assertEquals(6, env.size());
+        Assertions.assertNotNull(env);
+        Assertions.assertEquals(6, env.size());
         List<String> envAsString = convertToList(env);
-        assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
-        assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
-        assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
-        assertTrue(envAsString.contains("TEST_HTTP_ADDR=${docker.container.consul.ip}"));
-        assertTrue(envAsString.contains("TEST_CONSUL_IP=+${docker.container.consul.ip}:8080"));
-        assertTrue(envAsString.contains("TEST_CONSUL_IP_WITHOUT_DELIM=${docker.container.consul.ip}:8225"));
+        Assertions.assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
+        Assertions.assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
+        Assertions.assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
+        Assertions.assertTrue(envAsString.contains("TEST_HTTP_ADDR=${docker.container.consul.ip}"));
+        Assertions.assertTrue(envAsString.contains("TEST_CONSUL_IP=+${docker.container.consul.ip}:8080"));
+        Assertions.assertTrue(envAsString.contains("TEST_CONSUL_IP_WITHOUT_DELIM=${docker.container.consul.ip}:8225"));
     }
 
     @Test
-    public void testEnvironmentEmptyPropertiesFile() {
+    void testEnvironmentEmptyPropertiesFile() {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
         JsonArray env = getEnvArray(cc);
-        assertEquals(5, env.size());
+        Assertions.assertEquals(5, env.size());
     }
 
     @Test
-    public void testBind() {
+    void testBind() {
         String[] testData = new String[] {
             "c:\\this\\is\\my\\path:/data", "/data",
             "/home/user:/user", "/user",
             "c:\\this\\too:/data:ro", "/data"};
         for (int i = 0; i < testData.length; i += 2) {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
-            cc.binds(Arrays.asList(testData[i]));
+            cc.binds(Collections.singletonList(testData[i]));
 
             JsonObject volumes = (JsonObject) JsonFactory.newJsonObject(cc.toJson()).get("Volumes");
-            assertEquals(1, volumes.size());
-            assertTrue(volumes.has(testData[i+1]));
+            Assertions.assertEquals(1, volumes.size());
+            Assertions.assertTrue(volumes.has(testData[i+1]));
         }
     }
 
 
     @Test
-    public void testNullEnvironment() {
+    void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(null,null,Collections.<String, String>emptyMap());
         JsonObject config = JsonFactory.newJsonObject(cc.toJson());
-        assertFalse(config.has("Env"));
+        Assertions.assertFalse(config.has("Env"));
     }
 
     @Test
-    public void testEnvNoMap() throws IOException {
+    void testEnvNoMap() throws IOException {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(copyPropsToFile(),null,Collections.<String, String>emptyMap());
         JsonArray env = getEnvArray(cc);
-        assertEquals(2, env.size());
+        Assertions.assertEquals(2, env.size());
         List<String> envAsString = convertToList(env);
-        assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
+        Assertions.assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNoPropFile() {
+    @Test
+    void testNoPropFile() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment("/not/really/a/file",null,Collections.<String, String>emptyMap());
+        Map<String, String> mavenProps = Collections.emptyMap();
+        Assertions.assertThrows(IllegalArgumentException.class, ()-> cc.environment("/not/really/a/file",null, mavenProps));
     }
 
 

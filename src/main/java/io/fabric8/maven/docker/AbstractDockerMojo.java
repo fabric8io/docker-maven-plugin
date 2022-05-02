@@ -207,7 +207,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Image configurations configured directly.
      */
     @Parameter
-    private List<ImageConfiguration> images;
+    List<ImageConfiguration> images;
 
     /**
      * Image configurations configured via maps to allow overriding.
@@ -227,7 +227,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
-    private List<ImageConfiguration> resolvedImages;
+    List<ImageConfiguration> resolvedImages;
 
     // Handler dealing with authentication credentials
     AuthConfigFactory authConfigFactory;

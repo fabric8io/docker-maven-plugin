@@ -1,27 +1,28 @@
 package io.fabric8.maven.docker.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+ 
 
 import com.google.gson.JsonNull;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class ImageDetailsTest {
+class ImageDetailsTest {
 
     private Image image;
 
     private JsonObject json;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         json = new JsonObject();
     }
 
     @Test
-    public void testImageWithLabels() {
+    void testImageWithLabels() {
         givenAnImageWithLabels();
         whenCreateImage();
         thenLabelsSizeIs(2);
@@ -30,8 +31,8 @@ public class ImageDetailsTest {
     }
 
     private void thenLabelsContains(String key, String value) {
-        assertTrue(image.getLabels().containsKey(key));
-        assertEquals(value, image.getLabels().get(key));
+        Assertions.assertTrue(image.getLabels().containsKey(key));
+        Assertions.assertEquals(value, image.getLabels().get(key));
     }
 
     private void givenAnImageWithLabels() {
@@ -44,28 +45,28 @@ public class ImageDetailsTest {
     }
 
     @Test
-    public void testImageWithRepoTags() {
+    void testImageWithRepoTags() {
         givenImageData();
         whenCreateImage();
         thenRepoTagsSizeIs(2);
     }
 
     @Test
-    public void testImageWithNullRepoTags() {
+    void testImageWithNullRepoTags() {
         givenAnImageWithNullRepoTags();
         whenCreateImage();
         thenRepoTagsSizeIs(0);
     }
 
     @Test
-    public void testImageWitEmptyRepoTags() {
+    void testImageWitEmptyRepoTags() {
         givenAnImageWithEmptyRepoTags();
         whenCreateImage();
         thenRepoTagsSizeIs(0);
     }
 
     @Test
-    public void testImageWitNoRepoTags() {
+    void testImageWitNoRepoTags() {
         whenCreateImage();
         thenRepoTagsSizeIs(0);
     }
@@ -79,7 +80,7 @@ public class ImageDetailsTest {
     }
 
     @Test
-    public void testCreateImage() throws Exception {
+    void testCreateImage() {
         givenImageData();
         whenCreateImage();
         thenValidateImage();
@@ -101,20 +102,20 @@ public class ImageDetailsTest {
     }
 
     private void thenLabelsSizeIs(int size) {
-        assertEquals(size, image.getLabels().size());
+        Assertions.assertEquals(size, image.getLabels().size());
     }
 
     private void thenRepoTagsSizeIs(int size) {
-        assertEquals(size, image.getRepoTags().size());
+        Assertions.assertEquals(size, image.getRepoTags().size());
     }
 
     private void thenValidateImage() {
-        assertEquals("b750fe79269d2ec9a3c593ef05b4332b1d1a02a62b4accb2c21d589ff2f5f2dc", image.getId());
-        assertEquals("27cf784147099545", image.getParentId());
-        assertEquals(1365714795L, image.getCreated());
+        Assertions.assertEquals("b750fe79269d2ec9a3c593ef05b4332b1d1a02a62b4accb2c21d589ff2f5f2dc", image.getId());
+        Assertions.assertEquals("27cf784147099545", image.getParentId());
+        Assertions.assertEquals(1365714795L, image.getCreated());
 
-        assertEquals(24653L, image.getSize());
-        assertEquals(180116135L, image.getVirtualSize());
+        Assertions.assertEquals(24653L, image.getSize());
+        Assertions.assertEquals(180116135L, image.getVirtualSize());
     }
 
     private void whenCreateImage() {

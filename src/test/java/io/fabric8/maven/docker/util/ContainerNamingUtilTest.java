@@ -1,28 +1,31 @@
 package io.fabric8.maven.docker.util;
 
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.model.Container;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.model.Container;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Set;
 
 /**
  * @author marcus
  * @since 1.0.0
  */
-
-public class ContainerNamingUtilTest {
+@ExtendWith(MockitoExtension.class)
+class ContainerNamingUtilTest {
 
     @Test
-    public void testDefault() {
-        Assert.assertEquals("jolokia_demo-1",
+    void testDefault() {
+        Assertions.assertEquals("jolokia_demo-1",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", null),
                                 null,
@@ -31,8 +34,8 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
-    public void testAlias() {
-        Assert.assertEquals("nameAlias",
+    void testAlias() {
+        Assertions.assertEquals("nameAlias",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "%a"),
                                 null,
@@ -41,30 +44,25 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
-    public void testRandom() {
-        Assert.assertEquals(null,
-                ContainerNamingUtil.formatContainerName(
-                    imageConfiguration("jolokia/jolokia_demo","nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER),
-                    null,
-                    new Date(123456),
-                    Collections.emptySet()));
+    void testRandom() {
+        Assertions.assertNull(ContainerNamingUtil.formatContainerName(
+            imageConfiguration("jolokia/jolokia_demo", "nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER),
+            null,
+            new Date(123456),
+            Collections.emptySet()));
     }
 
     @Test
-    public void testMixedRandom() {
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Assert.assertEquals(null,
-                    ContainerNamingUtil.formatContainerName(
-                        imageConfiguration("jolokia/jolokia_demo","nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER + "-extra"),
-                        null,
-                        new Date(123456),
-                        Collections.emptySet()));
-        });
+    void testMixedRandom() {
+        ImageConfiguration imageConfiguration = imageConfiguration("jolokia/jolokia_demo", "nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER + "-extra");
+        Date buildTimestamp = new Date(123456);
+        Set<Container> emptySet = Collections.emptySet();
+        Assertions.assertThrows(IllegalArgumentException.class, () -> ContainerNamingUtil.formatContainerName(imageConfiguration, null, buildTimestamp, emptySet));
     }
 
     @Test
-    public void testTimestamp() {
-        Assert.assertEquals("123456",
+    void testTimestamp() {
+        Assertions.assertEquals("123456",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "%t"),
                                 null,
@@ -73,8 +71,8 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
-    public void testImageName() {
-        Assert.assertEquals("jolokia_demo",
+    void testImageName() {
+        Assertions.assertEquals("jolokia_demo",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "%n"),
                                 null,
@@ -83,8 +81,8 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
-    public void testIndex() {
-        Assert.assertEquals("1",
+    void testIndex() {
+        Assertions.assertEquals("1",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "%i"),
                                 null,
@@ -93,8 +91,8 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
-    public void testAll() {
-        Assert.assertEquals("prefix-1-nameAlias-jolokia_demo-123456-postfix",
+    void testAll() {
+        Assertions.assertEquals("prefix-1-nameAlias-jolokia_demo-123456-postfix",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "prefix-" + ContainerNamingUtil.INDEX_PLACEHOLDER + "-%a-%n-%t-postfix"),
                                 null,
@@ -102,18 +100,16 @@ public class ContainerNamingUtilTest {
                                 Collections.emptySet()));
     }
 
-    @Mocked
+    @Mock
     Container container1;
 
-    @Mocked
+    @Mock
     Container container2;
 
     @Test
-    public void testIndexAdvanced() {
-        new Expectations() {{
-            container1.getName();result = "container-1";
-        }};
-        Assert.assertEquals("container-2",
+    void testIndexAdvanced() {
+        Mockito.doReturn("container-1").when(container1).getName();
+        Assertions.assertEquals("container-2",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "container-%i"),
                                 null,
@@ -123,37 +119,33 @@ public class ContainerNamingUtilTest {
 
 
     @Test
-    public void testContainersToStop() {
-        new Expectations() {{
-            container1.getName();result = "container-1";
-            container2.getName();result = "container-2";
+    void testContainersToStop() {
+        Mockito.doReturn("container-1").when(container1).getName();
+        Mockito.doReturn("container-2").when(container2).getName();
 
-        }};
         Collection<Container> containers = Arrays.asList(container1, container2);
         Collection<Container> filtered = ContainerNamingUtil.getContainersToStop(
             imageConfiguration("jolokia/jolokia_demo","nameAlias", "container-%i"),
                                 null,
             new Date(123456),
             containers);
-        Assert.assertEquals(1, filtered.size());
-        Assert.assertEquals(container2, filtered.iterator().next());
+        Assertions.assertEquals(1, filtered.size());
+        Assertions.assertEquals(container2, filtered.iterator().next());
     }
 
     @Test
-    public void testContainersToStopWithAlias() {
-        new Expectations() {{
-            container1.getName();result = "container-1";
-            container2.getName();result = "container-2";
+    void testContainersToStopWithAlias() {
+        Mockito.doReturn("container-1").when(container1).getName();
+        Mockito.doReturn("container-2").when(container2).getName();
 
-        }};
         Collection<Container> containers = Arrays.asList(container1, container2);
         Collection<Container> filtered = ContainerNamingUtil.getContainersToStop(
                 imageConfiguration("jolokia/jolokia_demo","container-2", "%a"),
                 null,
                 new Date(123456),
                 containers);
-        Assert.assertEquals(1, filtered.size());
-        Assert.assertEquals(container2, filtered.iterator().next());
+        Assertions.assertEquals(1, filtered.size());
+        Assertions.assertEquals(container2, filtered.iterator().next());
     }
 
     private ImageConfiguration imageConfiguration(String name, String alias, String containerNamePattern) {

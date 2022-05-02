@@ -15,20 +15,17 @@ package io.fabric8.maven.docker.service;/*
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.io.StringReader;
-
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.Mocked;
-import mockit.Tested;
-import mockit.Verifications;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.BuildPluginManager;
+import org.apache.maven.plugin.DefaultBuildPluginManager;
+import org.apache.maven.plugin.InvalidPluginDescriptorException;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.PluginDescriptorParsingException;
+import org.apache.maven.plugin.PluginNotFoundException;
+import org.apache.maven.plugin.PluginResolutionException;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.project.MavenProject;
@@ -36,88 +33,104 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.junit.Test;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.io.IOException;
+import java.io.StringReader;
 
 /**
  * @author roland
  * @since 01/07/15
  */
 
-public class MojoExecutionServiceTest {
+@ExtendWith(MockitoExtension.class)
+class MojoExecutionServiceTest {
 
-    @Tested
-    @Mocked
+    @Spy
+    @InjectMocks
     MojoExecutionService executionService;
 
-    @Injectable
+    @Mock
     protected MavenProject project;
 
-    @Injectable
+    @Mock
     MavenSession session;
 
-    @Injectable
+    @Mock
     BuildPluginManager pluginManager;
 
-    @Mocked
+    @Mock
     PluginDescriptor pluginDescriptor;
 
     private final String PLUGIN_NAME = "io.fabric8:fabric8-maven-plugin";
     private final String GOAL_NAME = "delete-pods";
 
-
     @Test
-    public void straight() throws Exception {
-        standardSetup();
+    void straight() throws Exception {
+        pluginSetup(createPluginDescriptor());
         executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
-
-        new Verifications() {{}};
+        pluginVerifications();
     }
 
-    private void standardSetup() throws Exception {
-        new Expectations() {{
-            project.getPlugin(PLUGIN_NAME);
-            result = new Plugin();
-            pluginDescriptor.getMojo(GOAL_NAME);
-            result = createPluginDescriptor();
+    private void pluginSetup() {
+        Mockito.doReturn(new DefaultRepositorySystemSession()).when(session).getRepositorySession();
+        Mockito.doReturn(new Plugin()).when(project).getPlugin(PLUGIN_NAME);
+    }
 
-            pluginManager.executeMojo(session, (MojoExecution) any);
-            executionService.getPluginDescriptor((MavenProject) any, (Plugin) any);
-        }};
+    private void pluginSetup(MojoDescriptor descriptor) throws Exception {
+        pluginSetup();
+        Mockito.doReturn(pluginDescriptor).when(pluginManager).loadPlugin(Mockito.any(Plugin.class), Mockito.anyList(), Mockito.any(RepositorySystemSession.class));
+        Mockito.doReturn(descriptor).when(pluginDescriptor).getMojo(GOAL_NAME);
+    }
+
+    private void pluginVerifications() throws Exception {
+        Mockito.verify(pluginManager).executeMojo(Mockito.any(MavenSession.class), Mockito.any(MojoExecution.class));
+        Mockito.verify(executionService).getPluginDescriptor(Mockito.any(MavenProject.class), Mockito.any(Plugin.class));
     }
 
     @Test
-    public void straightWithExecutionId() throws Exception {
-        standardSetup();
+    void straightWithExecutionId() throws Exception {
+        pluginSetup(createPluginDescriptor());
         executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME + "#1");
+        pluginVerifications();
     }
 
-    @Test(expected = MojoExecutionException.class)
-    public void noDescriptor() throws Exception {
-        new Expectations() {{
-            project.getPlugin(PLUGIN_NAME);
-            result = new Plugin();
-            pluginDescriptor.getMojo(GOAL_NAME);
-            result = null;
-            executionService.getPluginDescriptor((MavenProject) any, (Plugin) any);
-        }};
-        executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
-
-        new Verifications() {{}};
+    @Test
+    void missingGoal() throws Exception {
+        pluginSetup();
+        Mockito.doThrow(new PluginResolutionException(new Plugin(), new Exception()))
+            .when(pluginManager).loadPlugin(Mockito.any(Plugin.class), Mockito.anyList(), Mockito.any(RepositorySystemSession.class));
+        Assertions.assertThrows(MojoFailureException.class, () -> executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME));
     }
 
-    @Test(expected = MojoFailureException.class)
-    public void noPlugin() throws MojoFailureException, MojoExecutionException {
-        new Expectations() {{
-            project.getPlugin(anyString);
-            result = null;
-        }};
+    @Test
+    void noDescriptor() throws Exception {
+        pluginSetup(null);
 
-        executionService.callPluginGoal("bla:blub:bla");
+        Assertions.assertThrows(MojoExecutionException.class, () -> executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME));
+
+        Mockito.verify(executionService).getPluginDescriptor(Mockito.any(MavenProject.class), Mockito.any(Plugin.class));
     }
 
-    @Test(expected = MojoFailureException.class)
-    public void wrongFormat() throws MojoFailureException, MojoExecutionException {
-        executionService.callPluginGoal("blubber");
+    @Test
+    void noPlugin() {
+        Mockito.doReturn(null).when(project).getPlugin(Mockito.anyString());
+        Assertions.assertThrows(MojoFailureException.class, () -> executionService.callPluginGoal("bla:blub:bla"));
+    }
+
+    @Test
+    void wrongFormat() {
+        Assertions.assertThrows(MojoFailureException.class, () -> executionService.callPluginGoal("blubber"));
     }
 
     // ============================================================================================
@@ -128,5 +141,4 @@ public class MojoExecutionServiceTest {
         descriptor.setMojoConfiguration(config);
         return descriptor;
     }
-
 }

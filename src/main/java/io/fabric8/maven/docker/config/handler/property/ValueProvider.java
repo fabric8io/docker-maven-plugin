@@ -312,7 +312,7 @@ public class ValueProvider {
             for(int i = values.size() - 1; i >= 0; i--) {
                 Map<String, String> value = values.get(i);
                 if(merged == null) {
-                    merged = value;
+                    merged = new HashMap<>(value);
                 } else {
                     merged.putAll(value);
                 }

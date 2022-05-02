@@ -1,50 +1,41 @@
 package io.fabric8.maven.docker.log;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.Assert.assertEquals;
+import java.util.stream.Stream;
 
 /**
  * @author roland
  * @since 04.11.17
  */
-@RunWith(Parameterized.class)
-public class LogOutputSpecFactoryTest {
+class LogOutputSpecFactoryTest {
 
     private static String ALIAS = "fcn";
     private static String NAME = "rhuss/fcn:1.0";
     private static String CONTAINER_ID = "1234567890";
 
-    @Parameterized.Parameters(name = "{index}: format \"{0}\" --> \"{1}\"")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-            { "%z", "" },
-            { null, ALIAS + "> "},
-            { "%c", CONTAINER_ID.substring(0,6) },
-            { "%C: ", CONTAINER_ID + ": " },
-            { "%n -- ", NAME + " -- " },
-            { "%z%c%n%C %a", CONTAINER_ID.substring(0,6) + NAME + CONTAINER_ID + " " + ALIAS }
-           });
+    private static Stream<Arguments> data() {
+        return Stream.of(
+            Arguments.of("%z", ""),
+            Arguments.of(null, ALIAS + "> "),
+            Arguments.of("%c", CONTAINER_ID.substring(0, 6)),
+            Arguments.of("%C: ", CONTAINER_ID + ": "),
+            Arguments.of("%n -- ", NAME + " -- "),
+            Arguments.of("%z%c%n%C %a", CONTAINER_ID.substring(0, 6) + NAME + CONTAINER_ID + " " + ALIAS)
+        );
     }
 
-    @Parameterized.Parameter(0)
-    public String prefixFormat;
-
-    @Parameterized.Parameter(1)
-    public String expectedPrefix;
-
-    @Test
-    public void prefix() {
+    @ParameterizedTest(name = "{index}: format \"{0}\" --> \"{1}\"")
+    @MethodSource("data")
+    void prefix(String prefixFormat, String expectedPrefix) {
         LogOutputSpec spec = createSpec(prefixFormat);
-        assertEquals(expectedPrefix, spec.getPrompt(false, null));
+        Assertions.assertEquals(expectedPrefix, spec.getPrompt(false, null));
     }
 
     private LogOutputSpec createSpec(String prefix) {
@@ -52,6 +43,6 @@ public class LogOutputSpecFactoryTest {
         LogConfiguration logConfig = new LogConfiguration.Builder().prefix(prefix).build();
         RunImageConfiguration runConfig = new RunImageConfiguration.Builder().log(logConfig).build();
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().alias(ALIAS).name(NAME).runConfig(runConfig).build();
-        return factory.createSpec(CONTAINER_ID,imageConfiguration);
+        return factory.createSpec(CONTAINER_ID, imageConfiguration);
     }
 }

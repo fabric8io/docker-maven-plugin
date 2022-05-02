@@ -3,40 +3,36 @@ package io.fabric8.maven.docker.config;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class RegistryAuthConfigurationTest {
+
+class RegistryAuthConfigurationTest {
 
     @Test
-    public void deprecatedAuthTokenTest() throws ReflectiveOperationException {
+    void deprecatedAuthTokenTest() throws ReflectiveOperationException {
         RegistryAuthConfiguration config = new RegistryAuthConfiguration();
         setField(config, "authToken", "foo");
         Map map = config.toMap();
-        assertNull(map.get("authToken"));
-        assertEquals("foo", map.get("auth"));
+        Assertions.assertNull(map.get("authToken"));
+        Assertions.assertEquals("foo", map.get("auth"));
     }
 
     @Test
-    public void invalidAuthTokenConfigTest() throws ReflectiveOperationException {
+    void invalidAuthTokenConfigTest() throws ReflectiveOperationException {
         RegistryAuthConfiguration config = new RegistryAuthConfiguration();
         setField(config, "authToken", "foo");
         setField(config, "auth", "bar");
-        try {
-            config.toMap();
-            fail("Should throw an exception because both 'auth' and 'authToken' is specified");
-        } catch (IllegalStateException exp) {
-
-        }
+        Assertions.assertThrows(IllegalStateException.class, config::toMap);
     }
 
         @Test
-    public void authTest() throws ReflectiveOperationException {
+    void authTest() throws ReflectiveOperationException {
         RegistryAuthConfiguration config = new RegistryAuthConfiguration();
         setField(config, "auth", "bar");
         Map map = config.toMap();
-        assertNull(map.get("authToken"));
-        assertEquals("bar", map.get("auth"));
+        Assertions.assertNull(map.get("authToken"));
+        Assertions.assertEquals("bar", map.get("auth"));
     }
 
 

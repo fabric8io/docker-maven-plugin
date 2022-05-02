@@ -1,4 +1,6 @@
-package io.fabric8.maven.docker.config;/*
+package io.fabric8.maven.docker.config;
+
+/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -15,34 +17,38 @@ package io.fabric8.maven.docker.config;/*
  * limitations under the License.
  */
 
-import java.util.*;
-
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.Logger;
-import mockit.Mocked;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.ReflectionUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
  * @since 18/11/14
  */
-public class ImageConfigResolverTest {
+@ExtendWith(MockitoExtension.class)
+class ImageConfigResolverTest {
 
     private ImageConfigResolver resolver;
 
-    @Mocked
+    @Mock
     private Logger log;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         resolver = new ImageConfigResolver();
         ReflectionUtils.setVariableValueInObject(resolver, "propertyConfigHandler", new TestHandler(3));
         resolver.initialize();
@@ -50,52 +56,54 @@ public class ImageConfigResolverTest {
     }
 
     @Test
-    public void direct() throws IllegalAccessException, InitializationException {
+    void direct() {
         List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"), new MavenProject(), null);
-        assertEquals(1, rest.size());
-        assertEquals("vanilla", rest.get(0).getName());
+        Assertions.assertEquals(1, rest.size());
+        Assertions.assertEquals("vanilla", rest.get(0).getName());
     }
 
     @Test
-    public void withReference() throws Exception {
-        Map<String,String> refConfig = Collections.singletonMap("type", "test");
+    void withReference() {
+        Map<String, String> refConfig = Collections.singletonMap("type", "test");
         ImageConfiguration config = new ImageConfiguration.Builder().name("reference").externalConfig(refConfig).build();
-        List<ImageConfiguration> rest = resolver.resolve(config,new MavenProject(), null);
-        assertEquals(3,rest.size());
-        for (int i = 0; i < 3;i++) {
-            assertEquals("image " + i,rest.get(i).getName());
+        List<ImageConfiguration> rest = resolver.resolve(config, new MavenProject(), null);
+        Assertions.assertEquals(3, rest.size());
+        for (int i = 0; i < 3; i++) {
+            Assertions.assertEquals("image " + i, rest.get(i).getName());
         }
     }
 
     @Test
-    public void withExternalConfigActivation() throws Exception {
+    void withExternalConfigActivation() {
         MavenProject project = new MavenProject();
         // Value is not verified since we're only using our TestHandler
         project.getProperties().put(ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, "notactuallyverified");
 
         List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"), project, null);
-        assertEquals(3,rest.size());
-        for (int i = 0; i < 3;i++) {
-            assertEquals("image " + i,rest.get(i).getName());
+        Assertions.assertEquals(3, rest.size());
+        for (int i = 0; i < 3; i++) {
+            Assertions.assertEquals("image " + i, rest.get(i).getName());
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void noType() {
-        Map<String,String> refConfig = Collections.singletonMap("notAType","test");
+    @Test
+    void noType() {
+        Map<String, String> refConfig = Collections.singletonMap("notAType", "test");
         ImageConfiguration config = new ImageConfiguration.Builder()
-                .name("reference")
-                .externalConfig(refConfig).build();
-        resolver.resolve(config,new MavenProject(), null);
+            .name("reference")
+            .externalConfig(refConfig).build();
+        MavenProject project = new MavenProject();
+        Assertions.assertThrows(IllegalArgumentException.class, () -> resolver.resolve(config, project, null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void unknownType() {
-        Map<String,String> refConfig = Collections.singletonMap("type","unknown");
+    @Test
+    void unknownType() {
+        Map<String, String> refConfig = Collections.singletonMap("type", "unknown");
         ImageConfiguration config = new ImageConfiguration.Builder()
-                .name("reference")
-                .externalConfig(refConfig).build();
-        resolver.resolve(config,new MavenProject(), null);
+            .name("reference")
+            .externalConfig(refConfig).build();
+        MavenProject project = new MavenProject();
+        Assertions.assertThrows(IllegalArgumentException.class, () -> resolver.resolve(config, project, null));
     }
 
     private static class TestHandler implements ExternalConfigHandler {
@@ -114,7 +122,7 @@ public class ImageConfigResolverTest {
         @Override
         public List<ImageConfiguration> resolve(ImageConfiguration referenceConfig, MavenProject project, MavenSession session) {
             List<ImageConfiguration> ret = new ArrayList<>();
-            for (int i = 0; i < nr;i++) {
+            for (int i = 0; i < nr; i++) {
                 ImageConfiguration config = getImageConfiguration("image " + i);
                 ret.add(config);
             }

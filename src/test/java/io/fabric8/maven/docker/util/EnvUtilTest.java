@@ -2,246 +2,235 @@ package io.fabric8.maven.docker.util;
 
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * @author roland
  * @since 14.10.14
  */
-@RunWith(JUnitParamsRunner.class)
-public class EnvUtilTest {
-
+class EnvUtilTest {
 
     @Test
-    public void splitPath() {
+    void splitPath() {
         Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db", "atlast:")).iterator();
         String[][] expected = new String[][] {
-                { "db", "db"},
-                { "postgres:9","db"},
-                { "postgres", "db"},
-                { "atlast", ""}
+            { "db", "db" },
+            { "postgres:9", "db" },
+            { "postgres", "db" },
+            { "atlast", "" }
         };
-        for (int i = 0; i < expected.length; i++) {
+        for (String[] strings : expected) {
             String[] got = it.next();
-            assertEquals(2,got.length);
-            assertEquals(expected[i][0],got[0]);
-            assertEquals(expected[i][1],got[1]);
+            Assertions.assertEquals(2, got.length);
+            Assertions.assertEquals(strings[0], got[0]);
+            Assertions.assertEquals(strings[1], got[1]);
         }
-        assertFalse(it.hasNext());
+        Assertions.assertFalse(it.hasNext());
     }
 
     @Test
-    public void removeEmptyEntries() {
-        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
-        assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
+    void removeEmptyEntries() {
+        Assertions.assertEquals(ImmutableList.of("ein"), EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
+        Assertions.assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
     }
 
     @Test
-    public void splitAtCommas() {
+    void splitAtCommas() {
         Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
-        Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
-        assertTrue(Iterables.elementsEqual(it, expected));
+        Iterable<String> expected = ImmutableList.of("db", "postgres:9:db", "postgres:db");
+        Assertions.assertTrue(Iterables.elementsEqual(it, expected));
     }
 
-    public void assertEmptyList(Iterable<String> actual) {
-        assertTrue(Iterables.elementsEqual(Collections.emptyList(), actual));
-    }
-    @Test
-    public void splitAtCommasEmpty() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>emptyList()));
+    void assertEmptyList(Iterable<String> actual) {
+        Assertions.assertTrue(Iterables.elementsEqual(Collections.emptyList(), actual));
     }
 
     @Test
-    public void splitAtCommasSingleEmpty() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Arrays.asList("")));
+    void splitAtCommasEmpty() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.emptyList()));
     }
 
     @Test
-    public void splitAtCommasNullList() {
+    void splitAtCommasSingleEmpty() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.singletonList("")));
+    }
+
+    @Test
+    void splitAtCommasNullList() {
         assertEmptyList(EnvUtil.splitAtCommasAndTrim(null));
     }
 
     // null occurs when <links><link></link></links>
     @Test
-    public void splitAtCommasNullInList() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>singletonList(null)));
+    void splitAtCommasNullInList() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.singletonList(null)));
     }
 
-    @Test
-    @TestCaseName("{method}: input \"{0}\" splits to {1}")
-    @Parameters
-    public void splitOnSpace(String input, String[] expected) {
+    @ParameterizedTest(name = "{displayName}: input \"{0}\" splits to {1}")
+    @MethodSource("parametersForSplitOnSpace")
+    void splitOnSpace(String input, String[] expected) {
         String[] result = EnvUtil.splitOnSpaceWithEscape(input);
-        assertEquals(expected.length, result.length);
+        Assertions.assertEquals(expected.length, result.length);
         for (int j = 0; j < expected.length; j++) {
-            assertEquals(expected[j],result[j]);
+            Assertions.assertEquals(expected[j], result[j]);
         }
     }
 
-    private Object parametersForSplitOnSpace() {
-        return $(
-            $("bla blub", new String[] { "bla", "blub"}),
-            $("bla\\ blub", new String[] {"bla blub"}),
-            $("bla blub\\ blubber", new String[] { "bla", "blub blubber"})
-                );
+    private static Stream<Arguments> parametersForSplitOnSpace() {
+        return Stream.of(
+            Arguments.of("bla blub", new String[] { "bla", "blub" }),
+            Arguments.of("bla\\ blub", new String[] { "bla blub" }),
+            Arguments.of("bla blub\\ blubber", new String[] { "bla", "blub blubber" })
+        );
     }
 
     @Test
-    public void extractMapFromProperties() {
+    void extractMapFromProperties() {
         Properties props = getTestProperties(
-                "bla.hello","world",
-                "bla.max","morlock",
-                "bla."+EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
-                "blub.not","aMap");
-        Map<String,String> result = EnvUtil.extractFromPropertiesAsMap("bla", props);
-        assertEquals(2,result.size());
-        assertEquals("world",result.get("hello"));
-        assertEquals("morlock",result.get("max"));
+            "bla.hello", "world",
+            "bla.max", "morlock",
+            "bla." + EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
+            "blub.not", "aMap");
+        Map<String, String> result = EnvUtil.extractFromPropertiesAsMap("bla", props);
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals("world", result.get("hello"));
+        Assertions.assertEquals("morlock", result.get("max"));
     }
 
     @Test
-    public void extractListFromProperties() {
+    void extractListFromProperties() {
         Properties props = getTestProperties(
-                "bla.2","world",
-                "bla.1","hello",
-                "bla.blub","last",
-                "bla."+EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
-                "blub.1","unknown");
+            "bla.2", "world",
+            "bla.1", "hello",
+            "bla.blub", "last",
+            "bla." + EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
+            "blub.1", "unknown");
         List<String> result = EnvUtil.extractFromPropertiesAsList("bla", props);
-        assertEquals(3,result.size());
-        assertArrayEquals(new String[]{"hello", "world", "last"}, new ArrayList(result).toArray());
+        Assertions.assertEquals(Arrays.asList("hello", "world", "last"), result);
     }
 
     @Test
-    public void extractListOfPropertiesFromProperties() {
+    void extractListOfPropertiesFromProperties() {
         final Properties testProperties = getTestProperties(
-                "bla.0001.what",      "bye",
-                "bla.1.who",          "java",
-                "bla.2.what",         "hello",
-                "bla.2.who",          "world",
-                "bla.3",              "no dot at the end",
-                "bla.4.",             "ends with dot",
-                "bla.blub",           "empty",
-                "bla.blub.when.date", "late",
-                "blub.1",             "unknown",
-                "bla." + EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved");
+            "bla.0001.what", "bye",
+            "bla.1.who", "java",
+            "bla.2.what", "hello",
+            "bla.2.who", "world",
+            "bla.3", "no dot at the end",
+            "bla.4.", "ends with dot",
+            "bla.blub", "empty",
+            "bla.blub.when.date", "late",
+            "blub.1", "unknown",
+            "bla." + EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved");
         final Properties[] expectedListOfProperties = {
-                getTestProperties(
-                        "who",  "java",
-                        "what", "bye"),
-                getTestProperties(
-                        "who",  "world",
-                        "what", "hello"),
-                getTestProperties(
-                        "",     "no dot at the end"),
-                getTestProperties(
-                        "",     "ends with dot"),
-                getTestProperties(
-                        "",          "empty",
-                        "when.date", "late")};
+            getTestProperties(
+                "who", "java",
+                "what", "bye"),
+            getTestProperties(
+                "who", "world",
+                "what", "hello"),
+            getTestProperties(
+                "", "no dot at the end"),
+            getTestProperties(
+                "", "ends with dot"),
+            getTestProperties(
+                "", "empty",
+                "when.date", "late") };
 
         List<Properties> result = EnvUtil.extractFromPropertiesAsListOfProperties("bla", testProperties);
 
-        assertNotNull(result);
-        assertEquals(5, result.size());
-        assertArrayEquals(expectedListOfProperties, result.toArray());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(5, result.size());
+        Assertions.assertArrayEquals(expectedListOfProperties, result.toArray());
+    }
+
+    @ParameterizedTest(name = "{displayName}: expression {0} => variable {1}")
+    @MethodSource("parametersForMavenPropertyExtract")
+    void mavenPropertyExtract(String expression, String varName) {
+        Assertions.assertEquals(varName, EnvUtil.extractMavenPropertyName(expression));
+    }
+
+    private static Stream<Arguments> parametersForMavenPropertyExtract() {
+        return Stream.of(
+            Arguments.of("${var1}", "var1"),
+            Arguments.of("${  var2}", "var2"),
+            Arguments.of(" ${ var3}  ", "var3"),
+            Arguments.of("nonvar", null),
+            Arguments.of("${nonvar", null)
+        );
+    }
+
+    @ParameterizedTest(name = "{displayName}: max({0},{1}) = {2}, {0} >= {1} ? {3}")
+    @MethodSource("parametersForVersionChecks")
+    void versionChecks(String versionA, String versionB, String largerVersion, boolean isGreaterOrEquals) {
+        Assertions.assertEquals(largerVersion, EnvUtil.extractLargerVersion(versionA, versionB));
+        Assertions.assertEquals(isGreaterOrEquals, EnvUtil.greaterOrEqualsVersion(versionA, versionB));
+    }
+
+    private static Stream<Arguments> parametersForVersionChecks() {
+        return Stream.of(
+            Arguments.of(null, null, null, false),
+            Arguments.of("1.10", null, "1.10", true),
+            Arguments.of(null, "1.10", "1.10", false),
+            Arguments.of("1.22", "1.10", "1.22", true),
+            Arguments.of("1.10", "1.25", "1.25", false),
+            Arguments.of("1.23", "1.23", "1.23", true),
+            Arguments.of("1.23.1", "1.23", "1.23.1", true),
+            Arguments.of("1.25", "1.25.1", "1.25.1", false),
+            Arguments.of("1.23.1", "2.0", "2.0", false)
+        );
     }
 
     @Test
-    @TestCaseName("{method}: expression {0} => variable {1}")
-    @Parameters
-    public void mavenPropertyExtract(String expression, String varName) {
-        assertEquals(varName,EnvUtil.extractMavenPropertyName(expression));
-    }
-
-    private Object parametersForMavenPropertyExtract() {
-        return $(
-            $("${var1}", "var1"),
-            $("${  var2}", "var2"),
-            $(" ${ var3}  ", "var3"),
-            $("nonvar", null),
-            $("${nonvar", null)
-                );
-    }
-
-    @Test
-    @TestCaseName("{method}: max({0},{1}) = {2}, {0} >= {1} ? {3}")
-    @Parameters
-    public void versionChecks(String versionA, String versionB, String largerVersion, boolean isGreaterOrEquals) {
-        assertEquals(largerVersion,EnvUtil.extractLargerVersion(versionA,versionB));
-        assertEquals(isGreaterOrEquals, EnvUtil.greaterOrEqualsVersion(versionA,versionB));
-    }
-
-    private Object parametersForVersionChecks() {
-        return $(
-            $(null, null, null, false),
-            $("1.10", null, "1.10", true),
-            $(null, "1.10", "1.10", false),
-            $("1.22", "1.10", "1.22", true),
-            $("1.10", "1.25", "1.25", false),
-            $("1.23", "1.23", "1.23", true),
-            $("1.23.1", "1.23", "1.23.1", true),
-            $("1.25", "1.25.1", "1.25.1", false),
-            $("1.23.1", "2.0", "2.0", false)
-                );
-    }
-
-
-    @Test
-    public void fixupPath() throws Exception {
+    void fixupPath() {
         String[] data = new String[] {
             "my/regular/path", "my/regular/path",
             "c:\\windows\\path", "/c/windows/path",
             "Z:\\yet another\\path", "/z/yet another/path"
         };
 
-        for (int i = 0; i < data.length; i+=2) {
-            assertEquals(data[i+1], EnvUtil.fixupPath(data[i]));
+        for (int i = 0; i < data.length; i += 2) {
+            Assertions.assertEquals(data[i + 1], EnvUtil.fixupPath(data[i]));
         }
-
 
     }
 
-    private Properties getTestProperties(String ... vals) {
+    private Properties getTestProperties(String... vals) {
         Properties ret = new Properties();
-        for (int i = 0; i < vals.length; i+=2) {
-            ret.setProperty(vals[i],vals[i+1]);
+        for (int i = 0; i < vals.length; i += 2) {
+            ret.setProperty(vals[i], vals[i + 1]);
         }
         return ret;
     }
 
-    private Object $(Object ... o) { return o; }
+    @ParameterizedTest
+    @CsvSource({
+        "https://index.docker.io/v1/, https://index.docker.io/v1/",
+        "index.docker.io/v1/, https://index.docker.io/v1/",
+        "http://index.docker.io/v1/, http://index.docker.io/v1/",
+        "registry.fuse-ignite.openshift.com, https://registry.fuse-ignite.openshift.com"
 
-    @Test
-    public void ensureRegistryHttpUrl() {
-        String[] data = {
-            "https://index.docker.io/v1/", "https://index.docker.io/v1/",
-            "index.docker.io/v1/", "https://index.docker.io/v1/",
-            "http://index.docker.io/v1/", "http://index.docker.io/v1/",
-            "registry.fuse-ignite.openshift.com", "https://registry.fuse-ignite.openshift.com"
-        };
-
-        for (int i = 0; i < data.length; i +=2) {
-            assertEquals(">> " + data[i], data[i+1], EnvUtil.ensureRegistryHttpUrl(data[i]));
-        }
+    })
+    void ensureRegistryHttpUrl(String input, String expected) {
+        Assertions.assertEquals( expected, EnvUtil.ensureRegistryHttpUrl(input), ">> " + input);
     }
 
     @Test
-    public void resolveHomeReferenceNoHome() {
-        assertEquals("~chas/relative", EnvUtil.resolveHomeReference("~chas/relative"));
+    void resolveHomeReferenceNoHome() {
+        Assertions.assertEquals("~chas/relative", EnvUtil.resolveHomeReference("~chas/relative"));
     }
 
     @Test
-    public void resolveHomeReference() {
-        assertEquals(Paths.get(EnvUtil.getUserHome(), "relative").toString(), EnvUtil.resolveHomeReference("~/relative"));
+    void resolveHomeReference() {
+        Assertions.assertEquals(Paths.get(EnvUtil.getUserHome(), "relative").toString(), EnvUtil.resolveHomeReference("~/relative"));
     }
 }

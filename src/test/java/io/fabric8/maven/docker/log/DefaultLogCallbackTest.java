@@ -1,29 +1,30 @@
 package io.fabric8.maven.docker.log;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import io.fabric8.maven.docker.access.log.LogCallback;
+import io.fabric8.maven.docker.access.log.LogCallback.DoneException;
+import io.fabric8.maven.docker.util.TimestampFactory;
+import org.apache.maven.shared.utils.io.FileUtils;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.io.Files;
-import org.apache.maven.shared.utils.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-
-import io.fabric8.maven.docker.access.log.LogCallback;
-import io.fabric8.maven.docker.access.log.LogCallback.DoneException;
-import io.fabric8.maven.docker.util.TimestampFactory;
-
-public class DefaultLogCallbackTest {
+class DefaultLogCallbackTest {
 
     private File file;
 
@@ -35,40 +36,42 @@ public class DefaultLogCallbackTest {
 
     private static final int NR_LOOPS = 100;
 
-    @Before
-    public void before() throws IOException {
+    @BeforeEach
+    void before() throws IOException {
         file = File.createTempFile("logcallback", ".log");
         file.deleteOnExit();
         spec = new LogOutputSpec.Builder().prefix("callback-test> ")
-                                          .file(file.toString()).build();
+            .file(file.toString()).build();
         callback = new DefaultLogCallback(spec);
         callback.open();
         ts = TimestampFactory.createTimestamp("2016-12-21T15:09:00.999666333Z");
     }
 
     @Test
-    public void shouldLogSequentially() throws IOException, DoneException {
+    void shouldLogSequentially() throws IOException, DoneException {
         callback.log(1, ts, "line 1");
         callback.log(1, ts, "line 2");
         callback.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-        assertThat(lines, contains("callback-test> line 1", "callback-test> line 2"));
+        Assertions.assertEquals(
+            Arrays.asList("callback-test> line 1", "callback-test> line 2"),
+            Arrays.asList(FileUtils.fileReadArray(file)));
     }
 
     @Test
-    public void shouldLogError() throws IOException, DoneException {
+    void shouldLogError() throws IOException, DoneException {
         callback.error("error 1");
         callback.log(1, ts, "line 2");
         callback.error("error 3");
         callback.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-        assertThat(lines, contains("error 1", "callback-test> line 2", "error 3"));
+        Assertions.assertEquals(
+            Arrays.asList("error 1", "callback-test> line 2", "error 3"),
+            Arrays.asList(FileUtils.fileReadArray(file)));
     }
 
     @Test
-    public void shouldLogToStdout() throws IOException, DoneException {
+    void shouldLogToStdout() throws IOException, DoneException {
         // we don't need the default stream for this test
         callback.close();
 
@@ -80,7 +83,7 @@ public class DefaultLogCallbackTest {
         try {
             System.setOut(ps);
             spec = new LogOutputSpec.Builder().prefix("stdout> ")
-                    .build();
+                .build();
             callback = new DefaultLogCallback(spec);
             callback.open();
             DefaultLogCallback callback2 = new DefaultLogCallback(spec);
@@ -93,15 +96,16 @@ public class DefaultLogCallbackTest {
             callback2.log(1, ts, "line 4");
             callback2.close();
 
-            List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-            assertThat(lines, contains("stdout> line 1", "stdout> line 2", "stdout> line 3", "stdout> line 4"));
+            Assertions.assertEquals(
+                Arrays.asList("stdout> line 1", "stdout> line 2", "stdout> line 3", "stdout> line 4"),
+                Arrays.asList(FileUtils.fileReadArray(file)));
         } finally {
             System.setOut(stdout);
         }
     }
 
     @Test
-    public void shouldKeepStreamOpen() throws IOException, DoneException {
+    void shouldKeepStreamOpen() throws IOException, DoneException {
         DefaultLogCallback callback2 = new DefaultLogCallback(spec);
         callback2.open();
         callback.log(1, ts, "line 1");
@@ -111,13 +115,13 @@ public class DefaultLogCallbackTest {
         callback2.log(1, ts, "line 4");
         callback2.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-        assertThat(lines,
-                contains("callback-test> line 1", "callback-test> line 2", "callback-test> line 3", "callback-test> line 4"));
+        Assertions.assertEquals(
+            Arrays.asList("callback-test> line 1", "callback-test> line 2", "callback-test> line 3", "callback-test> line 4"),
+            Arrays.asList(FileUtils.fileReadArray(file)));
     }
 
     @Test
-    public void shouldLogInParallel() throws IOException, DoneException, InterruptedException {
+    void shouldLogInParallel() throws IOException, InterruptedException {
         DefaultLogCallback callback2 = new DefaultLogCallback(spec);
         callback2.open();
 
@@ -129,8 +133,7 @@ public class DefaultLogCallbackTest {
         executorService.awaitTermination(1, TimeUnit.SECONDS);
 
         List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-        //System.out.println(lines);
-        assertThat(lines.size(), is(NR_LOOPS * 2));
+        Assertions.assertEquals(NR_LOOPS * 2, lines.size());
 
         // fill set with expected line numbers
         Set<Integer> indexes = new HashSet<>();
@@ -138,35 +141,40 @@ public class DefaultLogCallbackTest {
             indexes.add(i);
         }
 
+        String prefix = "callback-test> line ";
         // remove found line numbers from set
         for (String line : lines) {
-            String prefix = "callback-test> line ";
-            assertThat(line, startsWith(prefix));
+            Assertions.assertTrue(line.startsWith(prefix));
             String suffix = line.substring(prefix.length());
             indexes.remove(Integer.parseInt(suffix));
         }
 
         // expect empty set
-        assertThat(indexes, is(empty()));
+        Assertions.assertEquals(0, indexes.size());
     }
 
     @Test
-    public void shouldCreateParentDirs() throws IOException {
-        File dir = Files.createTempDir();
-        dir.deleteOnExit();
-        file = new File(dir, "non/existing/dirs/file.log");
-        spec = new LogOutputSpec.Builder().prefix("callback-test> ")
+    void shouldCreateParentDirs() throws IOException {
+        Path dir = Files.createTempDirectory("log");
+        try {
+            file = dir.resolve("non/existing/dirs/file.log").toFile();
+            spec = new LogOutputSpec.Builder().prefix("callback-test> ")
                 .file(file.toString()).build();
-        callback = new DefaultLogCallback(spec);
-        callback.open();
-        assertTrue(file.exists());
+            callback = new DefaultLogCallback(spec);
+            callback.open();
+            Assertions.assertTrue(file.exists());
+        } finally {
+            Files.walk(dir)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+        }
     }
 
     private class LoggerTask implements Runnable {
 
-        private LogCallback cb;
-
-        private int start;
+        private final LogCallback cb;
+        private final int start;
 
         LoggerTask(LogCallback cb, int start) {
             this.cb = cb;

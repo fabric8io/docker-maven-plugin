@@ -16,18 +16,19 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import static io.fabric8.maven.docker.config.CleanupMode.*;
-import static org.junit.Assert.*;
+
 
 /**
  * @author roland
  * @since 01/03/16
  */
-public class CleanupModeTest {
+class CleanupModeTest {
 
     @Test
-    public void parse() {
+    void parse() {
 
         Object[] data = {
             null, TRY_TO_REMOVE,
@@ -39,20 +40,16 @@ public class CleanupModeTest {
         };
 
         for (int i = 0; i < data.length; i += 2) {
-            assertEquals(data[i+1],CleanupMode.parse((String) data[i]));
+            Assertions.assertEquals(data[i+1],CleanupMode.parse((String) data[i]));
         }
     }
 
     @Test
-    public void invalid() {
-        try {
-            CleanupMode.parse("blub");
-            fail();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("blub"));
-            assertTrue(exp.getMessage().contains("try"));
-            assertTrue(exp.getMessage().contains("none"));
-            assertTrue(exp.getMessage().contains("remove"));
-        }
+    void invalid() {
+        String message= Assertions.assertThrows(IllegalArgumentException.class, () ->CleanupMode.parse("blub")).getMessage();
+        Assertions.assertTrue(message.contains("blub"));
+        Assertions.assertTrue(message.contains("try"));
+        Assertions.assertTrue(message.contains("none"));
+        Assertions.assertTrue(message.contains("remove"));
     }
 }

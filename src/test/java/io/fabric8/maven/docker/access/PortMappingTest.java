@@ -3,9 +3,9 @@ package io.fabric8.maven.docker.access;
 import com.google.gson.JsonArray;
 
 import org.apache.commons.text.StrSubstitutor;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,28 +14,26 @@ import java.util.Properties;
 
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.JsonFactory;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * @author roland
  * @since 04.04.14
  */
-public class PortMappingTest {
+class PortMappingTest {
 
     private PortMapping mapping;
 
     private Properties properties;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         properties = new Properties();
     }
 
     @Test
-    public void testComplexMapping() {
+    void testComplexMapping() {
 
         givenAHostIpProperty("other.ip", "127.0.0.1");
 
@@ -46,10 +44,10 @@ public class PortMappingTest {
         whenUpdateDynamicMapping(5678, 49901, "127.0.0.1");
 
         thenMapAndVerifyReplacement("http://localhost:49900/", "http://localhost:${jolokia.port}/",
-                "http://pirx:49900/", "http://pirx:${jolokia.port}/");
+            "http://pirx:49900/", "http://pirx:${jolokia.port}/");
         thenMapAndVerifyReplacement("http://localhost:49901/", "http://localhost:${other.port}/",
-                "http://pirx:49901/", "http://pirx:${other.port}/",
-                "http://49900/49901", "http://${jolokia.port}/${other.port}");
+            "http://pirx:49901/", "http://pirx:${other.port}/",
+            "http://49900/49901", "http://${jolokia.port}/${other.port}");
 
         thenNeedsPropertyUpdate();
 
@@ -71,9 +69,8 @@ public class PortMappingTest {
         thenBindToHostMapContains("5678/tcp", "127.0.0.1");
     }
 
-
     @Test
-    public void testHostIpAsPropertyOnly() {
+    void testHostIpAsPropertyOnly() {
         givenADockerHostAddress("1.2.3.4");
         givenAPortMapping("${other.ip}:5677:5677");
         whenUpdateDynamicMapping(5677, 5677, "0.0.0.0");
@@ -88,7 +85,7 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testHostIpPortAsProperties() {
+    void testHostIpPortAsProperties() {
         givenADockerHostAddress("5.6.7.8");
         givenAPortMapping("+other.ip:other.port:5677");
         whenUpdateDynamicMapping(5677, 49900, "1.2.3.4");
@@ -103,7 +100,7 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testHostIpVariableReplacement() {
+    void testHostIpVariableReplacement() {
         givenAPortMapping("jolokia.port:8080");
         whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
 
@@ -113,20 +110,20 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testHostnameAsBindHost() {
+    void testHostnameAsBindHost() {
         givenAPortMapping("localhost:80:80");
         thenBindToHostMapContainsValue("127.0.0.1");
     }
 
     @Test
-    public void testSingleContainerPort() {
+    void testSingleContainerPort() {
         givenAPortMapping("8080");
         thenContainerPortToHostPortMapSizeIs(1);
         thenContainerPortToHostPortMapHasOnlyPortSpec("8080");
     }
 
     @Test
-    public void testHostPortAsPropertyOnly() {
+    void testHostPortAsPropertyOnly() {
         givenAPortMapping("other.port:5677");
         whenUpdateDynamicMapping(5677, 49900, "0.0.0.0");
 
@@ -138,41 +135,20 @@ public class PortMappingTest {
         thenHostPortVariableEquals("other.port", 49900);
     }
 
-    @Ignore
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidHostnameWithDynamicPort() {
-        givenAPortMapping("does-not-exist.pvt:web.port:80");
-    }
-
-    @Ignore
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidHostnameWithFixedPort() {
-        givenAPortMapping("does-not-exist.pvt:80:80");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidMapping() {
-        givenAPortMapping("bla");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidMapping2() {
-        givenAPortMapping("jolokia.port:bla");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidProtocol() {
-        givenAPortMapping("49000:8080/abc");
+    @ParameterizedTest
+    @ValueSource(strings = {/*"does-not-exist.pvt:web.port:80","does-not-exist.pvt:80:80", */ "bla", "jolokia.port:bla", "49000:8080/abc" })
+    void testInvalidHostnameWithDynamicPort(String invalid) {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> givenAPortMapping(invalid));
     }
 
     @Test
-    public void testIpAsBindHost() {
+    void testIpAsBindHost() {
         givenAPortMapping("127.0.0.1:80:80");
         thenBindToHostMapContainsValue("127.0.0.1");
     }
 
     @Test
-    public void testUdpAsProtocol() {
+    void testUdpAsProtocol() {
         givenAPortMapping("49000:8080/udp", "127.0.0.1:49001:8081/udp");
         thenContainerPortToHostPortMapSizeIs(2);
         thenContainerPortToHostPortMapHasPortSpecAndPort("8080/udp", 49000);
@@ -182,7 +158,7 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testVariableReplacementWithProps() {
+    void testVariableReplacementWithProps() {
         givenExistingProperty("jolokia.port", "50000");
         givenAPortMapping("jolokia.port:8080");
         whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
@@ -190,7 +166,7 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testVariableReplacementWithSystemPropertyOverwrite() {
+    void testVariableReplacementWithSystemPropertyOverwrite() {
         try {
             System.setProperty("jolokia.port", "99999");
             givenExistingProperty("jolokia.port", "50000");
@@ -202,15 +178,15 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testToJson() {
+    void testToJson() {
         givenAPortMapping("49000:8080/udp", "127.0.0.1:49001:8081");
         thenAssertJsonEquals("[{ hostPort: 49000, containerPort: 8080, protocol: udp }," +
-                             " { hostIP: '127.0.0.1', hostPort: 49001, containerPort: 8081, protocol: tcp}]");
+            " { hostIP: '127.0.0.1', hostPort: 49001, containerPort: 8081, protocol: tcp}]");
     }
 
     private void thenAssertJsonEquals(String json) {
         JsonArray jsonArray = JsonFactory.newJsonArray(json);
-        assertEquals(jsonArray, mapping.toJson().getAsJsonArray());
+        Assertions.assertEquals(jsonArray, mapping.toJson().getAsJsonArray());
     }
 
     private void givenADockerHostAddress(String host) {
@@ -232,57 +208,57 @@ public class PortMappingTest {
     }
 
     private void thenBindToHostMapContains(String portSpec, String hostIp) {
-        assertEquals(hostIp, mapping.getBindToHostMap().get(portSpec));
+        Assertions.assertEquals(hostIp, mapping.getBindToHostMap().get(portSpec));
     }
 
     private void thenBindToHostMapContainsOnlySpec(String portSpec) {
-        assertNull(mapping.getBindToHostMap().get(portSpec));
+        Assertions.assertNull(mapping.getBindToHostMap().get(portSpec));
     }
 
     private void thenBindToHostMapContainsValue(String host) {
-        assertTrue(mapping.getBindToHostMap().values().contains(host));
+        Assertions.assertTrue(mapping.getBindToHostMap().containsValue(host));
     }
 
     private void thenBindToHostMapSizeIs(int size) {
-        assertEquals(size, mapping.getBindToHostMap().size());
+        Assertions.assertEquals(size, mapping.getBindToHostMap().size());
     }
 
     private void thenContainerPortToHostPortMapHasOnlyPortSpec(String portSpec) {
-        assertNull(mapping.getContainerPortToHostPortMap().get(portSpec));
+        Assertions.assertNull(mapping.getContainerPortToHostPortMap().get(portSpec));
     }
 
     private void thenContainerPortToHostPortMapHasPortSpecAndPort(String portSpec, Integer port) {
-        assertTrue(mapping.getContainerPorts().contains(portSpec));
-        assertEquals(port, mapping.getPortsMap().get(portSpec));
+        Assertions.assertTrue(mapping.getContainerPorts().contains(portSpec));
+        Assertions.assertEquals(port, mapping.getPortsMap().get(portSpec));
     }
 
     private void thenContainerPortToHostPortMapSizeIs(int size) {
-        assertEquals(size, mapping.getContainerPortToHostPortMap().size());
+        Assertions.assertEquals(size, mapping.getContainerPortToHostPortMap().size());
     }
 
     private void thenDynamicHostIpsSizeIs(int size) {
-        assertEquals(size, mapping.getHostIpVariableMap().size());
+        Assertions.assertEquals(size, mapping.getHostIpVariableMap().size());
     }
 
     private void thenDynamicHostPortsSizeIs(int size) {
-        assertEquals(size, mapping.getHostPortVariableMap().size());
+        Assertions.assertEquals(size, mapping.getHostPortVariableMap().size());
     }
 
     private void thenNeedsPropertyUpdate() {
-        assertTrue(mapping.needsPropertiesUpdate());
+        Assertions.assertTrue(mapping.needsPropertiesUpdate());
     }
 
     private void thenHostIpVariableEquals(String key, String ip) {
-        assertEquals(ip, mapping.getHostIpVariableMap().get(key));
+        Assertions.assertEquals(ip, mapping.getHostIpVariableMap().get(key));
     }
 
     private void thenHostPortVariableEquals(String key, Integer port) {
-        assertEquals(port, mapping.getHostPortVariableMap().get(key));
+        Assertions.assertEquals(port, mapping.getHostPortVariableMap().get(key));
     }
 
     private void thenMapAndVerifyReplacement(String... args) {
         for (int i = 0; i < args.length; i += 2) {
-            assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getHostPortVariableMap()));
+            Assertions.assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getHostPortVariableMap()));
         }
     }
 

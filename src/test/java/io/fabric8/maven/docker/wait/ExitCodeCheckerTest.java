@@ -3,64 +3,61 @@ package io.fabric8.maven.docker.wait;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.QueryService;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-
-public class ExitCodeCheckerTest {
+@ExtendWith(MockitoExtension.class)
+class ExitCodeCheckerTest {
 
     private static final String CONTAINER_ID = "1234";
 
-    @Mocked
+    @Mock
     private QueryService queryService;
-    @Mocked
+
+    @Mock
     private Container container;
 
     @Test
-    public void checkReturnsFalseIfContainerDoesNotExist() throws Exception {
+    void checkReturnsFalseIfContainerDoesNotExist() throws DockerAccessException {
 
-        new Expectations() {{
-            Exception e = new DockerAccessException("Cannot find container %s", CONTAINER_ID);
-            queryService.getMandatoryContainer(CONTAINER_ID); result = e;
-        }};
+        Mockito.doThrow(new DockerAccessException("Cannot find container %s", CONTAINER_ID))
+            .when(queryService).getMandatoryContainer(CONTAINER_ID);
 
         ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
-        assertThat(checker.check()).isFalse();
+        Assertions.assertFalse(checker.check());
     }
 
     @Test
-    public void checkReturnsFalseIfContainerIsStillRunning() throws Exception {
+    void checkReturnsFalseIfContainerIsStillRunning() throws DockerAccessException {
 
-        new Expectations() {{
-            container.getExitCode(); result = null;
-        }};
+        Mockito.doReturn(container).when(queryService).getMandatoryContainer(CONTAINER_ID);
+        Mockito.doReturn(null).when(container).getExitCode();
 
         ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
-        assertThat(checker.check()).isFalse();
+        Assertions.assertFalse(checker.check());
     }
 
     @Test
-    public void checkReturnsFalseIfActualExitCodeDoesNotMatchExpectedExitCode() throws Exception {
+    void checkReturnsFalseIfActualExitCodeDoesNotMatchExpectedExitCode() throws DockerAccessException {
 
-        new Expectations() {{
-            container.getExitCode(); result = 1;
-        }};
+        Mockito.doReturn(container).when(queryService).getMandatoryContainer(CONTAINER_ID);
+        Mockito.doReturn(1).when(container).getExitCode();
 
         ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
-        assertThat(checker.check()).isFalse();
+        Assertions.assertFalse(checker.check());
     }
 
     @Test
-    public void checkReturnsTrueIfActualExitCodeMatchesExpectedExitCode() throws Exception {
+    void checkReturnsTrueIfActualExitCodeMatchesExpectedExitCode() throws DockerAccessException {
 
-        new Expectations() {{
-            container.getExitCode(); result = 0;
-        }};
+        Mockito.doReturn(container).when(queryService).getMandatoryContainer(CONTAINER_ID);
+        Mockito.doReturn(0).when(container).getExitCode();
 
         ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
-        assertThat(checker.check()).isTrue();
+        Assertions.assertTrue(checker.check());
     }
 }

@@ -1,8 +1,8 @@
 package io.fabric8.maven.docker.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
 /*
  *
  * Copyright 2014 Roland Huss
@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 31/03/15
  */
-public class GavLabelTest {
+class GavLabelTest {
 
     String g = "io.fabric8";
     String a = "demo";
@@ -32,31 +32,31 @@ public class GavLabelTest {
     String coord = g + ":" + a + ":" + v;
 
     @Test
-    public void simple() throws Exception {
+    void simple() {
         GavLabel label = new GavLabel(g, a, v);
-        assertTrue(label.getValue().equals(coord));
+        Assertions.assertEquals(coord, label.getValue());
     }
 
     @Test
-    public void dontMatch() {
+    void dontMatch() {
         GavLabel label = new GavLabel(g, a, v);
-        assertFalse(label.equals(new GavLabel(g, a, "2.1.1")));
+        Assertions.assertNotEquals(label, new GavLabel(g, a, "2.1.1"));
     }
 
     @Test
-    public void match() {
+    void match() {
         GavLabel label = new GavLabel(g, a, v);
-        assertTrue(label.equals(new GavLabel(g, a, v)));
+        Assertions.assertEquals(label, new GavLabel(g, a, v));
     }
 
     @Test
-    public void parse() {
+    void parse() {
         GavLabel label = new GavLabel(coord);
-        assertEquals(coord, label.getValue());
+        Assertions.assertEquals(coord, label.getValue());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void invalid() {
-        new GavLabel("bla");
+    @Test
+    void invalid() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new GavLabel("bla"));
     }
 }

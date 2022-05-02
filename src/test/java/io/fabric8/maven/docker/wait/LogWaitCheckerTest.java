@@ -4,88 +4,70 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.util.Logger;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * @author roland
  * @since 25/03/2017
  */
+@ExtendWith(MockitoExtension.class)
+class LogWaitCheckerTest {
 
-public class LogWaitCheckerTest {
-
-    @Mocked
+    @Mock
     private Logger logger;
 
-    @Mocked
+    @Mock
     private DockerAccess access;
 
-    @Mocked
+    @Mock
     private LogGetHandle handle;
 
     private LogWaitChecker logWaitChecker;
 
-    @Before
-    public void setup() {
-
+    @BeforeEach
+    void setup() {
         presetExpections();
         logWaitChecker = new LogWaitChecker("Hello, world!", access, "1", logger);
     }
 
     @Test
-    public void checkerRegistersAsyncLogWhenCreated() {
-
-        new Expectations() {{
-            access.getLogAsync(anyString, withInstanceOf(LogCallback.class));
-            times = 1;
-        }};
-
-        final LogWaitChecker logWaitChecker =
-                new LogWaitChecker("Hello, world!", access, "1", logger);
+    void checkerRegistersAsyncLogWhenCreated() {
+        Mockito.verify(access).getLogAsync(Mockito.anyString(), Mockito.any(LogCallback.class));
     }
 
     @Test
-    public void checkingAfterMatchingSucceeds() {
+    void checkingAfterMatchingSucceeds() {
 
         logWaitChecker.matched();
 
-        assertThat(logWaitChecker.check()).isTrue();
+        Assertions.assertTrue(logWaitChecker.check());
     }
 
     @Test
-    public void checkingWithoutMatchingFails() {
+    void checkingWithoutMatchingFails() {
 
-        assertThat(logWaitChecker.check()).isFalse();
+        Assertions.assertFalse(logWaitChecker.check());
     }
 
     @Test
-    public void checkerClosesLogHandle() {
-
-        new Expectations() {{
-            handle.finish();
-            times = 1;
-        }};
-
+    void checkerClosesLogHandle() {
         logWaitChecker.cleanUp();
+        Mockito.verify(handle).finish();
     }
 
     @Test
-    public void checkerReturnsValidLogLabel() {
-
+    void checkerReturnsValidLogLabel() {
         final String expectedLogLabel = "on log out '" + "Hello, world!" + "'";
-        assertThat(logWaitChecker.getLogLabel()).isEqualTo(expectedLogLabel);
+        Assertions.assertEquals(expectedLogLabel, logWaitChecker.getLogLabel());
     }
 
     private void presetExpections() {
-
-        new Expectations() {{
-            access.getLogAsync(anyString, withInstanceOf(LogCallback.class));
-            times = 1;
-            result = handle;
-        }};
+Mockito.when(access.getLogAsync(Mockito.anyString(), Mockito.any(LogCallback.class))).thenReturn(handle);
     }
 }

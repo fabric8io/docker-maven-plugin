@@ -99,12 +99,17 @@ public abstract class ExternalCommand {
 
     private Process startProcess() throws IOException {
         try {
-            return Runtime.getRuntime().exec(getArgs());
+            return startCommand(getArgs());
         } catch (IOException e) {
             throw new IOException(String.format("Failed to start '%s' : %s",
                                                 getCommandAsString(),
                                                 e.getMessage()), e);
         }
+    }
+
+    // Unit test mocking point
+    public static Process startCommand(String[] cmd) throws IOException {
+        return new ProcessBuilder(cmd).start();
     }
 
     protected String getCommandAsString() {

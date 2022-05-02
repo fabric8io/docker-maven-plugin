@@ -1,8 +1,5 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.util.Collections;
-
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -10,47 +7,50 @@ import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.Mocked;
-import mockit.Tested;
-import mockit.Verifications;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.util.Collections;
 
-public class LoadImageTest {
-    @Tested
+@ExtendWith(MockitoExtension.class)
+class LoadImageTest {
+    @InjectMocks
     private BuildService buildService;
 
-    @Injectable
+    @Mock
     private DockerAccess docker;
 
     private ImageConfiguration imageConfig;
 
-    @Injectable
+    @Mock
     private Logger log;
 
-    @Mocked
+    @Mock
     private MavenProject project;
 
-    @Mocked
+    @Mock
     private MojoParameters params;
 
-    @Injectable
+    @Mock
     private QueryService queryService;
 
-    @Injectable
+    @Mock
     private ArchiveService archiveService;
 
-    @Injectable
+    @Mock
     private RegistryService registryService;
 
     private String dockerArchive;
 
     @Test
-    public void testLoadImage() throws DockerAccessException, MojoExecutionException {
+    void testLoadImage() throws DockerAccessException, MojoExecutionException {
         givenMojoParameters();
         givenAnImageConfiguration();
         givenDockerArchive("test.tar");
@@ -59,11 +59,9 @@ public class LoadImageTest {
     }
 
     private void givenMojoParameters() {
-        new Expectations() {{
-            params.getProject();
-            project.getBasedir(); result = "/maven-project";
-            params.getSourceDirectory(); result = "src/main/docker";
-        }};
+        Mockito.doReturn(project).when(params).getProject();
+        Mockito.doReturn(new File("/maven-project")).when(project).getBasedir();
+        Mockito.doReturn("src/main/docker").when(params).getSourceDirectory();
     }
 
     private void givenDockerArchive(String s) {
@@ -84,16 +82,12 @@ public class LoadImageTest {
     }
 
     private void whenBuildImage() throws DockerAccessException, MojoExecutionException {
-        buildService.buildImage(imageConfig, params, false, false, Collections.<String, String>emptyMap(), new File("/maven-project/src/main/docker/test.tar"));
+        buildService.buildImage(imageConfig, params, false, false, Collections.emptyMap(), new File("/maven-project/src/main/docker/test.tar"));
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
         final File targetFile = new File("/maven-project/src/main/docker/test.tar");
-        new Verifications() {{
-            docker.loadImage("build-image", withEqual(targetFile));
-        }};
+        Mockito.verify(docker).loadImage("build-image", targetFile);
     }
-
-
 
 }

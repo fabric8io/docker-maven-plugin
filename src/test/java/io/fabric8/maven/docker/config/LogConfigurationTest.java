@@ -1,84 +1,85 @@
 package io.fabric8.maven.docker.config;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+
 
 /**
  * Tests LogConfiguration
  */
-public class LogConfigurationTest {
+class LogConfigurationTest {
     @Test
-    public void testDefaultConfiguration() {
+    void testDefaultConfiguration() {
         LogConfiguration cfg = LogConfiguration.DEFAULT;
-        assertNull(cfg.isEnabled());
-        assertFalse(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertFalse(cfg.isActivated());
     }
 
     @Test
-    public void testEmptyBuiltConfiguration() {
+    void testEmptyBuiltConfiguration() {
         LogConfiguration cfg = new LogConfiguration.Builder()
                 .build();
-        assertNull(cfg.isEnabled());
-        assertFalse(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertFalse(cfg.isActivated());
     }
 
     @Test
-    public void testNonEmptyBuiltConfiguration() {
+    void testNonEmptyBuiltConfiguration() {
         LogConfiguration cfg = new LogConfiguration.Builder()
                 .file("test")
                 .build();
-        assertNull(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertTrue(cfg.isActivated());
 
         cfg = new LogConfiguration.Builder()
                 .color("test")
                 .build();
-        assertNull(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertTrue(cfg.isActivated());
 
         cfg = new LogConfiguration.Builder()
                 .logDriverName("test")
                 .build();
-        assertNull(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertTrue(cfg.isActivated());
 
         cfg = new LogConfiguration.Builder()
                 .date("1234")
                 .build();
-        assertNull(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
+        Assertions.assertNull(cfg.isEnabled());
+        Assertions.assertTrue(cfg.isActivated());
     }
 
     @Test
-    public void testEnabled() {
-        for (Boolean enabled : new Boolean[]{Boolean.TRUE, new Boolean(true)}) {
+    void testEnabled() {
+        for (Boolean enabled : new Boolean[]{Boolean.TRUE, Boolean.TRUE }) {
             LogConfiguration cfg = new LogConfiguration.Builder()
                 .enabled(enabled)
                 .build();
-            assertTrue(cfg.isEnabled());
-            assertTrue(cfg.isActivated());
+            Assertions.assertTrue(cfg.isEnabled());
+            Assertions.assertTrue(cfg.isActivated());
 
             cfg = new LogConfiguration.Builder()
                 .enabled(true)
                 .color("red")
                 .build();
-            assertTrue(cfg.isEnabled());
-            assertTrue(cfg.isActivated());
-            assertEquals("red", cfg.getColor());
+            Assertions.assertTrue(cfg.isEnabled());
+            Assertions.assertTrue(cfg.isActivated());
+            Assertions.assertEquals("red", cfg.getColor());
         }
     }
 
     @Test
-    public void testDisabled() {
-        for (Boolean disabled : new Boolean[]{Boolean.FALSE, new Boolean(false)}) {
+    void testDisabled() {
+        for (Boolean disabled : new Boolean[]{Boolean.FALSE, Boolean.FALSE }) {
             LogConfiguration cfg = new LogConfiguration.Builder()
                 .color("red")
                 .enabled(disabled)
                 .build();
-            assertFalse(cfg.isEnabled());
-            assertFalse(cfg.isActivated());
-            assertEquals("red", cfg.getColor());
+            Assertions.assertFalse(cfg.isEnabled());
+            Assertions.assertFalse(cfg.isActivated());
+            Assertions.assertEquals("red", cfg.getColor());
         }
     }
 }

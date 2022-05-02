@@ -1,4 +1,6 @@
-package io.fabric8.maven.docker.assembly;/*
+package io.fabric8.maven.docker.assembly;
+
+/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -15,45 +17,48 @@ package io.fabric8.maven.docker.assembly;/*
  * limitations under the License.
  */
 
-import java.io.File;
-import java.util.List;
-
-import mockit.Injectable;
+import io.fabric8.maven.docker.util.AnsiLogger;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import io.fabric8.maven.docker.util.AnsiLogger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author roland
  * @since 02/07/15
  */
-public class MappingTrackArchiverTest {
+@ExtendWith(MockitoExtension.class)
+class MappingTrackArchiverTest {
 
-    @Injectable
+    @InjectMocks
     private MavenSession session;
 
     private MappingTrackArchiver archiver;
 
-    @Before
-    public void setup() throws IllegalAccessException {
+    @BeforeEach
+    void setup() {
         archiver = new MappingTrackArchiver();
-        archiver.init(new AnsiLogger(new SystemStreamLog(),false,"build"), "maven");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void noDirectory() throws Exception {
-        archiver.setDestFile(new File("."));
-        archiver.addDirectory(new File(System.getProperty("user.home")), "tmp");
-        AssemblyFiles files = archiver.getAssemblyFiles(session);
+        archiver.init(new AnsiLogger(new SystemStreamLog(), false, "build"), "maven");
     }
 
     @Test
-    public void simple() throws Exception {
+    void noDirectory() {
+        archiver.setDestFile(new File("."));
+        archiver.addDirectory(new File(System.getProperty("user.home")), "tmp");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> archiver.getAssemblyFiles(session));
+    }
+
+    @Test
+    void simple() throws IOException, InterruptedException {
         archiver.setDestFile(new File("target/test-data/maven.tracker"));
         new File(archiver.getDestFile(), "maven").mkdirs();
 
@@ -63,15 +68,15 @@ public class MappingTrackArchiverTest {
 
         archiver.addFile(tempFile, "test.txt");
         AssemblyFiles files = archiver.getAssemblyFiles(session);
-        assertNotNull(files);
+        Assertions.assertNotNull(files);
         List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
-        assertEquals(0, entries.size());
+        Assertions.assertEquals(0, entries.size());
         Thread.sleep(1000);
         FileUtils.touch(tempFile);
         entries = files.getUpdatedEntriesAndRefresh();
-        assertEquals(1, entries.size());
+        Assertions.assertEquals(1, entries.size());
         AssemblyFiles.Entry entry = entries.get(0);
-        assertEquals(tempFile, entry.getSrcFile());
-        assertEquals(destination, entry.getDestFile());
+        Assertions.assertEquals(tempFile, entry.getSrcFile());
+        Assertions.assertEquals(destination, entry.getDestFile());
     }
 }
