@@ -172,7 +172,7 @@ public class ServiceHub {
     }
 
     /**
-     * Serivce for creating archives
+     * Service for creating archives
      *
      * @return the archive service
      */
