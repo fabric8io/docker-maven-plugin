@@ -4,9 +4,11 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.BufferedReader;
@@ -19,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,50 +44,40 @@ public class BuildXService {
         this.exec = exec;
     }
 
-    public void build(Path outputPath, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(outputPath, imageConfig, authConfig, this::buildMultiPlatform);
+    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
+        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::buildMultiPlatform);
     }
 
-    public void push(Path outputPath, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(outputPath, imageConfig, authConfig, this::pushMultiPlatform);
+    public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
+        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::pushMultiPlatform);
     }
 
-    interface Builder {
-        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException;
-    }
+    private void createAndRemoveBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, Builder builder) throws MojoExecutionException {
+        BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
-    private void createAndRemoveBuilder(Path outputPath, ImageConfiguration imageConfig, AuthConfig authConfig, Builder builder) throws MojoExecutionException {
-        BuildDirs buildDirs = new BuildDirs(outputPath, imageConfig.getName());
-
-        Path configPath = buildDirs.getPath("docker");
+        Path configPath = buildDirs.getBuildPath("docker");
         createDirectory(configPath);
         List<String> buildX = Arrays.asList("docker", "--config", configPath.toString(), "buildx");
 
-        String builderName = "dmp_" + buildDirs.getBuildTopDir().replace(File.separatorChar, '_');
-        createBuilder(buildX, builderName);
+        Map.Entry<String, Boolean> builderName = createBuilder(buildX, imageConfig, buildDirs);
         try {
             Path configJson = configPath.resolve("config.json");
             try {
-                if (authConfig != null) {
-                    createConfigJson(configJson, authConfig);
-                }
-                builder.useBuilder(buildX, builderName, buildDirs, imageConfig);
+                createConfigJson(configJson, authConfig);
+                builder.useBuilder(buildX, builderName.getKey(), buildDirs, imageConfig);
             } finally {
-                if (authConfig != null) {
-                    removeConfigJson(configJson);
-                }
+                removeConfigJson(configJson);
             }
         } finally {
             removeBuilder(buildX, builderName);
         }
-
     }
 
     private void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(configJson, StandardCharsets.UTF_8,
             StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         ) {
-            bufferedWriter.write(authConfig.toJson());
+            bufferedWriter.write(authConfig != null ? authConfig.toJson() : "{}");
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to create config.json", e);
         }
@@ -157,7 +150,7 @@ public class BuildXService {
 
     private String getCacheDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
         String cache = buildConfiguration.getBuildX().getCache();
-        Path cachePath = cache != null ? EnvUtil.resolveHomeReference(cache) : buildDirs.getPath("cache");
+        Path cachePath = buildDirs.getBuildPath(cache != null ? EnvUtil.resolveHomeReference(cache) : "cache");
         createDirectory(cachePath);
         return cachePath.toString();
     }
@@ -170,18 +163,37 @@ public class BuildXService {
         }
     }
 
-    private void createBuilder(List<String> buildX, String builderName) throws MojoExecutionException {
-        int rc = exec.process(buildX, "create", "--driver", "docker-container", "--name", builderName);
+    private Map.Entry<String, Boolean> createBuilder(List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
+        BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
+        String configuredBuilder = buildXConfiguration.getBuilderName();
+        if (configuredBuilder != null) {
+            return new AbstractMap.SimpleEntry<>(configuredBuilder, false);
+        }
+
+        String builderName = "dmp_" + buildDirs.getBuildTopDir().replace(File.separatorChar, '_');
+        String buildConfig = buildXConfiguration.getConfigFile();
+        int rc = exec.process(buildX, buildConfig == null
+            ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
+            : new String[] { "create", "--driver", "docker-container", "--name", builderName, "--config",
+                buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString() }
+        );
         if (rc != 0) {
             throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
         }
+        return new AbstractMap.SimpleEntry<>(builderName, true);
     }
 
-    private void removeBuilder(List<String> buildX, String builderName) throws MojoExecutionException {
-        int rc = exec.process(buildX, "rm", builderName);
-        if (rc != 0) {
-            logger.warn("Ignoring non-zero status (" + rc + ") while removing builder " + builderName);
+    private void removeBuilder(List<String> buildX, Map.Entry<String, Boolean> builderName) throws MojoExecutionException {
+        if (Boolean.TRUE.equals(builderName.getValue())) {
+            int rc = exec.process(buildX, "rm", builderName.getKey());
+            if (rc != 0) {
+                logger.warn("Ignoring non-zero status (" + rc + ") while removing builder " + builderName);
+            }
         }
+    }
+
+    interface Builder {
+        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException;
     }
 
     public interface Exec {

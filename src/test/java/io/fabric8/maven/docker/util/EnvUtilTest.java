@@ -237,11 +237,11 @@ public class EnvUtilTest {
 
     @Test
     public void resolveHomeReferenceNoHome() {
-        assertEquals(Paths.get("~chas/relative").toAbsolutePath(), EnvUtil.resolveHomeReference("~chas/relative"));
+        assertEquals("~chas/relative", EnvUtil.resolveHomeReference("~chas/relative"));
     }
 
     @Test
     public void resolveHomeReference() {
-        assertEquals(Paths.get(EnvUtil.getUserHome(), "relative"), EnvUtil.resolveHomeReference("~/relative"));
+        assertEquals(Paths.get(EnvUtil.getUserHome(), "relative").toString(), EnvUtil.resolveHomeReference("~/relative"));
     }
 }

@@ -109,8 +109,9 @@ public class BaseMojoTest {
         return singleImageConfiguration(null);
     }
 
-    protected ImageConfiguration singleBuildXImage() {
+    protected ImageConfiguration singleBuildXImage(String configFile) {
         return singleImageConfiguration(new BuildXConfiguration.Builder()
+            .configFile(configFile)
             .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
             .build());
     }

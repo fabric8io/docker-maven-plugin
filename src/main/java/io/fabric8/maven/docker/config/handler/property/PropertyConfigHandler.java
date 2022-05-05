@@ -323,8 +323,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         }
 
         return new BuildXConfiguration.Builder()
-            .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))
+            .builderName(valueProvider.getString(BUILDX_BUILDERNAME, config.getBuilderName()))
             .cache(valueProvider.getString(BUILDX_CACHE, config.getCache()))
+            .configFile(valueProvider.getString(BUILDX_CONFIGFILE, config.getConfigFile()))
+            .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))
             .build();
     }
 

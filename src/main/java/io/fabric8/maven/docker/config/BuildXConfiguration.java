@@ -10,10 +10,10 @@ import java.util.List;
 public class BuildXConfiguration implements Serializable {
 
     /**
-     * List of platforms for multi-architecture build
+     * Builder instance name
      */
     @Parameter
-    private List<String> platforms;
+    private String builderName;
 
     /**
      * Location of docker cache
@@ -21,18 +21,39 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private String cache;
 
+    /**
+     * Configuration file to create builder
+     */
+    @Parameter
+    private String configFile;
+
+    /**
+     * List of platforms for multi-architecture build
+     */
+    @Parameter
+    private List<String> platforms;
+
     @Nonnull
     public List<String> getPlatforms() {
         return EnvUtil.removeEmptyEntries(platforms);
+    }
+
+    public String getBuilderName() {
+        return builderName;
     }
 
     public String getCache() {
         return cache;
     }
 
+    public String getConfigFile() {
+        return configFile;
+    }
+
     public boolean isBuildX() {
         return !getPlatforms().isEmpty();
     }
+
 
     public static class Builder {
 
@@ -43,9 +64,9 @@ public class BuildXConfiguration implements Serializable {
             return isEmpty ? null : config;
         }
 
-        public Builder platforms(List<String> platforms) {
-            config.platforms = EnvUtil.removeEmptyEntries(platforms);
-            if (!config.platforms.isEmpty()) {
+        public Builder builderName(String builderName) {
+            config.builderName = builderName;
+            if (builderName != null) {
                 isEmpty = false;
             }
             return this;
@@ -54,6 +75,22 @@ public class BuildXConfiguration implements Serializable {
         public Builder cache(String cache) {
             config.cache = cache;
             if (cache != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder configFile(String configFile) {
+            config.configFile = configFile;
+            if (configFile != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder platforms(List<String> platforms) {
+            config.platforms = EnvUtil.removeEmptyEntries(platforms);
+            if (!config.platforms.isEmpty()) {
                 isEmpty = false;
             }
             return this;
