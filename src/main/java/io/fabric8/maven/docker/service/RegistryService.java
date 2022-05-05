@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.Serializable;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -18,6 +17,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 
+import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Settings;
 
@@ -48,7 +48,7 @@ public class RegistryService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void pushImages(Path outputPath, Collection<ImageConfiguration> imageConfigs,
+    public void pushImages(ProjectPaths projectPaths, Collection<ImageConfiguration> imageConfigs,
                             int retries, RegistryConfig registryConfig, boolean skipTag) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
@@ -68,7 +68,7 @@ public class RegistryService {
 
             AuthConfig authConfig = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
             if (imageConfig.isBuildX()) {
-                buildXService.push(outputPath, imageConfig, authConfig);
+                buildXService.push(projectPaths, imageConfig, authConfig);
             } else {
                 dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfig);
             }

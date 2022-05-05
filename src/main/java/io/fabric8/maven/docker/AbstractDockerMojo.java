@@ -2,7 +2,6 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +37,9 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.NamePatternUtil;
 
+import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -455,12 +454,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // =================================================================================
-    protected Path getOutputPath() {
-        File basedir = project.getBasedir();
-        Path path = basedir.toPath();
-        return path.resolve(outputDirectory);
-    }
-
     protected GavLabel getGavLabel() {
         // Label used for this run
         return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
@@ -610,5 +603,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     private String determinePullPolicy(RunImageConfiguration runConfig) {
         return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
+    }
+
+    protected ProjectPaths createProjectPaths() {
+        return new ProjectPaths(project.getBasedir(), outputDirectory);
     }
 }
