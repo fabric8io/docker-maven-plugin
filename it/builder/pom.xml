@@ -36,8 +36,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>app-image</module>
     <module>app</module>
+    <module>app-image</module>
     <module>builder-image</module>
   </modules>
 

@@ -137,6 +137,32 @@
 
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <keepBlankLines>true</keepBlankLines>
+          <predefinedSortOrder>recommended_2008_06</predefinedSortOrder>
+          <sortDependencies>groupId,artifactId,scope</sortDependencies>
+          <sortModules>true</sortModules>
+          <sortPlugins>groupId,artifactId,scope</sortPlugins>
+          <sortProperties>true</sortProperties>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>sort</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+
   </build>
 
 </project>

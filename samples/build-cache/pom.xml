@@ -14,8 +14,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>image</module>
     <module>app</module>
+    <module>image</module>
   </modules>
 
   <properties>
