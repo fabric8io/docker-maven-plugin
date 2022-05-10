@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.ProjectPaths;
 
 import javax.annotation.Nonnull;
 
@@ -34,19 +35,21 @@ import javax.annotation.Nonnull;
  */
 public class BuildDirs {
 
+    private final Path projectBasePath;
     private final Path buildPath;
     private final String buildTopDir;
 
     /**
      * Constructor building up the output directories
      *
-     * @param outputPath docker output
+     * @param projectPaths baseDir and outputDir
      * @param imageName image name for the image to build
      */
-    public BuildDirs(@Nonnull Path outputPath, @Nonnull String imageName) {
+    public BuildDirs( ProjectPaths projectPaths,  String imageName) {
         // Replace tag separator with a slash to avoid problems with OSs which get confused by colons.
         buildTopDir = imageName.replace(':', File.separatorChar).replace('/', File.separatorChar);
-        buildPath = outputPath.resolve(buildTopDir);
+        projectBasePath= projectPaths.getProjectBasePath();
+        buildPath = projectPaths.getOutputPath().resolve(buildTopDir);
     }
 
     /**
@@ -56,7 +59,7 @@ public class BuildDirs {
      * @param params mojo params holding base and global output dir
      */
     public BuildDirs(@Nonnull String imageName, MojoParameters params) {
-        this(params.getProject().getBasedir().toPath().resolve(params.getOutputDirectory()), imageName);
+        this(new ProjectPaths(params.getProject().getBasedir(), params.getOutputDirectory()), imageName);
     }
 
     public String getBuildTopDir() {
@@ -75,17 +78,21 @@ public class BuildDirs {
         return getDir("tmp");
     }
 
-    public Path getPath(String subdir) {
+    public Path getBuildPath(String subdir) {
         return buildPath.resolve(subdir);
     }
 
+    public Path getProjectPath(String subdir) {
+        return projectBasePath.resolve(subdir);
+    }
+
     private File getDir(String subdir) {
-        return getPath(subdir).toFile();
+        return getBuildPath(subdir).toFile();
     }
 
     void createDirs() {
         for (String workDir : new String[] { "build", "work", "tmp" }) {
-            Path dir = getPath(workDir);
+            Path dir = getBuildPath(workDir);
             try {
                 Files.createDirectories(dir);
             } catch (IOException e) {

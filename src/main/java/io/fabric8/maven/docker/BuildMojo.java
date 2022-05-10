@@ -7,7 +7,6 @@ import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.Enumeration;
 
@@ -103,7 +102,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
         if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
             if (imageConfig.isBuildX()) {
-                hub.getBuildXService().build(getOutputPath(), imageConfig, getAuthConfig(imageConfig));
+                hub.getBuildXService().build(createProjectPaths(), imageConfig, getAuthConfig(imageConfig));
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
                 if (!skipTag) {

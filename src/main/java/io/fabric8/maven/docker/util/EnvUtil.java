@@ -507,12 +507,12 @@ public class EnvUtil {
     /**
      * Resolve a path.  If path starts with '~/', resolve rest of path against the user's home directory.
      * @param path An absolute or relative path
-     * @return An absolute path
+     * @return If path starts with '~/', the absolute file path; otherwise, the input path
      */
     @Nonnull
-    public static Path resolveHomeReference(@Nonnull String path) {
+    public static String resolveHomeReference(@Nonnull String path) {
         return path.startsWith("~/")
-            ? Paths.get(getUserHome()).resolve(path.substring(2))
-            : Paths.get(path).toAbsolutePath();
+            ? Paths.get(getUserHome()).resolve(path.substring(2)).toString()
+            : path;
     }
 }
