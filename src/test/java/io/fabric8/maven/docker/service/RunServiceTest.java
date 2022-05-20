@@ -413,7 +413,7 @@ public class RunServiceTest {
                         .shmSize(1024L)
                         .memory(1L)
                         .memorySwap(1L)
-                        .memorySwappiness(1L)
+                        .memorySwappiness(60L)
                         .cpus(1000000000L)
                         .cpuSet("0,1")
                         .isolation("default")
