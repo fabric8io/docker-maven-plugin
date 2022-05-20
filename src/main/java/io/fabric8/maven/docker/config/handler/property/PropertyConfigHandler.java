@@ -15,34 +15,16 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Supplier;
-
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.BuildXConfiguration;
-import io.fabric8.maven.docker.config.CopyConfiguration;
-import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.config.WaitConfiguration;
-import io.fabric8.maven.docker.config.WatchImageConfiguration;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
+
+import java.io.File;
+import java.util.*;
+import java.util.function.Supplier;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 
@@ -216,7 +198,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .links(valueProvider.getList(LINKS, config.getLinks()))
             .memory(valueProvider.getLong(MEMORY, config.getMemory()))
             .memorySwap(valueProvider.getLong(MEMORY_SWAP, config.getMemorySwap()))
-            .memorySwappiness(valueProvider.getLong(MEMORY_SWAPPINESS, config == null ? null : config.getMemorySwappiness()))
+            .memorySwappiness(valueProvider.getLong(MEMORY_SWAPPINESS, config.getMemorySwappiness()))
             .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config.getNamingStrategy() == null ? null : config.getNamingStrategy().name()))
             .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config.getExposedPropertyKey()))
             .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config.getPortPropertyFile()))
