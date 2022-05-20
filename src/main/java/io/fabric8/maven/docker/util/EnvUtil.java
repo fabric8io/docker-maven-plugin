@@ -3,6 +3,8 @@ package io.fabric8.maven.docker.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
@@ -178,27 +180,6 @@ public class EnvUtil {
             res[i] = split[i].replaceAll("\\\\ "," ");
         }
         return res;
-    }
-
-
-    /**
-     * Join a list of objects to a string with a given separator by calling Object.toString() on the elements.
-     *
-     * @param list to join
-     * @param separator separator to use
-     * @return the joined string.
-     */
-    public static String stringJoin(List list, String separator) {
-        StringBuilder ret = new StringBuilder();
-        boolean first = true;
-        for (Object o : list) {
-            if (!first) {
-                ret.append(separator);
-            }
-            ret.append(o);
-            first = false;
-        }
-        return ret.toString();
     }
 
     /**
@@ -451,15 +432,11 @@ public class EnvUtil {
         return "https://" + registry;
     }
 
-    public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
-    }
-
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+        return prepareAbsolutePath(params.getProject().getBasedir(), params.getSourceDirectory(), path);
     }
 
-    private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
+    private static File prepareAbsolutePath(File projectBaseDir, String directory, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
@@ -467,7 +444,7 @@ public class EnvUtil {
 
         File baseDir = new File(directory);
         if (!baseDir.isAbsolute()) {
-            baseDir = new File(params.getProject().getBasedir(), directory);
+            baseDir = new File(projectBaseDir, directory);
         }
 
         return new File(baseDir, path);
@@ -525,5 +502,17 @@ public class EnvUtil {
             homeDir =  System.getProperty("user.home");
         }
         return homeDir;
+    }
+
+    /**
+     * Resolve a path.  If path starts with '~/', resolve rest of path against the user's home directory.
+     * @param path An absolute or relative path
+     * @return If path starts with '~/', the absolute file path; otherwise, the input path
+     */
+    @Nonnull
+    public static String resolveHomeReference(@Nonnull String path) {
+        return path.startsWith("~/")
+            ? Paths.get(getUserHome()).resolve(path.substring(2)).toString()
+            : path;
     }
 }

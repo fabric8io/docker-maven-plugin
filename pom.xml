@@ -1,12 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <prerequisites>
-    <maven>3.0.3</maven>
-  </prerequisites>
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.40-SNAPSHOT</version>
+  <version>0.40.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>docker-maven-plugin</name>
@@ -14,41 +12,143 @@
 
   <url>http://github.com/fabric8io/docker-maven-plugin</url>
 
+  <licenses>
+    <license>
+      <name>Apache 2</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
   <developers>
     <developer>
-      <name>Roland Huss</name>
       <id>roland</id>
+      <name>Roland Huss</name>
       <email>rhuss@redhat.com</email>
       <roles>
         <role>Developer</role>
       </roles>
     </developer>
     <developer>
-      <name>Jae Gangemi</name>
       <id>jgangemi</id>
+      <name>Jae Gangemi</name>
       <roles>
         <role>Developer</role>
       </roles>
     </developer>
   </developers>
+  <prerequisites>
+    <maven>3.0.3</maven>
+  </prerequisites>
+
+  <scm>
+    <connection>scm:git:git://github.com/fabric8io/docker-maven-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/fabric8io/docker-maven-plugin.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>git://github.com/fabric8io/docker-maven-plugin.git</url>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/fabric8io/docker-maven-plugin/issues/</url>
+  </issueManagement>
+
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.version>3.3.9</maven.version>
-    <jmockit.version>1.43</jmockit.version>
-    <surefire.version>3.0.0-M2</surefire.version>
-    <jib-core.version>0.18.0</jib-core.version>
-    <httpclient.version>4.5.13</httpclient.version>
     <excludedGroups>io.fabric8.maven.docker.UnixOnlyTests</excludedGroups>
+    <httpclient.version>4.5.13</httpclient.version>
+    <jib-core.version>0.18.0</jib-core.version>
+    <jmockit.version>1.43</jmockit.version>
+    <maven.version>3.3.9</maven.version>
     <project.build.outputTimestamp>2020-11-14T11:57:00Z</project.build.outputTimestamp>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <surefire.version>3.0.0-M2</surefire.version>
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>com.github.jnr</groupId>
+      <artifactId>jnr-unixsocket</artifactId>
+      <version>0.38.17</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>system-rules</artifactId>
+      <version>1.19.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.cloud.tools</groupId>
+      <artifactId>jib-core</artifactId>
+      <version>${jib-core.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.8.5</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>30.1-jre</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.jodah</groupId>
+      <artifactId>failsafe</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.1</version>
+    </dependency>
+
+    <!-- =============================================================================== -->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-plugin-api</artifactId>
-      <scope>provided</scope>
+      <artifactId>maven-artifact</artifactId>
       <version>${maven.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -64,33 +164,11 @@
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-artifact</artifactId>
+      <artifactId>maven-plugin-api</artifactId>
       <version>${maven.version}</version>
       <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.sonatype.plexus</groupId>
-      <artifactId>plexus-sec-dispatcher</artifactId>
-      <scope>provided</scope>
-      <version>1.3</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <scope>provided</scope>
-      <version>3.0.24</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-component-annotations</artifactId>
-      <scope>provided</scope>
-      <version>1.6</version>
     </dependency>
 
     <dependency>
@@ -98,50 +176,6 @@
       <artifactId>maven-plugin-annotations</artifactId>
       <version>3.5</version>
       <scope>provided</scope>
-    </dependency>
-
-    <!-- =============================================================================== -->
-
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.jnr</groupId>
-      <artifactId>jnr-unixsocket</artifactId>
-      <version>0.38.17</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.6</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-text</artifactId>
-      <version>1.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.8.5</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.fusesource.jansi</groupId>
-      <artifactId>jansi</artifactId>
-      <version>1.16</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
-      <version>1.65</version>
     </dependency>
 
     <dependency>
@@ -162,21 +196,23 @@
     </dependency>
 
     <dependency>
-      <groupId>com.google.cloud.tools</groupId>
-      <artifactId>jib-core</artifactId>
-      <version>${jib-core.version}</version>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>2.6.0</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>1.26</version>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>1.65</version>
     </dependency>
 
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>30.1-jre</version>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-component-annotations</artifactId>
+      <version>1.6</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -184,13 +220,19 @@
       <artifactId>plexus-interpolation</artifactId>
       <version>1.24</version>
     </dependency>
-    
+
     <dependency>
-      <groupId>net.jodah</groupId>
-      <artifactId>failsafe</artifactId>
-      <version>2.4.0</version>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.0.24</version>
+      <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.fusesource.jansi</groupId>
+      <artifactId>jansi</artifactId>
+      <version>1.16</version>
+    </dependency>
 
     <!-- =============================================================================== -->
 
@@ -209,17 +251,23 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.skyscreamer</groupId>
       <artifactId>jsonassert</artifactId>
       <version>1.5.0</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.sonatype.plexus</groupId>
+      <artifactId>plexus-sec-dispatcher</artifactId>
+      <version>1.3</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.26</version>
     </dependency>
 
     <dependency>
@@ -228,23 +276,81 @@
       <version>1.1.0</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>2.6.0</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.stefanbirkner</groupId>
-      <artifactId>system-rules</artifactId>
-      <version>1.19.0</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
+
+    <pluginManagement>
+      <plugins>
+
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.2.0</version>
+          <configuration>
+            <archive>
+              <addMavenDescriptor>true</addMavenDescriptor>
+            </archive>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>3.0.0-M1</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.version}</version>
+          <configuration>
+            <argLine>-javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar</argLine>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.asciidoctor</groupId>
+          <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>1.5.5</version>
+          <configuration>
+            <sourceDirectory>src/main/asciidoc</sourceDirectory>
+            <attributes>
+              <icons>font</icons>
+              <pagenums></pagenums>
+              <version>${project.version}</version>
+              <toc></toc>
+              <idprefix></idprefix>
+              <idseparator>-</idseparator>
+            </attributes>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>1.5.6</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+      </plugins>
+
+    </pluginManagement>
     <plugins>
 
       <plugin>
@@ -269,10 +375,10 @@
         <executions>
           <execution>
             <id>mojo-descriptor</id>
-            <phase>process-classes</phase>
             <goals>
               <goal>descriptor</goal>
             </goals>
+            <phase>process-classes</phase>
           </execution>
           <execution>
             <id>help-goal</id>
@@ -289,10 +395,10 @@
         <executions>
           <execution>
             <id>copy-plexus-resources</id>
-            <phase>process-resources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
+            <phase>process-resources</phase>
             <configuration>
               <outputDirectory>${basedir}/target/filtered-resources/META-INF/plexus</outputDirectory>
               <resources>
@@ -305,10 +411,10 @@
           </execution>
           <execution>
             <id>copy-asciidoc</id>
-            <phase>process-resources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
+            <phase>process-resources</phase>
             <configuration>
               <outputDirectory>${project.build.outputDirectory}/META-INF/doc/dmp</outputDirectory>
               <resources>
@@ -339,80 +445,6 @@
       </plugin>
     </plugins>
 
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>3.0.0-M1</version>
-        </plugin>
-
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.0</version>
-          <configuration>
-            <archive>
-              <addMavenDescriptor>true</addMavenDescriptor>
-            </archive>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>3.2.0</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.2.0</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.asciidoctor</groupId>
-          <artifactId>asciidoctor-maven-plugin</artifactId>
-          <version>1.5.5</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.asciidoctor</groupId>
-              <artifactId>asciidoctorj</artifactId>
-              <version>1.5.6</version>
-            </dependency>
-          </dependencies>
-          <configuration>
-            <sourceDirectory>src/main/asciidoc</sourceDirectory>
-            <attributes>
-              <icons>font</icons>
-              <pagenums />
-              <version>${project.version}</version>
-              <toc />
-                <idprefix />
-              <idseparator>-</idseparator>
-            </attributes>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire.version}</version>
-          <configuration>
-            <argLine>
-              -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
-            </argLine>
-          </configuration>
-        </plugin>
-
-      </plugins>
-
-    </pluginManagement>
-
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
@@ -421,40 +453,6 @@
       </extension>
     </extensions>
   </build>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-
-  <issueManagement>
-    <system>GitHub</system>
-    <url>https://github.com/fabric8io/docker-maven-plugin/issues/</url>
-  </issueManagement>
-
-  <scm>
-    <connection>scm:git:git://github.com/fabric8io/docker-maven-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/fabric8io/docker-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
-    <url>git://github.com/fabric8io/docker-maven-plugin.git</url>
-  </scm>
-
-  <licenses>
-    <license>
-      <name>Apache 2</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
 
   <profiles>
     <!-- "release" profiles used for deploying with fabric8 -->
@@ -472,25 +470,6 @@
           </plugin>
 
           <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <serverId>oss-sonatype-staging</serverId>
-            </configuration>
-          </plugin>
-
-          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
             <version>1.6</version>
@@ -500,9 +479,27 @@
             <executions>
               <execution>
                 <id>sign-artifacts</id>
-                <phase>verify</phase>
                 <goals>
                   <goal>sign</goal>
+                </goals>
+                <phase>verify</phase>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <skip>false</skip>
+              <source>8</source>
+              <additionalJOption>-Xdoclint:none</additionalJOption>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
                 </goals>
               </execution>
             </executions>
@@ -525,19 +522,20 @@
           </plugin>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.8</version>
             <configuration>
-              <skip>false</skip>
-              <source>8</source>
-              <additionalJOption>-Xdoclint:none</additionalJOption>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <serverId>oss-sonatype-staging</serverId>
             </configuration>
             <executions>
               <execution>
-                <id>attach-javadocs</id>
+                <id>default-deploy</id>
                 <goals>
-                  <goal>jar</goal>
+                  <goal>deploy</goal>
                 </goals>
+                <phase>deploy</phase>
               </execution>
             </executions>
           </plugin>
@@ -558,36 +556,14 @@
         <dependency>
           <groupId>org.jacoco</groupId>
           <artifactId>org.jacoco.agent</artifactId>
-          <classifier>runtime</classifier>
           <version>${jacoco.version}</version>
+          <classifier>runtime</classifier>
           <scope>test</scope>
         </dependency>
       </dependencies>
 
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>${jacoco.version}</version>
-            <executions>
-              <execution>
-                <id>instrument</id>
-                <phase>process-classes</phase>
-                <goals>
-                  <goal>instrument</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>restore</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>restore-instrumented-classes</goal>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -600,6 +576,28 @@
               </systemPropertyVariables>
             </configuration>
           </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>instrument</id>
+                <goals>
+                  <goal>instrument</goal>
+                </goals>
+                <phase>process-classes</phase>
+              </execution>
+              <execution>
+                <id>restore</id>
+                <goals>
+                  <goal>restore-instrumented-classes</goal>
+                  <goal>report</goal>
+                </goals>
+                <phase>test</phase>
+              </execution>
+            </executions>
+          </plugin>
 
         </plugins>
       </build>
@@ -608,6 +606,7 @@
     <profile>
       <id>doc-html</id>
       <build>
+        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
         <plugins>
           <plugin>
             <groupId>org.asciidoctor</groupId>
@@ -621,12 +620,12 @@
             </configuration>
           </plugin>
         </plugins>
-        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
       </build>
     </profile>
     <profile>
       <id>doc-pdf</id>
       <build>
+        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
         <plugins>
           <plugin>
             <groupId>org.asciidoctor</groupId>
@@ -644,28 +643,29 @@
             </dependencies>
           </plugin>
         </plugins>
-        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
       </build>
     </profile>
     <profile>
       <id>unix-test</id>
       <activation>
-        <os><family>unix</family></os>
+        <os>
+          <family>unix</family>
+        </os>
       </activation>
       <properties>
-        <excludedGroups/>
+        <excludedGroups></excludedGroups>
       </properties>
     </profile>
     <profile>
       <id>sonar</id>
       <properties>
-        <sonar.projectKey>fabric8io_docker-maven-plugin</sonar.projectKey>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.login>${env.SONAR_TOKEN}</sonar.login>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
         <sonar.organization>fabric8io</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.login>${env.SONAR_TOKEN}</sonar.login>
-        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.projectKey>fabric8io_docker-maven-plugin</sonar.projectKey>
       </properties>
       <build>
         <plugins>
@@ -675,10 +675,10 @@
             <executions>
               <execution>
                 <id>sonar</id>
-                <phase>install</phase>
                 <goals>
                   <goal>sonar</goal>
                 </goals>
+                <phase>install</phase>
               </execution>
             </executions>
           </plugin>

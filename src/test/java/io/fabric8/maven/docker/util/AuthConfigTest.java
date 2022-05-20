@@ -42,6 +42,13 @@ public class AuthConfigTest {
         check(config);
     }
 
+    @Test
+    public void toJsonConfig() {
+        AuthConfig config = new AuthConfig("king.roland", "12345", "king_roland@druidia.com", null);
+        config.setRegistry("druidia.com/registry");
+        assertEquals("{\"auths\":{\"druidia.com/registry\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
+    }
+
     private void check(AuthConfig config) {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used

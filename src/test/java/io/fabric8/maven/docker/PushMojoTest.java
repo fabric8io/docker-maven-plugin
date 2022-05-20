@@ -3,6 +3,7 @@ package io.fabric8.maven.docker;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.util.ProjectPaths;
 import mockit.Deencapsulation;
 import mockit.Mocked;
 import mockit.Tested;
@@ -81,14 +82,14 @@ public class PushMojoTest extends BaseMojoTest {
 
   private void thenImagePushed() throws MojoExecutionException, DockerAccessException {
     new Verifications() {{
-      registryService.pushImages((Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
+      registryService.pushImages((ProjectPaths) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
       times = 1;
     }};
   }
 
   private void thenImageNotPushed() throws DockerAccessException, MojoExecutionException {
     new Verifications() {{
-      registryService.pushImages((Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
+      registryService.pushImages((ProjectPaths) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
       times = 0;
     }};
   }

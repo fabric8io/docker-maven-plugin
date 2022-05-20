@@ -210,6 +210,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         return minimalApiVersion;
     }
 
+    public boolean isBuildX() {
+        return build.isBuildX();
+    }
+
     // =========================================================================
     // Builder for image configurations
 

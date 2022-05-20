@@ -16,16 +16,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -107,6 +105,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
     private final Logger log;
 
     private final ApacheHttpClientDelegate delegate;
+    private final String apiVersion;
+    private final String nativePlatform;
     private final UrlBuilder urlBuilder;
 
     /**
@@ -117,9 +117,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
      *                 directory
      * @param maxConnections maximum parallel connections allowed to docker daemon (if a pool is used)
      * @param log      a log handler for printing out logging information
-     * @paran usePool  whether to use a connection bool or not
      */
-    public DockerAccessWithHcClient(String baseUrl,
+    public DockerAccessWithHcClient(@Nonnull String baseUrl,
                                     String certPath,
                                     int maxConnections,
                                     Logger log) throws IOException {
@@ -137,37 +136,38 @@ public class DockerAccessWithHcClient implements DockerAccess {
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
         }
 
-        // Strip trailing slashes if any
-        while(baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-        this.urlBuilder = new UrlBuilder(baseUrl, "v" + fetchApiVersionFromServer(baseUrl, this.delegate));
+        baseUrl = stripTrailingSlash(baseUrl);
+        String url = baseUrl + "/version";
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
+        JsonObject info = JsonFactory.newJsonObject(delegate.get(url, HTTP_OK));
+        this.apiVersion = info.get("ApiVersion").getAsString();
+        this.nativePlatform = info.get("Os").getAsString() + "/" + info.get("Arch").getAsString();
+        this.urlBuilder = new UrlBuilder(baseUrl, "v" + apiVersion);
         this.log = log;
+    }
+
+    static String stripTrailingSlash(String url) {
+        int last = url.length();
+        while (url.charAt(last - 1) == '/') {
+            --last;
+        }
+        return url.substring(0, last);
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getServerApiVersion() throws DockerAccessException {
-        try {
-            String url = urlBuilder.version();
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
-            String response = delegate.get(url, 200);
-            JsonObject info = JsonFactory.newJsonObject(response);
-            return info.get("ApiVersion").getAsString();
-        } catch (Exception e) {
-            throw new DockerAccessException(e, "Cannot extract API version from server %s", urlBuilder.getBaseUrl());
-        }
+    public String getServerApiVersion() {
+        return apiVersion;
     }
 
     @Override
     public void startExecContainer(String containerId, LogOutputSpec outputSpec) throws DockerAccessException {
+        String url = urlBuilder.startExecContainer(containerId);
+        JsonObject request = new JsonObject();
+        request.addProperty("Detach", false);
+        request.addProperty("Tty", true);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, request);
         try {
-            String url = urlBuilder.startExecContainer(containerId);
-            JsonObject request = new JsonObject();
-            request.addProperty("Detach", false);
-            request.addProperty("Tty", true);
-
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, request);
             delegate.post(url, request.toString(), createExecResponseHandler(outputSpec), HTTP_OK);
         } catch (Exception e) {
             throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
@@ -229,11 +229,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public String createContainer(ContainerCreateConfig containerConfig, String containerName)
             throws DockerAccessException {
         String createJson = containerConfig.toJson();
-        log.debug("Container create config: %s", createJson);
-
+        String url = urlBuilder.createContainer(containerName);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
         try {
-            String url = urlBuilder.createContainer(containerName);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             JsonObject json = JsonFactory.newJsonObject(response);
@@ -249,9 +247,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void startContainer(String containerId) throws DockerAccessException {
+        String url = urlBuilder.startContainer(containerId);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
         try {
-            String url = urlBuilder.startContainer(containerId);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
@@ -260,9 +258,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void stopContainer(String containerId, int killWait) throws DockerAccessException {
+        String url = urlBuilder.stopContainer(containerId, killWait);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
         try {
-            String url = urlBuilder.stopContainer(containerId, killWait);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to stop container id [%s]", containerId);
@@ -271,9 +269,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void killContainer(String containerId) throws DockerAccessException {
+        String url = urlBuilder.killContainer(containerId);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
         try {
-            String url = urlBuilder.killContainer(containerId);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException ie) {
             throw new DockerAccessException(ie, "Unable to kill container id [%s]", containerId);
@@ -282,9 +280,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void buildImage(String image, File dockerArchive, BuildOptions options) throws DockerAccessException {
+        String url = urlBuilder.buildImage(image, options);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_FILE, url, dockerArchive);
         try {
-            String url = urlBuilder.buildImage(image, options);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_FILE, url, dockerArchive);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to build image [%s]", image);
@@ -294,9 +292,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void copyArchiveToContainer(String containerId, File archive, String targetPath)
             throws DockerAccessException {
+        String url = urlBuilder.copyArchive(containerId, targetPath);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_PUT_FILE, url, archive);
         try {
-            String url = urlBuilder.copyArchive(containerId, targetPath);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_PUT_FILE, url, archive);
             delegate.put(url, archive, HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to copy archive %s to container [%s] with path %s",
@@ -307,9 +305,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void copyArchiveFromContainer(String containerId, String containerPath, File archive)
             throws DockerAccessException {
+        String url = urlBuilder.copyArchive(containerId, containerPath);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
-            String url = urlBuilder.copyArchive(containerId, containerPath);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
             delegate.get(url, getContainerFileHandler(archive), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to copy archived path %s from container [%s] into file %s",
@@ -355,8 +353,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
             url = urlBuilder.listContainers(all);
         }
 
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
             String response = delegate.get(url, HTTP_OK);
             JsonArray array = JsonFactory.newJsonArray(response);
             List<Container> containers = new ArrayList<>();
@@ -376,7 +374,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public List<Container> listContainers(boolean all) throws DockerAccessException {
         String url = urlBuilder.listContainers(all);
-
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             String response = delegate.get(url, HTTP_OK);
             JsonArray array = JsonFactory.newJsonArray(response);
@@ -413,8 +411,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     private HttpBodyAndStatus inspectContainer(String containerIdOrName) throws DockerAccessException {
+        String url = urlBuilder.inspectContainer(containerIdOrName);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
-            String url = urlBuilder.inspectContainer(containerIdOrName);
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
@@ -422,8 +421,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     private HttpBodyAndStatus inspectExecContainer(String containerIdOrName) throws DockerAccessException {
+        String url = urlBuilder.inspectExecContainer(containerIdOrName);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
-            String url = urlBuilder.inspectExecContainer(containerIdOrName);
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
@@ -433,7 +433,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public List<Image> listImages(boolean all) throws DockerAccessException {
         String url = urlBuilder.listImages(all);
-
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             String response = delegate.get(url, HTTP_OK);
             JsonArray array = JsonFactory.newJsonArray(response);
@@ -452,6 +452,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public boolean hasImage(String name) throws DockerAccessException {
         String url = urlBuilder.inspectImage(name);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             return delegate.get(url, new ApacheHttpClientDelegate.StatusCodeResponseHandler(), HTTP_OK, HTTP_NOT_FOUND) == HTTP_OK;
         } catch (IOException e) {
@@ -487,6 +488,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private HttpBodyAndStatus inspectImage(String name) throws DockerAccessException {
         String url = urlBuilder.inspectImage(name);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
@@ -497,9 +499,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void removeContainer(String containerId, boolean removeVolumes)
             throws DockerAccessException {
+        String url = urlBuilder.removeContainer(containerId, removeVolumes);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
         try {
-            String url = urlBuilder.removeContainer(containerId, removeVolumes);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
             delegate.delete(url, HTTP_NO_CONTENT);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
@@ -509,7 +511,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void loadImage(String image, File tarArchive) throws DockerAccessException {
         String url = urlBuilder.loadImage();
-
         log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_FILE, url, tarArchive);
         try {
             delegate.post(url, tarArchive, new BodyAndStatusResponseHandler(), HTTP_OK);
@@ -522,7 +523,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void pullImage(String image, AuthConfig authConfig, String registry, CreateImageOptions options)
             throws DockerAccessException {
         String pullUrl = urlBuilder.pullImage(options);
-
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, pullUrl);
         try {
             delegate.post(pullUrl, null, createAuthHeader(authConfig),
                     createPullOrPushResponseHandler(), HTTP_OK);
@@ -536,6 +537,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, pushUrl);
         TemporaryImageHandler temporaryImageHandler = tagTemporaryImage(name, registry);
         DockerAccessException dae = null;
         try {
@@ -552,12 +554,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String url = urlBuilder.getImage(name);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             delegate.get(url, getImageResponseHandler(filename, compression), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to save '%s' to '%s'", image, filename);
         }
-
     }
 
     private ResponseHandler<Object> getImageResponseHandler(final String filename, final ArchiveCompression compression) throws FileNotFoundException {
@@ -578,8 +580,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         ImageName source = new ImageName(sourceImage);
         ImageName target = new ImageName(targetImage);
+        String url = urlBuilder.tagContainer(source, target, force);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST, url);
         try {
-            String url = urlBuilder.tagContainer(source, target, force);
             delegate.post(url, HTTP_CREATED);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to add tag [%s] to image [%s]", targetImage,
@@ -588,15 +591,14 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public boolean removeImage(String image, boolean... forceOpt) throws DockerAccessException {
-        boolean force = forceOpt != null && forceOpt.length > 0 && forceOpt[0];
+    public boolean removeImage(String image, boolean force) throws DockerAccessException {
+        String url = urlBuilder.deleteImage(image, force);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
         try {
-            String url = urlBuilder.deleteImage(image, force);
             HttpBodyAndStatus response = delegate.delete(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
             if (log.isDebugEnabled()) {
                 logRemoveResponse(JsonFactory.newJsonArray(response.getBody()));
             }
-
             return response.getStatusCode() == HTTP_OK;
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove image [%s]", image);
@@ -606,7 +608,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public List<Network> listNetworks() throws DockerAccessException {
         String url = urlBuilder.listNetworks();
-
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
         try {
             String response = delegate.get(url, HTTP_OK);
             JsonArray array = JsonFactory.newJsonArray(response);
@@ -627,9 +629,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         String createJson = networkConfig.toJson();
         log.debug("Network create config: " + createJson);
+        String url = urlBuilder.createNetwork();
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
         try {
-            String url = urlBuilder.createNetwork();
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             log.debug(response);
@@ -649,9 +651,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public boolean removeNetwork(String networkId)
             throws DockerAccessException {
+        String url = urlBuilder.removeNetwork(networkId);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
         try {
-            String url = urlBuilder.removeNetwork(networkId);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
             int status = delegate.delete(url, HTTP_OK, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
             return status == HTTP_OK || status == HTTP_NO_CONTENT;
         } catch (IOException e) {
@@ -665,11 +667,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
     {
         String createJson = containerConfig.toJson();
         log.debug("Volume create config: %s", createJson);
-
+        String url = urlBuilder.createVolume();
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
         try
         {
-            String url = urlBuilder.createVolume();
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
             String response =
                     delegate.post(url,
                                   createJson,
@@ -689,15 +690,19 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void removeVolume(String name) throws DockerAccessException {
+        String url = urlBuilder.removeVolume(name);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
         try {
-            String url = urlBuilder.removeVolume(name);
-            log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
             delegate.delete(url, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove volume [%s]", name);
         }
     }
 
+    @Override
+    public String getNativePlatform() {
+        return nativePlatform;
+    }
 
     // ---------------
     // Lifecycle methods not needed here
@@ -746,7 +751,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private void doPushImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
                              int retries) throws IOException {
-        // 0: The original attemp, 1..retry: possible retries.
+        // 0: The original attempt, 1..retry: possible retries.
         for (int i = 0; i <= retries; i++) {
             try {
                 delegate.post(url, null, header, handler, HTTP_OK);
@@ -808,17 +813,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     private static boolean isSSL(String url) {
-        return url != null && url.toLowerCase().startsWith("https");
-    }
-
-    public String fetchApiVersionFromServer(String baseUrl, ApacheHttpClientDelegate delegate) throws IOException {
-        HttpGet get = new HttpGet(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "version");
-        get.addHeader(HttpHeaders.ACCEPT, "*/*");
-        get.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        try (CloseableHttpResponse response = delegate.getHttpClient().execute(get)) {
-
-            return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
-        }
+        return url.toLowerCase().startsWith("https");
     }
 
     @FunctionalInterface

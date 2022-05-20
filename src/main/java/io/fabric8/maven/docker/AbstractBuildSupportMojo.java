@@ -37,7 +37,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private Map<String, String> buildArgs;
 
     @Parameter(property = "docker.pull.registry")
-    private String pullRegistry;
+    String pullRegistry;
 
     @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
     private List<MavenProject> reactorProjects;

@@ -2,7 +2,6 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
-import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
@@ -39,9 +37,9 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.NamePatternUtil;
 
+import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -51,7 +49,6 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
-import org.apache.maven.shared.utils.StringUtils;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
@@ -233,7 +230,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private List<ImageConfiguration> resolvedImages;
 
     // Handler dealing with authentication credentials
-    private AuthConfigFactory authConfigFactory;
+    AuthConfigFactory authConfigFactory;
 
     protected AnsiLogger log;
 
@@ -321,7 +318,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) throws MojoExecutionException {
+    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) {
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
                 .authConfig(authConfig != null ? authConfig.toMap() : null)
@@ -457,7 +454,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // =================================================================================
-
     protected GavLabel getGavLabel() {
         // Label used for this run
         return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
@@ -607,5 +603,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     private String determinePullPolicy(RunImageConfiguration runConfig) {
         return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
+    }
+
+    protected ProjectPaths createProjectPaths() {
+        return new ProjectPaths(project.getBasedir(), outputDirectory);
     }
 }

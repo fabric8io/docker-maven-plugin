@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
+import io.fabric8.maven.docker.config.BuildXConfiguration;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
 import org.apache.maven.model.Build;
 import org.apache.maven.monitor.logging.DefaultLog;
 import org.apache.maven.project.MavenProject;
@@ -35,7 +37,6 @@ import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.GavLabel;
-import io.fabric8.maven.docker.util.Logger;
 import mockit.Deencapsulation;
 import mockit.Expectations;
 import mockit.Injectable;
@@ -79,6 +80,9 @@ public class BaseMojoTest {
     @Mocked
     private LogDispatcher logDispatcher;
 
+    @Mocked
+    protected AuthConfigFactory authConfigFactory;
+
     protected String projectGroupId;
     protected String projectArtifactId;
     protected String projectVersion;
@@ -102,12 +106,24 @@ public class BaseMojoTest {
     }
 
     protected ImageConfiguration singleImageWithBuild() {
-        return new ImageConfiguration.Builder()
-                .name("example:latest")
-                .buildConfig(new BuildImageConfiguration.Builder()
-                        .from("scratch")
-                        .build())
-                .build();
+        return singleImageConfiguration(null);
+    }
+
+    protected ImageConfiguration singleBuildXImage(String configFile) {
+        return singleImageConfiguration(new BuildXConfiguration.Builder()
+            .configFile(configFile)
+            .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
+            .build());
+    }
+
+    private ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx) {
+        return new Builder()
+            .name("example:latest")
+            .buildConfig(new BuildImageConfiguration.Builder()
+                .from("scratch")
+                .buildx(buildx)
+                .build())
+            .build();
     }
 
     protected ImageConfiguration singleImageWithBuildWithTags(String... tags) {
@@ -214,6 +230,8 @@ public class BaseMojoTest {
         Deencapsulation.setField(mojo, "resolvedImages", Collections.emptyList());
         Deencapsulation.setField(mojo, "project", mavenProject);
         Deencapsulation.setField(mojo, "log", this.ansiLogger);
+        Deencapsulation.setField(mojo, "outputDirectory", "target/docker");
+        Deencapsulation.setField(mojo, "authConfigFactory", authConfigFactory);
 
         mojo.setPluginContext(new HashMap());
         mojo.getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, logDispatcher);

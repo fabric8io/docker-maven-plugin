@@ -1,8 +1,9 @@
-package io.fabric8.maven.docker.assembly;/*
- * 
+package io.fabric8.maven.docker.assembly;
+/*
+ *
  * Copyright 2014 Roland Huss
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -16,9 +17,14 @@ package io.fabric8.maven.docker.assembly;/*
  */
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ProjectPaths;
+
+import javax.annotation.Nonnull;
 
 /**
  * Helper object grouping together all working and output
@@ -29,20 +35,35 @@ import io.fabric8.maven.docker.util.EnvUtil;
  */
 public class BuildDirs {
 
+    private final Path projectBasePath;
+    private final Path buildPath;
     private final String buildTopDir;
-    private final MojoParameters params;
 
     /**
-     * Constructor building up the the output directories
+     * Constructor building up the output directories
+     *
+     * @param projectPaths baseDir and outputDir
+     * @param imageName image name for the image to build
+     */
+    public BuildDirs( ProjectPaths projectPaths,  String imageName) {
+        // Replace tag separator with a slash to avoid problems with OSs which get confused by colons.
+        buildTopDir = imageName.replace(':', File.separatorChar).replace('/', File.separatorChar);
+        projectBasePath= projectPaths.getProjectBasePath();
+        buildPath = projectPaths.getOutputPath().resolve(buildTopDir);
+    }
+
+    /**
+     * Constructor building up the output directories
      *
      * @param imageName image name for the image to build
      * @param params mojo params holding base and global output dir
      */
-    public BuildDirs(String imageName, MojoParameters params) {
-        this.params = params;
-        // Replace tag separator with a slash to avoid problems
-        // with OSs which gets confused by colons.
-        this.buildTopDir = imageName != null ? imageName.replace(':', File.separatorChar).replace("/", File.separator) : null;
+    public BuildDirs(@Nonnull String imageName, MojoParameters params) {
+        this(new ProjectPaths(params.getProject().getBasedir(), params.getOutputDirectory()), imageName);
+    }
+
+    public String getBuildTopDir() {
+        return buildTopDir;
     }
 
     public File getOutputDirectory() {
@@ -57,18 +78,26 @@ public class BuildDirs {
         return getDir("tmp");
     }
 
-    void createDirs() {
-        for (String workDir : new String[] { "build", "work", "tmp" }) {
-            File dir = getDir(workDir);
-            if (!dir.exists()) {
-                if(!dir.mkdirs()) {
-                    throw new IllegalArgumentException("Cannot create directory " + dir.getAbsolutePath());
-                }
-            }
-        }
+    public Path getBuildPath(String subdir) {
+        return buildPath.resolve(subdir);
     }
 
-    private File getDir(String dir) {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, dir);
+    public Path getProjectPath(String subdir) {
+        return projectBasePath.resolve(subdir);
+    }
+
+    private File getDir(String subdir) {
+        return getBuildPath(subdir).toFile();
+    }
+
+    void createDirs() {
+        for (String workDir : new String[] { "build", "work", "tmp" }) {
+            Path dir = getBuildPath(workDir);
+            try {
+                Files.createDirectories(dir);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot create directory " + dir);
+            }
+        }
     }
 }

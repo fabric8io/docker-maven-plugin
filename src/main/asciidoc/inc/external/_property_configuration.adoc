@@ -73,6 +73,18 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.buildArg.VARIABLE*
 | Set a ARG to be available during build of image. *Note*: this is handled separately from external configuration, and is always available. See <<property-buildargs,Build Args>> for more details.
 
+| *docker.buildx.builderName*
+| Name of buildx builder
+
+| *docker.buildx.cache*
+| Location of image cache
+
+| *docker.buildx.configFile*
+| Configuration file for buildx builder
+
+| *docker.buildx.platform*
+| Platform for multi-architecture image
+
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container. See <<list-properties>>.
 

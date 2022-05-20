@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -16,18 +16,95 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.39.1</version>
+    <version>0.40.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-net</artifactId>
-  <version>0.39.1</version>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <watchInterval>500</watchInterval>
+          <logDate>default</logDate>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <images>
+            <image>
+              <alias>box1</alias>
+              <name>busybox</name>
+              <run>
+                <namingStrategy>alias</namingStrategy>
+                <net>${box1.net}</net>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <log>
+                  <prefix>1</prefix>
+                  <color>cyan</color>
+                </log>
+                <wait>
+                  <log>finish</log>
+                </wait>
+              </run>
+            </image>
+            <image>
+              <alias>box2</alias>
+              <name>busybox</name>
+              <run>
+                <net>${box2.net}</net>
+                <namingStrategy>alias</namingStrategy>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <log>
+                  <prefix>2</prefix>
+                  <color>blue</color>
+                </log>
+                <wait>
+                  <log>finish</log>
+                </wait>
+              </run>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+            <phase>pre-integration-test</phase>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <phase>post-integration-test</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <profiles>
     <profile>
       <!-- "box1" connects to the network of "box2" which is bridged -->
       <id>container</id>
-      <activation><activeByDefault>true</activeByDefault></activation>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <box1.net>container:box2</box1.net>
         <box2.net>bridge</box2.net>
@@ -71,79 +148,5 @@
     </profile>
 
   </profiles>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <configuration>
-          <watchInterval>500</watchInterval>
-          <logDate>default</logDate>
-          <verbose>true</verbose>
-          <autoPull>always</autoPull>
-          <images>
-            <image>
-              <alias>box1</alias>
-              <name>busybox</name>
-              <run>
-                <namingStrategy>alias</namingStrategy>
-                <net>${box1.net}</net>
-                <cmd>
-                  <exec>
-                    <args>sh</args>
-                    <args>-c</args>
-                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
-                  </exec>
-                </cmd>
-                <log>
-                  <prefix>1</prefix> <color>cyan</color>
-                </log>
-                <wait>
-                  <log>finish</log>
-                </wait>
-              </run>
-            </image>
-            <image>
-              <alias>box2</alias>
-              <name>busybox</name>
-              <run>
-                <net>${box2.net}</net>
-                <namingStrategy>alias</namingStrategy>
-                <cmd>
-                  <exec>
-                    <args>sh</args>
-                    <args>-c</args>
-                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
-                  </exec>
-                </cmd>
-                <log>
-                  <prefix>2</prefix> <color>blue</color>
-                </log>
-                <wait>
-                  <log>finish</log>
-                </wait>
-              </run>
-            </image>
-          </images>
-        </configuration>
-        <executions>
-          <execution>
-            <id>start</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>start</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

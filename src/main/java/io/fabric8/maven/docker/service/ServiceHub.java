@@ -46,6 +46,7 @@ public class ServiceHub {
     private final WatchService watchService;
     private final WaitService waitService;
     private final DockerAssemblyManager dockerAssemblyManager;
+    private final BuildXService buildXService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -59,7 +60,8 @@ public class ServiceHub {
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
-            registryService = new RegistryService(dockerAccess, queryService, logger);
+            buildXService= new BuildXService(dockerAccess, logger);
+            registryService = new RegistryService(dockerAccess, queryService, buildXService, logger);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
             volumeService = new VolumeService(dockerAccess);
@@ -73,6 +75,7 @@ public class ServiceHub {
             volumeService = null;
             watchService = null;
             waitService = null;
+            buildXService =null;
         }
     }
 
@@ -159,21 +162,22 @@ public class ServiceHub {
     }
 
     /**
-     * Serivce for creating archives
+     * Build multi-architecture images
+     *
+     * @return the buildx builder
+     */
+    public BuildXService getBuildXService() {
+        checkDockerAccessInitialization();
+        return buildXService;
+    }
+
+    /**
+     * Service for creating archives
      *
      * @return the archive service
      */
     public ArchiveService getArchiveService() {
         return archiveService;
-    }
-
-    /**
-     * Get a service for executing goals on other Maven mojos
-     *
-     * @return service for calling other mojos
-     */
-    public MojoExecutionService getMojoExecutionService() {
-        return mojoExecutionService;
     }
 
     public DockerAssemblyManager getDockerAssemblyManager() {
@@ -185,6 +189,4 @@ public class ServiceHub {
             throw new IllegalStateException("Service hub created without a docker access to a docker daemon");
         }
     }
-
-
 }
