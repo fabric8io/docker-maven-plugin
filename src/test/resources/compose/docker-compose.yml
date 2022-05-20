@@ -51,6 +51,7 @@ services:
   #   key: value
     mem_limit: 1
     memswap_limit: 1
+    mem_swappiness: 1
   # net: "host"
   # pid: "host"
     ports:

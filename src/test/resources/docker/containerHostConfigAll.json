@@ -36,6 +36,7 @@
   ],
   "Memory":1,
   "MemorySwap":1,
+  "MemorySwappiness":60,
   "RestartPolicy":{
     "Name":"on-failure",
     "MaximumRetryCount":1

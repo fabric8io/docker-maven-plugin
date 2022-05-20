@@ -1,21 +1,10 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
+
+import java.io.File;
+import java.util.*;
 
 
 class DockerComposeServiceWrapper {
@@ -307,6 +296,10 @@ class DockerComposeServiceWrapper {
 
     Long getMemorySwap() {
         return asLong("memswap_limit");
+    }
+
+    Long getMemorySwappiness() {
+        return asLong("mem_swappiness");
     }
 
     Boolean getPrivileged() {

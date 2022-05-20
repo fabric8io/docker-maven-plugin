@@ -81,6 +81,10 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Long memorySwap;
 
+    // Tune a container's memory swappiness behavior. Accepts an integer between 0 and 100.
+    @Parameter
+    private Long memorySwappiness;
+
     // Path to a file where the dynamically mapped properties are written to
     @Parameter
     private String portPropertyFile;
@@ -272,6 +276,10 @@ public class RunImageConfiguration implements Serializable {
 
     public Long getMemorySwap() {
         return memorySwap;
+    }
+
+    public Long getMemorySwappiness() {
+        return memorySwappiness;
     }
 
     public String getIsolation() {
@@ -534,6 +542,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder memorySwap(Long memorySwap) {
             config.memorySwap = memorySwap;
+            return this;
+        }
+
+        public Builder memorySwappiness(Long memorySwappiness) {
+            config.memorySwappiness = memorySwappiness;
             return this;
         }
 

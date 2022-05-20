@@ -243,6 +243,9 @@ See <<list-properties>>.
 | *docker.memorySwap*
 | Total memory limit (memory + swap) in bytes. Set `docker.memorySwap` equal to `docker.memory` to disable swap. Set to `-1` to allow unlimited swap.
 
+| *docker.memorySwappiness*
+| Tune a container's memory swappiness behavior. Accepts an integer between 0 and 100.
+
 | *docker.name*
 | Image name
 

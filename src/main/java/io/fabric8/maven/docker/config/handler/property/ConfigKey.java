@@ -95,6 +95,7 @@ public enum ConfigKey {
     MAINTAINER,
     MEMORY,
     MEMORY_SWAP,
+    MEMORY_SWAPPINESS,
     NAME,
     NAMING_STRATEGY,
     NET,

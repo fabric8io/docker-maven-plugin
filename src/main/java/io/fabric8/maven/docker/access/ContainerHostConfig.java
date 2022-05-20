@@ -2,17 +2,16 @@ package io.fabric8.maven.docker.access;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerHostConfig {
 
@@ -61,6 +60,10 @@ public class ContainerHostConfig {
 
     public ContainerHostConfig memorySwap(Long memorySwap) {
         return add("MemorySwap", memorySwap);
+    }
+
+    public ContainerHostConfig memorySwappiness(Long memorySwappiness) {
+        return add("MemorySwappiness", memorySwappiness);
     }
 
     public ContainerHostConfig dns(List<String> dns) {

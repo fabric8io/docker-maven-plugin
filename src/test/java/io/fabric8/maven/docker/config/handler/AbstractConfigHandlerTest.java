@@ -37,6 +37,7 @@ public abstract class AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals((Long) 1L, runConfig.getMemorySwappiness());
         assertEquals((Long) 1000000000L, runConfig.getCpus());
         assertEquals("default", runConfig.getIsolation());
         assertEquals((Long) 1L, runConfig.getCpuShares());

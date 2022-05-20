@@ -1,72 +1,23 @@
 package io.fabric8.maven.docker.service;
 
-import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
-
-/*
- *
- * Copyright 2014 Roland Huss
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import java.io.File;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-
-import io.fabric8.maven.docker.access.ContainerCreateConfig;
-import io.fabric8.maven.docker.access.ContainerHostConfig;
-import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.access.NetworkCreateConfig;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.StopMode;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.access.*;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.model.ContainerDetails;
-import io.fabric8.maven.docker.model.ExecDetails;
-import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.model.PortBindingException;
+import io.fabric8.maven.docker.model.*;
 import io.fabric8.maven.docker.service.ContainerTracker.ContainerShutdownDescriptor;
-import io.fabric8.maven.docker.util.ContainerNamingUtil;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.GavLabel;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+
+import java.io.File;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 
 /**
  * Service class for helping in running containers.
@@ -430,6 +381,7 @@ public class RunService {
                 .securityOpts(runConfig.getSecurityOpts())
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())
+                .memorySwappiness(runConfig.getMemorySwappiness())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
                 .logConfig(runConfig.getLogConfiguration())
                 .tmpfs(runConfig.getTmpfs())
