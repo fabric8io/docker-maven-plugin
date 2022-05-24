@@ -121,6 +121,7 @@ abstract class MojoTestBase {
             .buildConfig(new BuildImageConfiguration.Builder()
                 .from("scratch")
                 .buildx(buildx)
+                .args(Collections.singletonMap("foo", "bar"))
                 .build())
             .build();
     }
