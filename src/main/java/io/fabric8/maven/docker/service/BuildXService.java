@@ -123,7 +123,7 @@ public class BuildXService {
         Map<String, String> args = buildConfiguration.getArgs();
         if (args != null) {
             args.forEach((key, value) -> {
-                cmdLine.add("--buildarg");
+                cmdLine.add("--build-arg");
                 cmdLine.add(key + '=' + value);
             });
         }

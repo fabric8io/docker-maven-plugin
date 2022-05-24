@@ -119,13 +119,13 @@ class BuildMojoTest extends MojoTestBase {
 
         Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
             "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64,linux/arm64", "--tag", "example:latest",
+            "--platform", "linux/amd64,linux/arm64", "--tag", "example:latest", "--build-arg", "foo=bar",
             "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
             buildDir));
 
         Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
             "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64", "--tag", "example:latest",
+            "--platform", "linux/amd64", "--tag", "example:latest", "--build-arg", "foo=bar",
             "--load",
             "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
             buildDir));

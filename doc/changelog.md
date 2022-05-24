@@ -6,6 +6,7 @@
   - Support for `docker run --sysctl` parameters ([1530](https://github.com/fabric8io/docker-maven-plugin/issues/1530)) @jpraet
   - Migrate to JUnit5 and Mockito for testing ([1550](https://github.com/fabric8io/docker-maven-plugin/pull/1550)) @chonton
   - Multi-architecture images using buildx ([1502](https://github.com/fabric8io/docker-maven-plugin/issues/1502)) @chonton
+  - Add missing dash to buildx `--build-arg` ([1559](https://github.com/fabric8io/docker-maven-plugin/pull/1559)) @elektro-wolle
 
 * **0.39.1** (2022-02-27):
   - determineFinalArgValue respect default value if key exists but value is null ([1528](https://github.com/fabric8io/docker-maven-plugin/issues/1528)) @twendelmuth
