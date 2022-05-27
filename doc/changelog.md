@@ -1,6 +1,11 @@
 # ChangeLog
 
-* **0.40-SNAPSHOT** :
+* **0.40.0-SNAPSHOT** :
+  - `docker:stop` should respect docker.skip even when `docker.executeStopOnVMShutdown` is set to `true` ([1561](https://github.com/fabric8io/docker-maven-plugin/pull/1561)) @doyleyoung
+  - Prevent concurrent access to secDispatcher during password decryption ([1533](https://github.com/fabric8io/docker-maven-plugin/pull/1533)) @joserebelo
+  - Support for `docker run --sysctl` parameters ([1530](https://github.com/fabric8io/docker-maven-plugin/issues/1530)) @jpraet
+  - Migrate to JUnit5 and Mockito for testing ([1550](https://github.com/fabric8io/docker-maven-plugin/pull/1550)) @chonton
+  - Multi-architecture images using buildx ([1502](https://github.com/fabric8io/docker-maven-plugin/issues/1502)) @chonton
 
 * **0.39.1** (2022-02-27):
   - determineFinalArgValue respect default value if key exists but value is null ([1528](https://github.com/fabric8io/docker-maven-plugin/issues/1528)) @twendelmuth

@@ -72,6 +72,9 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.stopNamePattern")
     String stopNamePattern;
 
+    @Parameter(property = "docker.skip", defaultValue = "false")
+    protected boolean skip;
+
     /**
      * If true, the containers are not stopped right away, but when the build is finished (success or failed).
      */
@@ -80,6 +83,10 @@ public class StopMojo extends AbstractDockerMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if(skip) {
+            return;
+        }
+
         if (this.executeStopOnVMShutdown) {
             this.executeStopOnVMShutdown = false;
            if (!invokedTogetherWithDockerStart()) {
@@ -109,6 +116,10 @@ public class StopMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, IOException, ExecException {
+        if(skip) {
+            return;
+        }
+
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
 
