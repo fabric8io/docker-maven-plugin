@@ -6,7 +6,9 @@ import java.util.Collections;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.apache.maven.plugin.MojoFailureException;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
@@ -29,6 +31,30 @@ class StopMojoTest extends MojoTestBase {
 
     @Mock
     private Container runningInstance;
+
+    @Test
+    @DisplayName("Mock project with skipRun set no actions are performed.")
+    void respectDockerSkip() throws MojoExecutionException, ExecException, IOException {
+        givenMavenProject();
+        stopMojo.skip = true;
+
+        whenMojoExecutes();
+
+        thenNoContainerLookupByImageOccurs();
+        thenNoContainerIsStopped();
+    }
+
+    @Test
+    @DisplayName("Mock project with skip set then no actions performed on execute.")
+    void respectDockerSkipEvenIfExecuteCalled() throws MojoExecutionException, ExecException, IOException, MojoFailureException {
+        givenMavenProject();
+        stopMojo.skip = true;
+
+        stopMojo.execute();
+
+        thenNoContainerLookupByImageOccurs();
+        thenNoContainerIsStopped();
+    }
 
     /**
      * Mock project with no images, no containers are stopped.
