@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.39.1,</span>
-<span id="revdate">2022-02-27</span>
+<span id="revnumber">version 0.40.0,</span>
+<span id="revdate">2022-05-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -562,6 +562,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#misc-startup">5.1.3. Startup Arguments</a></li>
 <li><a href="#build-buildargs">5.1.4. Build Args</a></li>
 <li><a href="#build-healthcheck">5.1.5. Healthcheck</a></li>
+<li><a href="#build-healthcheck">5.1.6. Multi-Architecture Build</a></li>
 </ul>
 </li>
 <li><a href="#docker:start">5.2. <strong>docker:start</strong></a>
@@ -879,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.39.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.40.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2125,7 +2126,7 @@ of an image configuration. The following configuration options are supported:</p
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build-assembly"><strong>assembly</strong></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-buildargs"><strong>args</strong></a></p></td>
@@ -2139,6 +2140,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 <a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
 (e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>squash</code>, <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specifies the buildx configuration for multi-architecture images. See  <a href="#build-buildx">Buildx Options</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>createImageOptions</strong></p></td>
@@ -2890,6 +2895,47 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="build-healthcheck">5.1.6. Multi-Architecture Build</h4>
+<div id="build-buildx" class="paragraph">
+<p>The <code>&lt;buildx&gt;</code> element within <code>&lt;build&gt;</code> defines how to build multi-architecture images.</p>
+</div>
+<table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 10. BuildX Options</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>builderName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of builder to use with buildx.  If not supplied, a builder instance is dynamically created before each build and destroyed
+after completion of build.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cache directory name, which is <code>cache</code> by default. This directory is used to cache image layers. If the directory name is relative,
+the cache directory is resolved relative to <code>outputDirectory</code>.  If the cache name starts with <code>~/</code>, the cache directory is relative
+to the user&#8217;s home directory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>configFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration file for builder.  Non-absolute files are relative to the maven project directory.  If the cache name starts with
+<code>~/</code>, the configuration file is relative to the user&#8217;s home directory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platforms</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;platform&gt;</code> elements specifying platform to build.  A platform has syntax of <code>OS/architecture</code> (e.g. linux/amd64, linux/arm64, darwin/amd64).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="docker:start">5.2. <strong>docker:start</strong></h3>
@@ -2903,7 +2949,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Properties provided</caption>
+<caption class="title">Table 11. Properties provided</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2941,7 +2987,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following global configuration options.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Start options</caption>
+<caption class="title">Table 12. Start options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2978,7 +3024,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
 <table id="config-image-run" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Run configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
+<caption class="title">Table 13. Run configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2997,6 +3043,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>capDrop</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>drop</code> elements to specify kernel parameters to remove from the container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>sysctls</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map of namespaced kernel parameters (<a href="https://docs.docker.com/engine/reference/commandline/run/#configure-namespaced-kernel-parameters-sysctls-at-runtime">sysctls</a>) to set in the container.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>cmd</strong></a></p></td>
@@ -3267,7 +3317,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Port mapping format</caption>
+<caption class="title">Table 14. Port mapping format</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 71.4286%;">
@@ -3394,7 +3444,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt; </a> configuration section can be used to configure the network mode of the container. This is now the preferred way for linking containers together. It knows the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Network configuration</caption>
+<caption class="title">Table 15. Network configuration</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 87.5%;">
@@ -3500,7 +3550,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Restart Policy configuration</caption>
+<caption class="title">Table 16. Restart Policy configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3544,7 +3594,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Volume configuration</caption>
+<caption class="title">Table 17. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3629,7 +3679,7 @@ some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Wait configuration</caption>
+<caption class="title">Table 18. Wait configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3776,7 +3826,7 @@ output of an container and blocks until the pattern is matched. You can use <cod
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Logging configuration</caption>
+<caption class="title">Table 19. Logging configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3915,7 +3965,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>This option is useful in situations where you are running Docker containers on Windows. The --isolation &lt;value&gt; option sets a container&#8217;s isolation technology. On Linux, the only supported is the default option which uses Linux namespaces.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. On Windows, isolation can take one of these values:</caption>
+<caption class="title">Table 20. On Windows, isolation can take one of these values:</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3972,7 +4022,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <code>allContainers</code>, <code>keepContainer</code>, <code>keepRunning</code> and <code>removeVolumes</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Stop configuration</caption>
+<caption class="title">Table 21. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4044,7 +4094,7 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Push options</caption>
+<caption class="title">Table 22. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4154,7 +4204,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Watch configuration</caption>
+<caption class="title">Table 23. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4240,7 +4290,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Watch configuration for a single image</caption>
+<caption class="title">Table 24. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4324,7 +4374,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. removeMode Values</caption>
+<caption class="title">Table 25. removeMode Values</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4380,7 +4430,7 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Remove options</caption>
+<caption class="title">Table 26. Remove options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4419,7 +4469,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Logging options</caption>
+<caption class="title">Table 27. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4466,7 +4516,7 @@ When called, then all images which are configured in the project and having <a h
 <p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Copy options</caption>
+<caption class="title">Table 28. Copy options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4546,7 +4596,7 @@ Ignored if <code>createContainers</code> is <code>false</code>.</p></td>
 <p>The <code>copy</code> image configuration element is honored by the goal and has the following sub elements:</p>
 </div>
 <table id="config-image-copy" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Copy configuration (<a href="#config-image">Image Configuration</a>)</caption>
+<caption class="title">Table 29. Copy configuration (<a href="#config-image">Image Configuration</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4571,7 +4621,7 @@ Copying is performed in the order of list items.</p>
 <p>Each item in the <code>entries</code> list of <code>copy</code> element consists of the following sub elements:</p>
 </div>
 <table id="config-image-copy-entry" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Copy entry format</caption>
+<caption class="title">Table 30. Copy entry format</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 71.4286%;">
@@ -4761,7 +4811,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <p>Note that using overriding the default to use <code>docker</code> or <code>docker-%a</code> may lead to a conflict if a source archive is also attached with <a href="#docker:source"><strong>docker:source</strong></a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Save options</caption>
+<caption class="title">Table 31. Save options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4830,7 +4880,7 @@ samples/demp-sample-zero-config                        0.9.0                    
 </div>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Supported options</caption>
+<caption class="title">Table 32. Supported options</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 50%;">
@@ -4892,7 +4942,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Volume configuration</caption>
+<caption class="title">Table 33. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4953,7 +5003,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. Volume configuration</caption>
+<caption class="title">Table 34. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -5039,7 +5089,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. External properties</caption>
+<caption class="title">Table 35. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -5094,12 +5144,32 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Set a ARG to be available during build of image. <strong>Note</strong>: this is handled separately from external configuration, and is always available. See <a href="#property-buildargs">Build Args</a> for more details.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.builderName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of buildx builder</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.cache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Location of image cache</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.configFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration file for buildx builder</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.platform</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Platform for multi-architecture image</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capAdd.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to add to the container. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capDrop.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to remove from the container. See <a href="#list-properties">List Properties</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.sysctls.KEY</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a namespaced kernel parameter (<a href="https://docs.docker.com/engine/reference/commandline/run/#configure-namespaced-kernel-parameters-sysctls-at-runtime">sysctl</a>) in the container.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cleanup</strong></p></td>
@@ -5485,7 +5555,7 @@ configuration in the XML/POM file. This can be changed by adding the <code>&lt;m
 configuration (since version 0.25.0), which can have one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Property mode</caption>
+<caption class="title">Table 36. Property mode</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -5816,7 +5886,7 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 36. Docker compose configuration</caption>
+<caption class="title">Table 37. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -6342,8 +6412,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.39.1<br>
-Last updated 2022-02-27 09:38:36 UTC
+Version 0.40.0<br>
+Last updated 2022-05-29 17:56:07 UTC
 </div>
 </div>
 </body>
