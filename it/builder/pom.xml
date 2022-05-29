@@ -28,7 +28,7 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.40.0-SNAPSHOT</version>
+    <version>0.40.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -49,7 +49,7 @@
     <builder.output.fileName>dmp-it-builder-app.tar.gz</builder.output.fileName>
     <docker.verbose>true</docker.verbose>
     <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
-    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2022-05-29T12:39:30Z</project.build.outputTimestamp>
     <resource.delimiter>@</resource.delimiter>
   </properties>
 
