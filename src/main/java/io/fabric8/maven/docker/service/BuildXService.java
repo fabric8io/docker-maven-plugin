@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.service;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.BuildDirs;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -31,28 +32,32 @@ import java.util.concurrent.CompletableFuture;
 
 public class BuildXService {
     private final DockerAccess dockerAccess;
+    private final DockerAssemblyManager dockerAssemblyManager;
     private final Logger logger;
     private final Exec exec;
 
-    public BuildXService(DockerAccess dockerAccess, Logger logger) {
-        this(dockerAccess, logger, new DefaultExec(logger));
+    public BuildXService(DockerAccess dockerAccess, DockerAssemblyManager dockerAssemblyManager, Logger logger) {
+        this(dockerAccess, dockerAssemblyManager, logger, new DefaultExec(logger));
     }
 
-    public BuildXService(DockerAccess dockerAccess, Logger logger, Exec exec) {
+    public BuildXService(DockerAccess dockerAccess, DockerAssemblyManager dockerAssemblyManager, Logger logger, Exec exec) {
         this.dockerAccess = dockerAccess;
+        this.dockerAssemblyManager = dockerAssemblyManager;
         this.logger = logger;
         this.exec = exec;
     }
 
-    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::buildMultiPlatform);
+    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
+        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, buildArchive, this::buildMultiPlatform);
     }
 
     public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::pushMultiPlatform);
+        BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
+        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
+        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, archive, this::pushMultiPlatform);
     }
 
-    private void createAndRemoveBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, Builder builder) throws MojoExecutionException {
+    private <C> void createAndRemoveBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = buildDirs.getBuildPath("docker");
@@ -64,7 +69,7 @@ public class BuildXService {
             Path configJson = configPath.resolve("config.json");
             try {
                 createConfigJson(configJson, authConfig);
-                builder.useBuilder(buildX, builderName.getKey(), buildDirs, imageConfig);
+                builder.useBuilder(buildX, builderName.getKey(), buildDirs, imageConfig, context);
             } finally {
                 removeConfigJson(configJson);
             }
@@ -75,7 +80,7 @@ public class BuildXService {
 
     private void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(configJson, StandardCharsets.UTF_8,
-            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
         ) {
             bufferedWriter.write(authConfig != null ? authConfig.toJson() : "{}");
         } catch (IOException e) {
@@ -91,16 +96,16 @@ public class BuildXService {
         }
     }
 
-    private void buildMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException {
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), null);
-        buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(dockerAccess.getNativePlatform()), "--load");
+    private void buildMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, null);
+        buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(dockerAccess.getNativePlatform()), buildArchive, "--load");
     }
 
-    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException {
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), "--push");
+    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
     }
 
-    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, List<String> platforms, String extraParam)
+    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, List<String> platforms, File buildArchive, String extraParam)
         throws MojoExecutionException {
 
         BuildImageConfiguration buildConfiguration = imageConfig.getBuildConfiguration();
@@ -135,17 +140,36 @@ public class BuildXService {
         cmdLine.add("--cache-to=type=local,dest=" + cacheDir);
         cmdLine.add("--cache-from=type=local,src=" + cacheDir);
 
-        String dockerfileName = buildConfiguration.getDockerfileName();
-        if (dockerfileName != null) {
-            cmdLine.add("--file");
-            cmdLine.add(dockerfileName);
+        String[] ctxCmds;
+        File contextDir = buildConfiguration.getContextDir();
+        if (contextDir != null) {
+            Path destinationPath = getContextPath(buildArchive, extraParam == null);
+            Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
+            ctxCmds = new String[] { "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString() };
+        } else {
+            ctxCmds = new String[] { buildDirs.getOutputDirectory().getAbsolutePath() };
         }
-        cmdLine.add(buildDirs.getOutputDirectory().getAbsolutePath());
 
-        int rc = exec.process(cmdLine);
+        int rc = exec.process(cmdLine, ctxCmds);
         if (rc != 0) {
             throw new MojoExecutionException("Error status (" + rc + ") when building");
         }
+    }
+
+    private Path getContextPath(File buildArchive, boolean extract) throws MojoExecutionException {
+        String archiveName = buildArchive.getName();
+        String fileName = archiveName.substring(0, archiveName.indexOf('.'));
+        File destinationDirectory = new File(buildArchive.getParentFile(), fileName);
+        Path destinationPath = destinationDirectory.toPath();
+        try {
+            Files.createDirectories(destinationPath);
+        } catch (IOException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+        if (extract) {
+            dockerAssemblyManager.extractDockerTarArchive(buildArchive, destinationDirectory);
+        }
+        return destinationPath;
     }
 
     private String getCacheDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
@@ -192,8 +216,8 @@ public class BuildXService {
         }
     }
 
-    interface Builder {
-        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException;
+    interface Builder<C> {
+        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, C context) throws MojoExecutionException;
     }
 
     public interface Exec {

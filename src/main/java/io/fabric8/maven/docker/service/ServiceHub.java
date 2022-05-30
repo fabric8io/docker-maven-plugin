@@ -60,7 +60,7 @@ public class ServiceHub {
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
-            buildXService= new BuildXService(dockerAccess, logger);
+            buildXService= new BuildXService(dockerAccess, dockerAssemblyManager, logger);
             registryService = new RegistryService(dockerAccess, queryService, buildXService, logger);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
