@@ -12,6 +12,7 @@ import java.util.Enumeration;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
@@ -102,7 +103,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
         if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
             if (imageConfig.isBuildX()) {
-                hub.getBuildXService().build(createProjectPaths(), imageConfig, getAuthConfig(imageConfig));
+                hub.getBuildXService().build(createProjectPaths(), imageConfig, getAuthConfig(imageConfig), buildArchiveFile);
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
                 if (!skipTag) {
@@ -111,6 +112,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             }
         }
     }
+
 
     private AuthConfig getAuthConfig(ImageConfiguration imageConfig) throws MojoExecutionException {
         // TODO: refactor similar code in RegistryService#pushImages

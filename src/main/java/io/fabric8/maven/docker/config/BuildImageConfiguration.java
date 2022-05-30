@@ -797,24 +797,19 @@ public class BuildImageConfiguration implements Serializable {
             File dFile = new File(dockerFile);
             if (dockerFileDir == null && contextDir == null) {
                 return dFile;
-            } else {
-                if(contextDir != null) {
-                    if (dFile.isAbsolute()) {
-                        return dFile;
-                    }
-                    return new File(contextDir, dockerFile);
-                }
-
-                if (dockerFileDir != null) {
-                    if (dFile.isAbsolute()) {
-                        throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
-                    }
-                    log.warn("dockerFileDir parameter is deprecated, please migrate to contextDir");
-                    return new File(dockerFileDir, dockerFile);
-                }
             }
+            if(contextDir != null) {
+                if (dFile.isAbsolute()) {
+                    return dFile;
+                }
+                return new File(contextDir, dockerFile);
+            }
+            if (dFile.isAbsolute()) {
+                throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+            }
+            log.warn("dockerFileDir parameter is deprecated, please migrate to contextDir");
+            return new File(dockerFileDir, dockerFile);
         }
-
 
         if (contextDir != null) {
             return new File(contextDir, "Dockerfile");

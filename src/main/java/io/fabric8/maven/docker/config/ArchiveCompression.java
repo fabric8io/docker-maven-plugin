@@ -21,6 +21,7 @@ import java.io.OutputStream;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.codehaus.plexus.archiver.tar.TarUnArchiver;
 
 /**
  * Enumeration for determine the compression mode when creating docker
@@ -31,16 +32,16 @@ import org.codehaus.plexus.archiver.tar.TarArchiver;
  */
 public enum ArchiveCompression {
 
-    none(TarArchiver.TarCompressionMethod.none, "tar"),
+    none(TarArchiver.TarCompressionMethod.none, TarUnArchiver.UntarCompressionMethod.NONE, "tar"),
 
-    gzip(TarArchiver.TarCompressionMethod.gzip,"tar.gz") {
+    gzip(TarArchiver.TarCompressionMethod.gzip, TarUnArchiver.UntarCompressionMethod.GZIP, "tar.gz") {
         @Override
         public OutputStream wrapOutputStream(OutputStream out) throws IOException {
             return new GZIPOutputStream(out);
         }
     },
 
-    bzip2(TarArchiver.TarCompressionMethod.bzip2,"tar.bz") {
+    bzip2(TarArchiver.TarCompressionMethod.bzip2, TarUnArchiver.UntarCompressionMethod.BZIP2, "tar.bz") {
         @Override
         public OutputStream wrapOutputStream(OutputStream out) throws IOException {
             return new BZip2CompressorOutputStream(out);
@@ -50,15 +51,20 @@ public enum ArchiveCompression {
     // ====================================================================
 
     private final TarArchiver.TarCompressionMethod tarCompressionMethod;
+    private final TarUnArchiver.UntarCompressionMethod untarCompressionMethod;
     private final String fileSuffix;
 
-    ArchiveCompression(TarArchiver.TarCompressionMethod tarCompressionMethod, String fileSuffix) {
+    ArchiveCompression(TarArchiver.TarCompressionMethod tarCompressionMethod, TarUnArchiver.UntarCompressionMethod untarCompressionMethod, String fileSuffix) {
         this.tarCompressionMethod = tarCompressionMethod;
+        this.untarCompressionMethod = untarCompressionMethod;
         this.fileSuffix = fileSuffix;
     }
 
     public TarArchiver.TarCompressionMethod getTarCompressionMethod() {
         return tarCompressionMethod;
+    }
+    public TarUnArchiver.UntarCompressionMethod getUnTarCompressionMethod() {
+        return untarCompressionMethod;
     }
 
     public String getFileSuffix() {

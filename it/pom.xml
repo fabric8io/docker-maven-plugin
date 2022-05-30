@@ -20,6 +20,10 @@
 
   <modules>
     <module>builder</module>
+    <module>buildx</module>
+    <module>buildx-contextdir</module>
+    <module>buildx-dependencyset</module>
+    <module>buildx-dockerfile</module>
     <module>docker-compose</module>
     <module>dockerfile</module>
     <module>dockerignore</module>
