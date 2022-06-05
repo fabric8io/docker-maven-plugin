@@ -8,6 +8,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -119,7 +120,7 @@ public class BuildXService {
         cmdLine.add(String.join(",", platforms));
         buildConfiguration.getTags().forEach(t -> {
                 cmdLine.add("--tag");
-                cmdLine.add(t);
+                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName());
             }
         );
         cmdLine.add("--tag");

@@ -29,9 +29,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -77,6 +79,10 @@ class RegistryServiceTest {
     @Mock
     private BuildXService.Exec exec;
 
+    private static String getOsDependentBuild(Path buildPath, String docker) {
+        return buildPath.resolve(docker).toString().replace('/', File.separatorChar);
+    }
+
     @BeforeEach
     void setup() {
         BuildXService buildXService = new BuildXService(docker, dockerAssemblyManager, logger, exec);
@@ -92,7 +98,7 @@ class RegistryServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
+    @ValueSource(booleans = { false, true })
     void pullImagePullPolicyAlways(boolean hasImage) throws Exception {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
@@ -103,7 +109,7 @@ class RegistryServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
+    @ValueSource(booleans = { false, true })
     void pullImageAutopullAlways(boolean hasImage) throws Exception {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
@@ -262,34 +268,46 @@ class RegistryServiceTest {
 
     @Test
     void pushBuildXImage() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", null, null);
+        givenBuildxImageConfiguration("user/test:1.0.1", null, null, null);
         givenCredentials("skroob", "12345");
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, null);
+        thenBuildxImageHasBeenPushed(null, null, false);
         thenNoExceptionThrown();
     }
 
     @Test
     void pushBuildXImageWithDockerfile() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", null, projectBaseDir.toPath().resolve("src/docker/Dockerfile").toString());
+        String dockerFile = projectBaseDir.toPath().resolve("src/docker/Dockerfile").toString();
+        givenBuildxImageConfiguration("user/test:1.0.1", null, dockerFile, null);
         givenCredentials("skroob", "12345");
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, "Dockerfile");
+        thenBuildxImageHasBeenPushed(null, "Dockerfile", false);
         thenNoExceptionThrown();
     }
 
     @Test
     void pushBuildXImageProvidedBuilder() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder", null);
+        givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder", null, null);
         givenCredentials("King_Roland_of_Druidia", "12345");
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed("provided-builder", null);
+        thenBuildxImageHasBeenPushed("provided-builder", null, false);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushBuildXImageTag() throws MojoExecutionException {
+        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+        givenCredentials("King_Roland_of_Druidia", "12345");
+
+        whenPushImage();
+
+        thenBuildxImageHasBeenPushed(null, null, true);
         thenNoExceptionThrown();
     }
 
@@ -332,17 +350,28 @@ class RegistryServiceTest {
         Mockito.verify(docker).pushImage(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyInt());
     }
 
-    private void thenBuildxImageHasBeenPushed(String providedBuilder, String relativeDockerfile) throws MojoExecutionException {
+    private void thenBuildxImageHasBeenPushed(String providedBuilder, String relativeDockerfile, boolean tag) throws MojoExecutionException {
         Path buildPath = projectBaseDir.toPath().resolve("target/docker").resolve("user/test/1.0.1");
         String config = getOsDependentBuild(buildPath, "docker");
         String cacheDir = getOsDependentBuild(buildPath, "cache");
         String buildDir = getOsDependentBuild(buildPath, "build");
-        String builderName = providedBuilder!=null ? providedBuilder : "dmp_user_test_1.0.1";
+        String builderName = providedBuilder != null ? providedBuilder : "dmp_user_test_1.0.1";
 
         if (providedBuilder == null) {
             Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
                 "create", "--driver", "docker-container", "--name", builderName);
         }
+
+        List<String> args = new ArrayList<>();
+        args.addAll(Arrays.asList(
+            "docker", "--config", config, "buildx",
+            "build", "--progress=plain", "--builder", builderName,
+            "--platform", "linux/amd64,linux/arm64"));
+        if (tag) {
+            args.addAll(Arrays.asList("--tag", "user/test:perri-air"));
+        }
+        args.addAll(Arrays.asList("--tag", "user/test:1.0.1", "--push",
+            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir));
 
         String[] cmds;
         if (relativeDockerfile != null) {
@@ -351,20 +380,13 @@ class RegistryServiceTest {
         } else {
             cmds = new String[] { buildDir };
         }
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
-            "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64,linux/arm64",
-            "--tag", "user/test:1.0.1", "--push",
-            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir), cmds);
+
+        Mockito.verify(exec).process(args, cmds);
 
         if (providedBuilder == null) {
             Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
                 "rm", builderName);
         }
-    }
-
-    private static String getOsDependentBuild(Path buildPath, String docker) {
-        return buildPath.resolve(docker).toString().replace('/', File.separatorChar);
     }
 
     private void thenImageHasBeenTagged() throws DockerAccessException {
@@ -406,12 +428,12 @@ class RegistryServiceTest {
 
     private void whenPushImage() {
         try {
-             ProjectPaths projectPaths= new ProjectPaths(projectBaseDir, "target/docker");
+            ProjectPaths projectPaths = new ProjectPaths(projectBaseDir, "target/docker");
 
             RegistryService.RegistryConfig registryConfig =
-                    new RegistryService.RegistryConfig.Builder()
-                            .authConfigFactory(authConfigFactory)
-                            .authConfig(authConfig).build();
+                new RegistryService.RegistryConfig.Builder()
+                    .authConfigFactory(authConfigFactory)
+                    .authConfig(authConfig).build();
             registryService.pushImages(projectPaths, Collections.singleton(imageConfiguration), 1, registryConfig, false);
         } catch (Exception e) {
             this.actualException = e;
@@ -447,19 +469,20 @@ class RegistryServiceTest {
     }
 
     private void givenAnImageConfiguration(String imageName) {
-        givenImageNameAndBuildX(imageName, null, null);
+        givenImageNameAndBuildX(imageName, null, null, null);
     }
 
-    private void givenBuildxImageConfiguration(String imageName, String builderName, String dockerFile) {
+    private void givenBuildxImageConfiguration(String imageName, String builderName, String dockerFile, String tag) {
         BuildXConfiguration buildx = new BuildXConfiguration.Builder()
             .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
             .builderName(builderName)
             .build();
-        givenImageNameAndBuildX(imageName, buildx, dockerFile);
+        givenImageNameAndBuildX(imageName, buildx, dockerFile, tag);
     }
 
-    private void givenImageNameAndBuildX(String imageName, BuildXConfiguration buildx, String dockerFile) {
-        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().buildx(buildx).dockerFile(dockerFile).build();
+    private void givenImageNameAndBuildX(String imageName, BuildXConfiguration buildx, String dockerFile, String tag) {
+        List<String> tags = tag != null ? Collections.singletonList(tag) : null;
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().buildx(buildx).tags(tags).dockerFile(dockerFile).build();
         buildImageConfiguration.initAndValidate(logger);
         imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
     }
