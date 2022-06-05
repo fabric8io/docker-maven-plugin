@@ -35,6 +35,10 @@
                     <platform>linux/arm64</platform>
                   </platforms>
                 </buildx>
+                <tags>
+                  <tag>${project.version}</tag>
+                  <tag>latest</tag>
+                </tags>
               </build>
               <run>
                 <log>
