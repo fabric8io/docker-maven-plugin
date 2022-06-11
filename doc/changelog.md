@@ -1,5 +1,8 @@
 # ChangeLog
-* **0.41.0-SNAPSHOT**:
+
+* **0.40.1** (2022-06-11):
+  - buildx does not work when specifying Dockerfile location ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1562)) @chonton
+  - Use buildx, set tag to current version fails if it contains `-SNAPSHOT` ([1566](https://github.com/fabric8io/docker-maven-plugin/issues/1566)) @chonton
 
 * **0.40.0** (2022-05-29):
   - `docker:stop` should respect docker.skip even when `docker.executeStopOnVMShutdown` is set to `true` ([1561](https://github.com/fabric8io/docker-maven-plugin/pull/1561)) @doyleyoung
