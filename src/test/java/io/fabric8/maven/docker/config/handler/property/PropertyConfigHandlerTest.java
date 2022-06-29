@@ -947,16 +947,6 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         validateRunConfiguration(resolved.getRunConfiguration());
     }
 
-    @Test
-    void testResolveAssembly() {
-
-    }
-
-    @Test
-    void testResolveAssembliesWithSingleAssembly() {
-
-    }
-
     @Override
     protected String getEnvPropertyFile() {
         return "/tmp/envProps.txt";
