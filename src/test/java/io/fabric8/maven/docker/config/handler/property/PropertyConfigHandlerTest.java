@@ -29,6 +29,8 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
+import io.fabric8.maven.docker.util.Logger;
+
 import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.assembly.model.DependencySet;
 import org.apache.maven.project.MavenProject;
@@ -658,8 +660,9 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     void testAssembly() {
         List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
         Assertions.assertEquals(1, configs.size());
+        configs.get(0).initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
 
-        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAllAssemblyConfigurations();
         Assertions.assertEquals(1, assemblies.size());
 
         AssemblyConfiguration config = assemblies.get(0);
@@ -673,8 +676,9 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     void testMultipleAssemblies() {
         List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestMultipleAssemblyData()));
         Assertions.assertEquals(1, configs.size());
+        configs.get(0).initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
 
-        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAllAssemblyConfigurations();
         Assertions.assertEquals(2, assemblies.size());
 
         AssemblyConfiguration config = assemblies.get(0);
@@ -707,10 +711,13 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
         Assertions.assertEquals(1, configs.size());
+        configs.get(0).initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
 
-        AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
-        Assertions.assertNotNull(config.getInline());
-        Assertions.assertEquals(1, config.getInline().getDependencySets().size());
+        List<AssemblyConfiguration> assemblyConfigurations = configs.get(0).getBuildConfiguration().getAllAssemblyConfigurations();
+        Assertions.assertEquals(1, assemblyConfigurations.size());
+        AssemblyConfiguration assemblyConfiguration = assemblyConfigurations.get(0);
+        Assertions.assertNotNull(assemblyConfiguration.getInline());
+        Assertions.assertEquals(1, assemblyConfiguration.getInline().getDependencySets().size());
     }
 
     @Test
@@ -940,6 +947,16 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         validateRunConfiguration(resolved.getRunConfiguration());
     }
 
+    @Test
+    void testResolveAssembly() {
+
+    }
+
+    @Test
+    void testResolveAssembliesWithSingleAssembly() {
+
+    }
+
     @Override
     protected String getEnvPropertyFile() {
         return "/tmp/envProps.txt";
@@ -1023,7 +1040,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
          * validate only the descriptor is required and defaults are all used, 'testAssembly' validates
          * all options can be set
          */
-        List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAllAssemblyConfigurations();
         Assertions.assertEquals(1, assemblyConfigurations.size());
 
         AssemblyConfiguration assemblyConfig = assemblyConfigurations.get(0);
