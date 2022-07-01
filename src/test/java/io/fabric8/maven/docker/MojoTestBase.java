@@ -108,22 +108,7 @@ abstract class MojoTestBase {
         return singleImageConfiguration(null, null);
     }
 
-    protected ImageConfiguration singleBuildXImageWithConfiguration(String configFile) {
-        return singleImageConfiguration(getBuildXConfiguration(configFile), null);
-    }
-
-    protected ImageConfiguration singleBuildXImageWithContext(String contextDir) {
-        return singleImageConfiguration(getBuildXConfiguration(null), contextDir);
-    }
-
-    private BuildXConfiguration getBuildXConfiguration(String configFile) {
-        return new BuildXConfiguration.Builder()
-            .configFile(configFile)
-            .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
-            .build();
-    }
-
-    private ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx, String contextDir) {
+    ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx, String contextDir) {
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
             .from("scratch")
             .buildx(buildx)
