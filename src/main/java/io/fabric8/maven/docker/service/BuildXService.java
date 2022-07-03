@@ -98,8 +98,15 @@ public class BuildXService {
     }
 
     private void buildMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, null);
-        buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(dockerAccess.getNativePlatform()), buildArchive, "--load");
+        // build the image
+        List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
+        buildX(buildX, builderName, buildDirs, imageConfig, platforms, buildArchive, null);
+
+        // now load the native image by re-building, image should be cached and build should be quick
+        String nativePlatform = dockerAccess.getNativePlatform();
+        if (platforms.contains(nativePlatform)) {
+            buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(nativePlatform), buildArchive, "--load");
+        }
     }
 
     private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
