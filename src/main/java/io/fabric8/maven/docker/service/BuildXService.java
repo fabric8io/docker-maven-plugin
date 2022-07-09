@@ -49,7 +49,7 @@ public class BuildXService {
     }
 
     public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
-        useBuilder(projectPaths, imageConfig, authConfig, buildArchive, this::buildMultiPlatform);
+        useBuilder(projectPaths, imageConfig, authConfig, buildArchive, this::buildAndLoadNativePlatform);
     }
 
     public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
@@ -92,19 +92,19 @@ public class BuildXService {
         }
     }
 
-    private void buildMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
-        // build the image
+    private void buildAndLoadNativePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
         List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
-        buildX(buildX, builderName, buildDirs, imageConfig, platforms, buildArchive, null);
-
-        // now load the native image by re-building, image should be cached and build should be quick
+        // build and load the native image by re-building, image should be cached and build should be quick
         String nativePlatform = dockerAccess.getNativePlatform();
         if (platforms.contains(nativePlatform)) {
             buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(nativePlatform), buildArchive, "--load");
+        } else  {
+            logger.info("Native platform not specified, no image built");
         }
     }
 
     private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+        // build and push all images.  The native platform may be re-built, image should be cached and build should be quick
         buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
     }
 
@@ -142,7 +142,7 @@ public class BuildXService {
         String[] ctxCmds;
         File contextDir = buildConfiguration.getContextDir();
         if (contextDir != null) {
-            Path destinationPath = getContextPath(buildArchive, extraParam == null);
+            Path destinationPath = getContextPath(buildArchive);
             Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
             ctxCmds = new String[] { "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString() };
         } else {
@@ -155,7 +155,7 @@ public class BuildXService {
         }
     }
 
-    private Path getContextPath(File buildArchive, boolean extract) throws MojoExecutionException {
+    private Path getContextPath(File buildArchive) throws MojoExecutionException {
         String archiveName = buildArchive.getName();
         String fileName = archiveName.substring(0, archiveName.indexOf('.'));
         File destinationDirectory = new File(buildArchive.getParentFile(), fileName);
@@ -165,9 +165,7 @@ public class BuildXService {
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-        if (extract) {
-            dockerAssemblyManager.extractDockerTarArchive(buildArchive, destinationDirectory);
-        }
+        dockerAssemblyManager.extractDockerTarArchive(buildArchive, destinationDirectory);
         return destinationPath;
     }
 

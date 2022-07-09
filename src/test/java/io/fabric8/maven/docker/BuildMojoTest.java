@@ -170,11 +170,6 @@ class BuildMojoTest extends MojoTestBase {
             ctxCmdLine = new String[] { "--file=" + contextPath.resolve("Dockerfile"), contextPath.toString() };
         }
 
-        String platforms = nativePlatformIncluded ? NATIVE_PLATFORM + "," + NON_NATIVE_PLATFORM : NON_NATIVE_PLATFORM;
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
-            "build", "--progress=plain", "--builder", builderName,
-            "--platform", platforms, "--tag", "example:latest", "--build-arg", "foo=bar"), ctxCmdLine);
-
         if (nativePlatformIncluded) {
             Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
                 "build", "--progress=plain", "--builder", builderName,
