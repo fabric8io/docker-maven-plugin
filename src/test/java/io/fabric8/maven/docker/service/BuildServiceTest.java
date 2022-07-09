@@ -1,13 +1,13 @@
 package io.fabric8.maven.docker.service;
 
-import io.fabric8.maven.docker.access.BuildOptions;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.CleanupMode;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.Assertions;
@@ -20,13 +20,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import io.fabric8.maven.docker.access.BuildOptions;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CleanupMode;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 
 @ExtendWith(MockitoExtension.class)
 class BuildServiceTest {
@@ -186,6 +189,31 @@ class BuildServiceTest {
         //verify that tries to pull both images
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s2i-java");
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s1i-java");
+    }
+
+    @Test
+    void testBuildImagePullsDefaultImageWhenNoFromImage() throws Exception {
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+                .build();
+
+        buildConfig.initAndValidate(logger);
+
+        imageConfig = new ImageConfiguration.Builder()
+            .name("test")
+            .buildConfig(buildConfig)
+            .build();
+
+        final ImagePullManager pullManager = new ImagePullManager(null, null, null);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+            .mojoParameters(mojoParameters)
+            .build();
+
+        mockMavenProject();
+
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+
+        verifyImagePull(buildConfig, pullManager, buildContext, DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
     }
 
     @Test

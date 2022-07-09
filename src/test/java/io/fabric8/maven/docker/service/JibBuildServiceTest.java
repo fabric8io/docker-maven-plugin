@@ -1,14 +1,16 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 import com.google.cloud.tools.jib.api.Credential;
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
-import io.fabric8.maven.docker.util.JibServiceUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import com.google.cloud.tools.jib.api.TarImage;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -22,12 +24,14 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.JibServiceUtil;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 
 @ExtendWith(MockitoExtension.class)
 class JibBuildServiceTest {
@@ -149,6 +153,30 @@ class JibBuildServiceTest {
             List<ImageConfiguration> emptyList = Collections.emptyList();
             // Then
             Assertions.assertDoesNotThrow(() -> jibBuildService.push(emptyList, 1, null, false));
+        }
+    }
+
+    @Test
+    void testBuildCallsBuildContainer(@TempDir Path tmpDir) throws Exception {
+        // ARRANGE
+        Mockito.when(project.getProperties()).thenReturn(new Properties());
+        setupServiceHubExpectations(tmpDir.toFile());
+        setupDockerAssemblyExpectations(tmpDir);
+        final RegistryService.RegistryConfig registryConfig = new RegistryService.RegistryConfig.Builder()
+                .authConfigFactory(authConfigFactory)
+                .build();
+        mockAuthConfigFactory(true, registryConfig);
+
+        JibBuildService jibBuildService = new JibBuildService(serviceHub, params, logger);
+        ImageConfiguration imageConfiguration = getImageConfiguration();
+
+        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = Mockito.mockStatic(JibServiceUtil.class)) {
+            jibServiceUtilMock.when(() -> JibServiceUtil.getBaseImage(imageConfiguration)).thenCallRealMethod();
+            // ACT
+            jibBuildService.build("docker", imageConfiguration, registryConfig);
+
+            // ASSERT
+            jibServiceUtilMock.verify(() -> JibServiceUtil.buildContainer(Mockito.any(), Mockito.any(), Mockito.any()), Mockito.times(1));
         }
     }
 

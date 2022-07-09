@@ -105,7 +105,7 @@ public class ArchiveService {
 
         String name = imageConfig.getName();
         try {
-            List<AssemblyConfiguration> assemblyConfigurations = imageConfig.getBuildConfiguration().getAssemblyConfigurations();
+            List<AssemblyConfiguration> assemblyConfigurations = imageConfig.getBuildConfiguration().getAllAssemblyConfigurations();
             AssemblyConfiguration assemblyConfig = assemblyConfigurations.stream().filter(a -> a.getName().equals(assemblyName)).findFirst().orElse(null);
 
             if (assemblyConfig == null) {
