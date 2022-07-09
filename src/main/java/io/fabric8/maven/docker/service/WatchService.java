@@ -78,7 +78,7 @@ public class WatchService {
                 ArrayList<String> tasks = new ArrayList<>();
 
                 if (imageConfig.getBuildConfiguration() != null) {
-                    for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAssemblyConfigurations()) {
+                    for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAllAssemblyConfigurations()) {
                         if (watcher.isCopy()) {
                             String containerBaseDir = assemblyConfiguration.getTargetDir();
                             schedule(executor, createCopyWatchTask(watcher, assemblyConfiguration.getName(), context.getMojoParameters(), containerBaseDir), interval);

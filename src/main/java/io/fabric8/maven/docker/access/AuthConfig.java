@@ -109,7 +109,7 @@ public class AuthConfig {
         JsonObject creds = new JsonObject();
         creds.addProperty("auth", encodeBase64(username + ":" + password));
         JsonObject auths = new JsonObject();
-        auths.add(registry != null ? registry : "docker.io", creds);
+        auths.add(registry != null ? registry : "https://index.docker.io/v1/", creds);
         JsonObject root = new JsonObject();
         root.add("auths", auths);
         return root.toString();

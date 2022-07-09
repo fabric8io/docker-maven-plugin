@@ -153,7 +153,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .optimise(valueProvider.getBoolean(OPTIMISE, config.getOptimise()))
             .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config.getEntryPoint()))
             .assembly(extractAssembly(config.getAssemblyConfiguration(), valueProvider))
-            .assemblies(extractAssemblies(config.getAssemblyConfigurations(), valueProvider))
+            .assemblies(extractAssemblies(config.getAssembliesConfiguration(), valueProvider))
             .env(CollectionUtils.mergeMaps(
                 valueProvider.getMap(ENV_BUILD, config.getEnv()),
                 valueProvider.getMap(ENV, Collections.emptyMap())
@@ -275,6 +275,12 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @SuppressWarnings("deprecation")
     private AssemblyConfiguration extractAssembly(AssemblyConfiguration config, ValueProvider valueProvider) {
+        Map<String, String> assemblyProperties = valueProvider.getMap(ASSEMBLY, Collections.emptyMap());
+
+        if (assemblyProperties == null || assemblyProperties.isEmpty()) {
+            return config;
+        }
+
         if (config == null) {
             config = new AssemblyConfiguration();
         }

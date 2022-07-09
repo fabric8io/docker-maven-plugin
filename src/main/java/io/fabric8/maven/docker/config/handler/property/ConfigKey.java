@@ -26,6 +26,7 @@ public enum ConfigKey {
     ALIAS,
     ARGS(ValueCombinePolicy.Merge),
     ASSEMBLIES,
+    ASSEMBLY,
     ASSEMBLY_BASEDIR("assembly.baseDir"),
     ASSEMBLY_DESCRIPTOR("assembly.descriptor"),
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),

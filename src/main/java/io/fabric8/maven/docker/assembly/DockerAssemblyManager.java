@@ -146,7 +146,7 @@ public class DockerAssemblyManager {
             throws MojoExecutionException {
 
         final BuildDirs buildDirs = createBuildDirs(imageName, params);
-        final List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAssemblyConfigurations();
+        final List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAllAssemblyConfigurations();
 
         final List<ArchiverCustomizer> archiveCustomizers = new ArrayList<>();
 
@@ -241,7 +241,7 @@ public class DockerAssemblyManager {
 
     // visible for testing
     void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
-        List<AssemblyConfiguration> assemblyConfigs = buildConfig.getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblyConfigs = buildConfig.getAllAssemblyConfigurations();
         if (assemblyConfigs.isEmpty()) {
             return;
         }
