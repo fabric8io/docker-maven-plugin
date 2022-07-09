@@ -14,18 +14,17 @@ public class BuildXConfiguration implements Serializable {
      */
     @Parameter
     private String builderName;
-
-    /**
-     * Location of docker cache
-     */
-    @Parameter
-    private String cache;
-
     /**
      * Configuration file to create builder
      */
     @Parameter
     private String configFile;
+
+    /**
+     * Location of docker state, including builder configurations
+     */
+    @Parameter
+    private String dockerStateDir;
 
     /**
      * List of platforms for multi-architecture build
@@ -42,12 +41,12 @@ public class BuildXConfiguration implements Serializable {
         return builderName;
     }
 
-    public String getCache() {
-        return cache;
-    }
-
     public String getConfigFile() {
         return configFile;
+    }
+
+    public String getDockerStateDir() {
+        return dockerStateDir;
     }
 
     public boolean isBuildX() {
@@ -72,17 +71,17 @@ public class BuildXConfiguration implements Serializable {
             return this;
         }
 
-        public Builder cache(String cache) {
-            config.cache = cache;
-            if (cache != null) {
+        public Builder configFile(String configFile) {
+            config.configFile = configFile;
+            if (configFile != null) {
                 isEmpty = false;
             }
             return this;
         }
 
-        public Builder configFile(String configFile) {
-            config.configFile = configFile;
-            if (configFile != null) {
+        public Builder dockerStateDir(String dockerStateDir) {
+            config.dockerStateDir = dockerStateDir;
+            if (dockerStateDir != null) {
                 isEmpty = false;
             }
             return this;

@@ -353,9 +353,8 @@ class RegistryServiceTest {
     private void thenBuildxImageHasBeenPushed(String providedBuilder, String relativeDockerfile, boolean tag) throws MojoExecutionException {
         Path buildPath = projectBaseDir.toPath().resolve("target/docker").resolve("user/test/1.0.1");
         String config = getOsDependentBuild(buildPath, "docker");
-        String cacheDir = getOsDependentBuild(buildPath, "cache");
         String buildDir = getOsDependentBuild(buildPath, "build");
-        String builderName = providedBuilder != null ? providedBuilder : "dmp_user_test_1.0.1";
+        String builderName = providedBuilder != null ? providedBuilder : "maven";
 
         if (providedBuilder == null) {
             Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
@@ -370,8 +369,7 @@ class RegistryServiceTest {
         if (tag) {
             args.addAll(Arrays.asList("--tag", "user/test:perri-air"));
         }
-        args.addAll(Arrays.asList("--tag", "user/test:1.0.1", "--push",
-            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir));
+        args.addAll(Arrays.asList("--tag", "user/test:1.0.1", "--push"));
 
         String[] cmds;
         if (relativeDockerfile != null) {
@@ -382,11 +380,6 @@ class RegistryServiceTest {
         }
 
         Mockito.verify(exec).process(args, cmds);
-
-        if (providedBuilder == null) {
-            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
-                "rm", builderName);
-        }
     }
 
     private void thenImageHasBeenTagged() throws DockerAccessException {

@@ -31,7 +31,6 @@ import org.codehaus.plexus.components.io.resources.PlexusIoResource;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -76,7 +75,7 @@ class DockerAssemblyManagerTest {
     @Test
     void testNoAssembly() {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration();
-        List<AssemblyConfiguration> assemblyConfig = buildConfig.getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblyConfig = buildConfig.getAllAssemblyConfigurations();
 
         String content =
             assemblyManager.createDockerFileBuilder(
@@ -94,7 +93,7 @@ class DockerAssemblyManagerTest {
                 .build();
 
         DockerFileBuilder builder =
-            assemblyManager.createDockerFileBuilder(buildConfig, buildConfig.getAssemblyConfigurations());
+            assemblyManager.createDockerFileBuilder(buildConfig, buildConfig.getAllAssemblyConfigurations());
         String content = builder.content();
 
         Assertions.assertTrue(content.contains("SHELL [\"/bin/sh\",\"echo\",\"hello\"]"));
@@ -111,7 +110,7 @@ class DockerAssemblyManagerTest {
 
         BuildImageConfiguration buildConfig = createBuildConfig();
 
-        assemblyManager.getAssemblyFiles("testImage", buildConfig.getAssemblyConfigurations().get(0), mojoParams, new AnsiLogger(new SystemStreamLog(), true, "build"));
+        assemblyManager.getAssemblyFiles("testImage", buildConfig.getAllAssemblyConfigurations().get(0), mojoParams, new AnsiLogger(new SystemStreamLog(), true, "build"));
         Mockito.verify(assemblyArchiver).createArchive(Mockito.eq(assembly), Mockito.eq("maven"), Mockito.eq("track"), Mockito.any(DockerAssemblyConfigurationSource.class),
             Mockito.eq(false), Mockito.any());
     }
@@ -128,10 +127,10 @@ class DockerAssemblyManagerTest {
 
         BuildImageConfiguration buildConfig = createBuildConfigMultiAssembly();
 
-        AssemblyFiles files = assemblyManager.getAssemblyFiles("testImage", buildConfig.getAssemblyConfigurations().get(0), mojoParams,
+        AssemblyFiles files = assemblyManager.getAssemblyFiles("testImage", buildConfig.getAllAssemblyConfigurations().get(0), mojoParams,
             new AnsiLogger(new SystemStreamLog(), true, "build"));
         Assertions.assertNotNull(files);
-        files = assemblyManager.getAssemblyFiles("testImage", buildConfig.getAssemblyConfigurations().get(1), mojoParams, new AnsiLogger(new SystemStreamLog(), true, "build"));
+        files = assemblyManager.getAssemblyFiles("testImage", buildConfig.getAllAssemblyConfigurations().get(1), mojoParams, new AnsiLogger(new SystemStreamLog(), true, "build"));
         Assertions.assertNotNull(files);
     }
 
