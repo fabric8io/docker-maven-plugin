@@ -153,10 +153,9 @@ class BuildMojoTest extends MojoTestBase {
     private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded) throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
         String config = getOsDependentBuild(buildPath, "docker");
-        String cacheDir = getOsDependentBuild(buildPath, "cache");
         String buildDir = getOsDependentBuild(buildPath, "build");
         String configFile = relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) : null;
-        String builderName = "dmp_example_latest";
+        String builderName = "maven";
 
         String[] cfgCmdLine = configFile == null
             ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
@@ -174,19 +173,14 @@ class BuildMojoTest extends MojoTestBase {
         String platforms = nativePlatformIncluded ? NATIVE_PLATFORM + "," + NON_NATIVE_PLATFORM : NON_NATIVE_PLATFORM;
         Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
             "build", "--progress=plain", "--builder", builderName,
-            "--platform", platforms, "--tag", "example:latest", "--build-arg", "foo=bar",
-            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir), ctxCmdLine);
+            "--platform", platforms, "--tag", "example:latest", "--build-arg", "foo=bar"), ctxCmdLine);
 
         if (nativePlatformIncluded) {
             Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
                 "build", "--progress=plain", "--builder", builderName,
                 "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar",
-                "--load",
-                "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir), ctxCmdLine);
+                "--load"), ctxCmdLine);
         }
-
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
-            "rm", builderName);
     }
 
     private void givenPackaging(String packaging) {
