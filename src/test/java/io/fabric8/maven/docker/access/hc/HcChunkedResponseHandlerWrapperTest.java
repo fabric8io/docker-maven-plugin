@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 
 @SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
@@ -56,7 +57,9 @@ class HcChunkedResponseHandlerWrapperTest {
     void handleResponseWithNoContentType() throws IOException {
         givenResponseHeaders();
         hcChunkedResponseHandlerWrapper.handleResponse(response);
-        verifyProcessJsonStream(0);
+        // timesCalled is 1 here because without "Content-Type" handleResponse() tries to parse the body to
+        // detect if it is JSON or not. See HcChunkedResponseHandlerWrapper.handleResponse() for more details.
+        verifyProcessJsonStream(1);
     }
 
     private void givenResponseHeaders(Header... headers) throws IOException {
