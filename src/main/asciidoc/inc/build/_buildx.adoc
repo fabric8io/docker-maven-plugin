@@ -1,6 +1,10 @@
 
 [[build-buildx]]
 
+Buildx is enabled by setting the `<platform>` section of buildx configuration.  Only the native platform
+built and loaded into the local repository by the build goal.  All specified platforms are built and
+pushed by the push goal.
+
 The `<buildx>` element within `<build>` defines how to build multi-architecture images.
 
 [[config-image-build-assembly]]
