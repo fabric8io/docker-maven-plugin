@@ -10,8 +10,6 @@
   </parent>
 
   <artifactId>dmp-multi-assembly</artifactId>
-  <version>0.41.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
 
   <description>Docker Maven Plugin Integration Test with Spring Boot with Multiple Layers</description>
 
@@ -27,11 +25,9 @@
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
+
   <properties>
     <docker.user>fabric8</docker.user>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <spring.version>2.3.3.RELEASE</spring.version>
   </properties>
 
   <dependencies>
@@ -40,27 +36,23 @@
     <dependency>
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.2</version>
     </dependency>
 
     <!-- Runtime, com.sun.xml.bind module -->
     <dependency>
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
-      <version>2.3.2</version>
     </dependency>
 
     <!-- Boot generator  -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
-      <version>${spring.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
-      <version>${spring.version}</version>
     </dependency>
 
   </dependencies>
@@ -126,10 +118,10 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
         <configuration>
           <archive>
             <manifest>
@@ -140,10 +132,10 @@
           </archive>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${spring.version}</version>
       </plugin>
     </plugins>
   </build>

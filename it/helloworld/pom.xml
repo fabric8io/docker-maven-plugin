@@ -17,15 +17,11 @@
   </parent>
 
   <artifactId>dmp-it-helloworld</artifactId>
-  <version>0.41.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <name>dmp-it-helloworld</name>
 
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -79,19 +75,15 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
         <configuration>
           <archive>
             <manifest>
@@ -100,10 +92,10 @@
           </archive>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.5.0</version>
         <configuration>
           <mainClass>io.fabric8.dmp.sample.helloworld.App</mainClass>
         </configuration>

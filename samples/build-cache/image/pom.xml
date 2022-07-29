@@ -40,28 +40,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.googlecode.maven-download-plugin</groupId>
-        <artifactId>download-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <!--
-                tini (https://github.com/krallin/tini) to override Java exit code when stopping container,
-                because JVM returns non-zero exit code when stopped with SIGINT, SIGTERM or any other signal.
-             -->
-            <id>download-tini</id>
-            <goals>
-              <goal>wget</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <url>https://github.com/krallin/tini/releases/download/v${tini.version}/tini</url>
-              <outputFileName>tini</outputFileName>
-              <sha512>${tini.sha512}</sha512>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <configuration>
@@ -94,9 +72,19 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <delimiters>
+            <delimiter>@{*}</delimiter>
+          </delimiters>
+          <overrideUid>0</overrideUid>
+          <overrideUserName>root</overrideUserName>
+          <overrideGid>0</overrideGid>
+          <overrideGroupName>root</overrideGroupName>
+        </configuration>
         <executions>
           <execution>
             <id>build-dependencies-tar</id>
@@ -176,6 +164,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>

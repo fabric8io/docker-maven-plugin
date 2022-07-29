@@ -15,7 +15,6 @@
   </parent>
 
   <artifactId>dmp-it-properties</artifactId>
-  <version>0.41.0-SNAPSHOT</version>
   <packaging>docker-build</packaging>
 
   <properties>
@@ -34,7 +33,6 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${project.version}</version>
         <extensions>true</extensions>
         <configuration>
           <images>

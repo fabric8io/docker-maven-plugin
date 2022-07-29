@@ -26,6 +26,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <configuration>
           <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
+          <containerNamePattern>%a</containerNamePattern>
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
@@ -41,7 +42,6 @@
                   <alias>box1</alias>
                   <alias>box1-alternative</alias>
                 </network>
-                <namingStrategy>none</namingStrategy>
                 <cmd>
                   <exec>
                     <args>sh</args>
@@ -66,16 +66,15 @@
                 <dependsOn>
                   <container>box1</container>
                 </dependsOn>
-                <namingStrategy>none</namingStrategy>
                 <cmd>
                   <exec>
                     <args>sh</args>
                     <args>-c</args>
-                    <args>nslookup box1-alternative; tail -f /dev/null</args>
+                    <args>ping box1-alternative; tail -f /dev/null</args>
                   </exec>
                 </cmd>
                 <wait>
-                  <log>box1.test-network</log>
+                  <log>PING box1-alternative</log>
                 </wait>
                 <log>
                   <prefix>2</prefix>

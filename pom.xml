@@ -40,7 +40,7 @@
   </developers>
 
   <prerequisites>
-    <maven>3.0.3</maven>
+    <maven>${maven.version}</maven>
   </prerequisites>
 
   <scm>
@@ -71,14 +71,16 @@
   <properties>
     <byte-buddy.version>1.12.10</byte-buddy.version>
     <httpclient.version>4.5.13</httpclient.version>
-    <jib-core.version>0.18.0</jib-core.version>
+    <jib-core.version>0.21.0</jib-core.version>
     <jmockit.version>1.43</jmockit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
-    <maven.version>3.3.9</maven.version>
+    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
+    <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
+    <maven.version>3.6.3</maven.version>
     <mockito.version>4.5.1</mockito.version>
     <project.build.outputTimestamp>2022-06-11T17:42:07Z</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <surefire.version>3.0.0-M2</surefire.version>
     <system-stubs.version>2.0.1</system-stubs.version>
   </properties>
 
@@ -99,13 +101,13 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.8.9</version>
+      <version>2.9.0</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>30.1-jre</version>
+      <version>31.1-jre</version>
     </dependency>
 
     <dependency>
@@ -118,19 +120,19 @@
     <dependency>
       <groupId>net.jodah</groupId>
       <artifactId>failsafe</artifactId>
-      <version>2.4.0</version>
+      <version>2.4.4</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.6</version>
+      <version>3.12.0</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
-      <version>1.1</version>
+      <version>1.9</version>
     </dependency>
 
     <dependency>
@@ -143,6 +145,20 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
       <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-builder-support</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-compat</artifactId>
+      <version>3.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -162,7 +178,21 @@
 
     <dependency>
       <groupId>org.apache.maven</groupId>
+      <artifactId>maven-model-builder</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-settings</artifactId>
       <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -170,7 +200,7 @@
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
-      <version>3.5</version>
+      <version>3.6.4</version>
       <scope>provided</scope>
     </dependency>
 
@@ -194,33 +224,33 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk15on</artifactId>
-      <version>1.65</version>
+      <version>1.70</version>
     </dependency>
 
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-component-annotations</artifactId>
-      <version>1.6</version>
+      <version>2.1.1</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-interpolation</artifactId>
-      <version>1.24</version>
+      <version>1.26</version>
     </dependency>
 
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.0.24</version>
+      <version>3.4.1</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.fusesource.jansi</groupId>
       <artifactId>jansi</artifactId>
-      <version>1.16</version>
+      <version>2.4.0</version>
     </dependency>
 
     <dependency>
@@ -268,14 +298,14 @@
     <dependency>
       <groupId>org.sonatype.plexus</groupId>
       <artifactId>plexus-sec-dispatcher</artifactId>
-      <version>1.3</version>
+      <version>1.4</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
-      <version>1.26</version>
+      <version>1.30</version>
     </dependency>
 
     <dependency>
@@ -300,13 +330,28 @@
       <plugins>
 
         <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.10.1</version>
+        </plugin>
+
+        <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
+          <version>3.0.0-M2</version>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>3.0.1</version>
         </plugin>
 
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.2.2</version>
           <configuration>
             <archive>
               <addMavenDescriptor>true</addMavenDescriptor>
@@ -316,22 +361,32 @@
 
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.4.0</version>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>3.6.4</version>
         </plugin>
 
         <plugin>
           <artifactId>maven-release-plugin</artifactId>
-          <version>3.0.0-M1</version>
+          <version>3.0.0-M5</version>
         </plugin>
 
         <plugin>
-          <artifactId>maven-source-plugin</artifactId>
+          <artifactId>maven-resources-plugin</artifactId>
           <version>3.2.0</version>
         </plugin>
 
         <plugin>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.2.1</version>
+        </plugin>
+
+        <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire.version}</version>
+          <version>3.0.0-M6</version>
           <configuration>
             <argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar</argLine>
           </configuration>
@@ -340,7 +395,7 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
-          <version>1.5.5</version>
+          <version>2.2.2</version>
           <configuration>
             <sourceDirectory>src/main/asciidoc</sourceDirectory>
             <attributes>
@@ -352,13 +407,30 @@
               <idseparator>-</idseparator>
             </attributes>
           </configuration>
-          <dependencies>
-            <dependency>
-              <groupId>org.asciidoctor</groupId>
-              <artifactId>asciidoctorj</artifactId>
-              <version>1.5.6</version>
-            </dependency>
-          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-component-metadata</artifactId>
+          <version>2.1.1</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>3.9.1.2184</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.6.8</version>
         </plugin>
 
       </plugins>
@@ -392,18 +464,37 @@
 
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
           <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
 
       <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>required-tool-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[${maven.compiler.release},)</version>
+                </requireJavaVersion>
+
+                <requireMavenVersion>
+                  <version>[${maven.version},)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.6.0</version>
         <configuration>
           <goalPrefix>docker</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -427,7 +518,6 @@
 
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.2</version>
         <executions>
           <execution>
             <id>copy-plexus-resources</id>
@@ -467,7 +557,6 @@
       <plugin>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-metadata</artifactId>
-        <version>2.1.0</version>
         <configuration>
           <staticMetadataDirectory>${basedir}/target/filtered-resources/META-INF/plexus</staticMetadataDirectory>
         </configuration>
@@ -485,7 +574,7 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-ssh-external</artifactId>
-        <version>3.1.0</version>
+        <version>3.5.1</version>
       </extension>
     </extensions>
   </build>
@@ -498,7 +587,6 @@
         <plugins>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>
             <configuration>
               <skip>true</skip>
@@ -506,9 +594,7 @@
           </plugin>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
             <configuration>
               <skip>false</skip>
             </configuration>
@@ -524,11 +610,10 @@
           </plugin>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <configuration>
               <skip>false</skip>
-              <source>8</source>
+              <source>${maven.compiler.release}</source>
               <additionalJOption>-Xdoclint:none</additionalJOption>
             </configuration>
             <executions>
@@ -542,7 +627,6 @@
           </plugin>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
             <configuration>
               <skipSource>false</skipSource>
@@ -560,7 +644,6 @@
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
             <configuration>
               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
               <serverId>oss-sonatype-staging</serverId>
@@ -584,7 +667,7 @@
       <id>jacoco</id>
 
       <properties>
-        <jacoco.version>0.7.9</jacoco.version>
+        <jacoco.version>0.8.8</jacoco.version>
       </properties>
 
       <dependencies>
@@ -602,9 +685,7 @@
         <plugins>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
             <configuration>
               <systemPropertyVariables>
                 <!-- JaCoCo runtime must know where to dump coverage: -->
@@ -616,7 +697,6 @@
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>${jacoco.version}</version>
             <executions>
               <execution>
                 <id>instrument</id>
@@ -672,13 +752,6 @@
               <backend>pdf</backend>
               <sourceHighlighter>rouge</sourceHighlighter>
             </configuration>
-            <dependencies>
-              <dependency>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctorj-pdf</artifactId>
-                <version>1.5.0-alpha.16</version>
-              </dependency>
-            </dependencies>
           </plugin>
         </plugins>
       </build>

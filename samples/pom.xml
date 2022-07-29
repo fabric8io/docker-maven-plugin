@@ -18,10 +18,8 @@
 
   <modules>
     <module>build-cache</module>
-    <module>cargo-jolokia</module>
     <module>copy-from-container</module>
     <module>custom-net</module>
-    <module>data-jolokia</module>
     <module>docker-compose</module>
     <module>dockerfile</module>
     <module>dockerignore</module>
@@ -46,7 +44,6 @@
 
   <build>
     <pluginManagement>
-
       <plugins>
         <plugin>
           <groupId>io.fabric8</groupId>

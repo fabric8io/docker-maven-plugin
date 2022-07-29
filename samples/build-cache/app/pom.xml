@@ -34,6 +34,9 @@
             </goals>
             <configuration>
               <mainClass>io.fabric8.dmp.samples.buildcache.Application</mainClass>
+              <layers>
+                <enabled>true</enabled>
+              </layers>
             </configuration>
           </execution>
         </executions>

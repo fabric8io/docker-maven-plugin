@@ -13,21 +13,8 @@
 
   <description>Docker Maven Plugin Example with Spring Boot with Multiple Layers</description>
 
-  <distributionManagement>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
   <properties>
     <docker.user>fabric8</docker.user>
-    <spring.version>2.3.3.RELEASE</spring.version>
   </properties>
 
   <dependencies>
@@ -106,11 +93,11 @@
             <phase>package</phase>
           </execution>
           <execution>
-            <id>docker-run</id>
+            <id>integration-test</id>
             <goals>
               <goal>start</goal>
+              <goal>stop</goal>
             </goals>
-            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>

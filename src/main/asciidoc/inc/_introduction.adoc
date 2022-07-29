@@ -3,6 +3,11 @@
 
 This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:
 
+== Minimum Supported Versions
+* Java 11
+* Maven 3.6.3
+* Docker 1.9
+
 == Building Images
 
 One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artefacts and their dependencies into an image.
