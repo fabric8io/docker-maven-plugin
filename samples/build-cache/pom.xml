@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.40.0-SNAPSHOT</version>
+    <version>0.41.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -14,8 +14,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>image</module>
     <module>app</module>
+    <module>image</module>
   </modules>
 
   <properties>

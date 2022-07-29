@@ -1,6 +1,8 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.BuildXService;
@@ -8,6 +10,7 @@ import io.fabric8.maven.docker.service.ImagePullManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -21,11 +24,18 @@ import java.util.Collections;
 
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
+    private static final String NON_NATIVE_PLATFORM = "linux/amd64";
+    private static final String NATIVE_PLATFORM = "linux/arm64";
+    private static final String[] TWO_BUILDX_PLATFORMS = { NATIVE_PLATFORM, NON_NATIVE_PLATFORM };
+
     @InjectMocks
     private BuildMojo buildMojo;
 
     @Mock
-    private BuildService buildService;
+    private DockerAssemblyManager dockerAssemblyManager;
+
+    @TempDir
+    private Path tmpDir;
 
     @Mock
     private BuildXService.Exec exec;
@@ -55,7 +65,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildNotRun();
+        thenBuildRun();
     }
 
     @Test
@@ -63,12 +73,12 @@ class BuildMojoTest extends MojoTestBase {
         givenBuildXService();
 
         givenMavenProject(buildMojo);
-        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImage(null)));
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithConfiguration(null)));
         givenPackaging("jar");
 
         whenMojoExecutes();
 
-        thenBuildxRun(null);
+        thenBuildxRun(null, null, true);
     }
 
     @Test
@@ -76,19 +86,55 @@ class BuildMojoTest extends MojoTestBase {
         givenBuildXService();
 
         givenMavenProject(buildMojo);
-        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImage("src/docker/builder.toml")));
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithConfiguration("src/docker/builder.toml")));
         givenPackaging("jar");
 
         whenMojoExecutes();
 
-        thenBuildxRun("src/docker/builder.toml");
+        thenBuildxRun("src/docker/builder.toml", null, true);
+    }
+
+    @Test
+    void buildUsingConfiguredBuildxWithContext() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        ImageConfiguration imageConfiguration = singleBuildXImageWithContext("src/main/docker");
+        givenResolvedImages(buildMojo, Collections.singletonList(imageConfiguration));
+        givenPackaging("jar");
+
+        Mockito.doReturn(tmpDir.resolve("docker-build.tar").toFile())
+            .when(buildService)
+            .buildArchive(Mockito.any(), Mockito.any(), Mockito.any());
+
+        whenMojoExecutes();
+
+        thenBuildxRun(null, "src/main/docker", true);
+    }
+
+    @Test
+    void buildUsingBuildxWithNonNative() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        ImageConfiguration imageConfiguration = singleBuildXImageNonNative();
+        givenResolvedImages(buildMojo, Collections.singletonList(imageConfiguration));
+        givenPackaging("jar");
+
+        Mockito.doReturn(tmpDir.resolve("docker-build.tar").toFile())
+            .when(buildService)
+            .buildArchive(Mockito.any(), Mockito.any(), Mockito.any());
+
+        whenMojoExecutes();
+
+        thenBuildxRun(null, null, false);
     }
 
     private void givenBuildXService() {
-        BuildXService buildXService = new BuildXService(dockerAccess, log, exec);
+        BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
         Mockito.doReturn(buildXService).when(serviceHub).getBuildXService();
-        Mockito.doReturn("linux/amd64").when(dockerAccess).getNativePlatform();
+        Mockito.doReturn(NATIVE_PLATFORM).when(dockerAccess).getNativePlatform();
     }
 
     private void thenBuildRun() throws DockerAccessException, MojoExecutionException {
@@ -104,34 +150,32 @@ class BuildMojoTest extends MojoTestBase {
             .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any());
     }
 
-    private void thenBuildxRun(String relativeConfigFile) throws MojoExecutionException {
+    private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded) throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
         String config = getOsDependentBuild(buildPath, "docker");
-        String cacheDir = getOsDependentBuild(buildPath, "cache");
         String buildDir = getOsDependentBuild(buildPath, "build");
         String configFile = relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) : null;
-        String builderName = "dmp_example_latest";
+        String builderName = "maven";
 
-        String[] cmdLine = configFile == null
+        String[] cfgCmdLine = configFile == null
             ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
             : new String[] { "create", "--driver", "docker-container", "--name", builderName, "--config", configFile.replace('/', File.separatorChar) };
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"), cmdLine);
+        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"), cfgCmdLine);
 
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
-            "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64,linux/arm64", "--tag", "example:latest",
-            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
-            buildDir));
+        String[] ctxCmdLine;
+        if (contextDir == null) {
+            ctxCmdLine = new String[] { buildDir };
+        } else {
+            Path contextPath = tmpDir.resolve("docker-build");
+            ctxCmdLine = new String[] { "--file=" + contextPath.resolve("Dockerfile"), contextPath.toString() };
+        }
 
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
-            "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64", "--tag", "example:latest",
-            "--load",
-            "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
-            buildDir));
-
-        Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
-            "rm", builderName);
+        if (nativePlatformIncluded) {
+            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
+                "build", "--progress=plain", "--builder", builderName,
+                "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar",
+                "--load"), ctxCmdLine);
+        }
     }
 
     private void givenPackaging(String packaging) {
@@ -145,4 +189,24 @@ class BuildMojoTest extends MojoTestBase {
     private void whenMojoExecutes() throws IOException, MojoExecutionException {
         buildMojo.executeInternal(serviceHub);
     }
+
+    private BuildXConfiguration getBuildXConfiguration(String configFile, String... platforms) {
+        return new BuildXConfiguration.Builder()
+            .configFile(configFile)
+            .platforms(Arrays.asList(platforms))
+            .build();
+    }
+
+    private ImageConfiguration singleBuildXImageWithConfiguration(String configFile) {
+        return singleImageConfiguration(getBuildXConfiguration(configFile, TWO_BUILDX_PLATFORMS), null);
+    }
+
+    private ImageConfiguration singleBuildXImageWithContext(String contextDir) {
+        return singleImageConfiguration(getBuildXConfiguration(null, TWO_BUILDX_PLATFORMS), contextDir);
+    }
+
+    private ImageConfiguration singleBuildXImageNonNative() {
+        return singleImageConfiguration(getBuildXConfiguration(null, NON_NATIVE_PLATFORM), null);
+    }
+
 }

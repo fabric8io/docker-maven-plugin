@@ -3,10 +3,12 @@ package io.fabric8.maven.docker.service;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.BuildDirs;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,8 +22,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,51 +33,50 @@ import java.util.concurrent.CompletableFuture;
 
 public class BuildXService {
     private final DockerAccess dockerAccess;
+    private final DockerAssemblyManager dockerAssemblyManager;
     private final Logger logger;
     private final Exec exec;
 
-    public BuildXService(DockerAccess dockerAccess, Logger logger) {
-        this(dockerAccess, logger, new DefaultExec(logger));
+    public BuildXService(DockerAccess dockerAccess, DockerAssemblyManager dockerAssemblyManager, Logger logger) {
+        this(dockerAccess, dockerAssemblyManager, logger, new DefaultExec(logger));
     }
 
-    public BuildXService(DockerAccess dockerAccess, Logger logger, Exec exec) {
+    public BuildXService(DockerAccess dockerAccess, DockerAssemblyManager dockerAssemblyManager, Logger logger, Exec exec) {
         this.dockerAccess = dockerAccess;
+        this.dockerAssemblyManager = dockerAssemblyManager;
         this.logger = logger;
         this.exec = exec;
     }
 
-    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::buildMultiPlatform);
+    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
+        useBuilder(projectPaths, imageConfig, authConfig, buildArchive, this::buildAndLoadNativePlatform);
     }
 
     public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
-        createAndRemoveBuilder(projectPaths, imageConfig, authConfig, this::pushMultiPlatform);
+        BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
+        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
+        useBuilder(projectPaths, imageConfig, authConfig, archive, this::pushMultiPlatform);
     }
 
-    private void createAndRemoveBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, Builder builder) throws MojoExecutionException {
+    private <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
-        Path configPath = buildDirs.getBuildPath("docker");
-        createDirectory(configPath);
+        Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
         List<String> buildX = Arrays.asList("docker", "--config", configPath.toString(), "buildx");
 
-        Map.Entry<String, Boolean> builderName = createBuilder(buildX, imageConfig, buildDirs);
+        String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
+        Path configJson = configPath.resolve("config.json");
         try {
-            Path configJson = configPath.resolve("config.json");
-            try {
-                createConfigJson(configJson, authConfig);
-                builder.useBuilder(buildX, builderName.getKey(), buildDirs, imageConfig);
-            } finally {
-                removeConfigJson(configJson);
-            }
+            createConfigJson(configJson, authConfig);
+            builder.useBuilder(buildX, builderName, buildDirs, imageConfig, context);
         } finally {
-            removeBuilder(buildX, builderName);
+            removeConfigJson(configJson);
         }
     }
 
     private void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(configJson, StandardCharsets.UTF_8,
-            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
         ) {
             bufferedWriter.write(authConfig != null ? authConfig.toJson() : "{}");
         } catch (IOException e) {
@@ -91,16 +92,23 @@ public class BuildXService {
         }
     }
 
-    private void buildMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException {
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), null);
-        buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(dockerAccess.getNativePlatform()), "--load");
+    private void buildAndLoadNativePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+        List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
+        // build and load the native image by re-building, image should be cached and build should be quick
+        String nativePlatform = dockerAccess.getNativePlatform();
+        if (platforms.contains(nativePlatform)) {
+            buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(nativePlatform), buildArchive, "--load");
+        } else  {
+            logger.info("Native platform not specified, no image built");
+        }
     }
 
-    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException {
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), "--push");
+    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+        // build and push all images.  The native platform may be re-built, image should be cached and build should be quick
+        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
     }
 
-    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, List<String> platforms, String extraParam)
+    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, List<String> platforms, File buildArchive, String extraParam)
         throws MojoExecutionException {
 
         BuildImageConfiguration buildConfiguration = imageConfig.getBuildConfiguration();
@@ -114,7 +122,7 @@ public class BuildXService {
         cmdLine.add(String.join(",", platforms));
         buildConfiguration.getTags().forEach(t -> {
                 cmdLine.add("--tag");
-                cmdLine.add(t);
+                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName());
             }
         );
         cmdLine.add("--tag");
@@ -123,7 +131,7 @@ public class BuildXService {
         Map<String, String> args = buildConfiguration.getArgs();
         if (args != null) {
             args.forEach((key, value) -> {
-                cmdLine.add("--buildarg");
+                cmdLine.add("--build-arg");
                 cmdLine.add(key + '=' + value);
             });
         }
@@ -131,28 +139,41 @@ public class BuildXService {
             cmdLine.add(extraParam);
         }
 
-        String cacheDir = getCacheDir(buildConfiguration, buildDirs);
-        cmdLine.add("--cache-to=type=local,dest=" + cacheDir);
-        cmdLine.add("--cache-from=type=local,src=" + cacheDir);
-
-        String dockerfileName = buildConfiguration.getDockerfileName();
-        if (dockerfileName != null) {
-            cmdLine.add("--file");
-            cmdLine.add(dockerfileName);
+        String[] ctxCmds;
+        File contextDir = buildConfiguration.getContextDir();
+        if (contextDir != null) {
+            Path destinationPath = getContextPath(buildArchive);
+            Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
+            ctxCmds = new String[] { "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString() };
+        } else {
+            ctxCmds = new String[] { buildDirs.getOutputDirectory().getAbsolutePath() };
         }
-        cmdLine.add(buildDirs.getOutputDirectory().getAbsolutePath());
 
-        int rc = exec.process(cmdLine);
+        int rc = exec.process(cmdLine, ctxCmds);
         if (rc != 0) {
             throw new MojoExecutionException("Error status (" + rc + ") when building");
         }
     }
 
-    private String getCacheDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
-        String cache = buildConfiguration.getBuildX().getCache();
-        Path cachePath = buildDirs.getBuildPath(cache != null ? EnvUtil.resolveHomeReference(cache) : "cache");
-        createDirectory(cachePath);
-        return cachePath.toString();
+    private Path getContextPath(File buildArchive) throws MojoExecutionException {
+        String archiveName = buildArchive.getName();
+        String fileName = archiveName.substring(0, archiveName.indexOf('.'));
+        File destinationDirectory = new File(buildArchive.getParentFile(), fileName);
+        Path destinationPath = destinationDirectory.toPath();
+        try {
+            Files.createDirectories(destinationPath);
+        } catch (IOException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+        dockerAssemblyManager.extractDockerTarArchive(buildArchive, destinationDirectory);
+        return destinationPath;
+    }
+
+    private Path getDockerStateDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
+        String stateDir = buildConfiguration.getBuildX().getDockerStateDir();
+        Path dockerStatePath = buildDirs.getBuildPath(stateDir != null ? EnvUtil.resolveHomeReference(stateDir) : "docker");
+        createDirectory(dockerStatePath);
+        return dockerStatePath;
     }
 
     private void createDirectory(Path cachePath) {
@@ -163,37 +184,29 @@ public class BuildXService {
         }
     }
 
-    private Map.Entry<String, Boolean> createBuilder(List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
+    private String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
-        String configuredBuilder = buildXConfiguration.getBuilderName();
-        if (configuredBuilder != null) {
-            return new AbstractMap.SimpleEntry<>(configuredBuilder, false);
+        String builderName = buildXConfiguration.getBuilderName();
+        if (builderName == null) {
+            builderName= "maven";
         }
-
-        String builderName = "dmp_" + buildDirs.getBuildTopDir().replace(File.separatorChar, '_');
-        String buildConfig = buildXConfiguration.getConfigFile();
-        int rc = exec.process(buildX, buildConfig == null
-            ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
-            : new String[] { "create", "--driver", "docker-container", "--name", builderName, "--config",
+        Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
+        if(Files.notExists(builderPath)) {
+            String buildConfig = buildXConfiguration.getConfigFile();
+            int rc = exec.process(buildX, buildConfig == null
+                ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
+                : new String[] { "create", "--driver", "docker-container", "--name", builderName, "--config",
                 buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString() }
-        );
-        if (rc != 0) {
-            throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
-        }
-        return new AbstractMap.SimpleEntry<>(builderName, true);
-    }
-
-    private void removeBuilder(List<String> buildX, Map.Entry<String, Boolean> builderName) throws MojoExecutionException {
-        if (Boolean.TRUE.equals(builderName.getValue())) {
-            int rc = exec.process(buildX, "rm", builderName.getKey());
+            );
             if (rc != 0) {
-                logger.warn("Ignoring non-zero status (" + rc + ") while removing builder " + builderName);
+                throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
             }
         }
+        return builderName;
     }
 
-    interface Builder {
-        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig) throws MojoExecutionException;
+    interface Builder<C> {
+        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, C context) throws MojoExecutionException;
     }
 
     public interface Exec {

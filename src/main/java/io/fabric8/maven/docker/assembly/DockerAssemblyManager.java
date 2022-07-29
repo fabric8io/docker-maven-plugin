@@ -33,7 +33,6 @@ import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -90,9 +89,21 @@ public class DockerAssemblyManager {
      * @throws MojoExecutionException if an error occurs during extracting.
      */
     public void extractDockerTarArchive(File archiveFile, File destinationDirectory) throws MojoExecutionException {
+        UntarCompressionMethod untarMethod = ArchiveCompression.fromFileName(archiveFile.getName()).getUnTarCompressionMethod();
+        extractDockerTarArchive(archiveFile, destinationDirectory, untarMethod);
+    }
+
+    /**
+     * Extract a docker tar archive into the given directory.
+     *
+     * @param archiveFile a tar archive to extract
+     * @param destinationDirectory directory where to place extracted content
+     * @throws MojoExecutionException if an error occurs during extracting.
+     */
+    public void extractDockerTarArchive(File archiveFile, File destinationDirectory, UntarCompressionMethod method) throws MojoExecutionException {
         try {
             TarUnArchiver unArchiver = (TarUnArchiver) archiverManager.getUnArchiver(TAR_ARCHIVER_TYPE);
-            unArchiver.setCompression(UntarCompressionMethod.NONE);
+            unArchiver.setCompression(method);
             unArchiver.setSourceFile(archiveFile);
             unArchiver.setDestDirectory(destinationDirectory);
             unArchiver.extract();
@@ -135,7 +146,7 @@ public class DockerAssemblyManager {
             throws MojoExecutionException {
 
         final BuildDirs buildDirs = createBuildDirs(imageName, params);
-        final List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAssemblyConfigurations();
+        final List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAllAssemblyConfigurations();
 
         final List<ArchiverCustomizer> archiveCustomizers = new ArrayList<>();
 
@@ -230,7 +241,7 @@ public class DockerAssemblyManager {
 
     // visible for testing
     void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
-        List<AssemblyConfiguration> assemblyConfigs = buildConfig.getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblyConfigs = buildConfig.getAllAssemblyConfigurations();
         if (assemblyConfigs.isEmpty()) {
             return;
         }

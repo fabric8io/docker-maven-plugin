@@ -105,23 +105,21 @@ abstract class MojoTestBase {
     }
 
     protected ImageConfiguration singleImageWithBuild() {
-        return singleImageConfiguration(null);
+        return singleImageConfiguration(null, null);
     }
 
-    protected ImageConfiguration singleBuildXImage(String configFile) {
-        return singleImageConfiguration(new BuildXConfiguration.Builder()
-            .configFile(configFile)
-            .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
-            .build());
-    }
+    ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx, String contextDir) {
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+            .from("scratch")
+            .buildx(buildx)
+            .args(Collections.singletonMap("foo", "bar"))
+            .contextDir(contextDir)
+            .build();
+        buildImageConfiguration.initAndValidate(log);
 
-    private ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx) {
         return new Builder()
             .name("example:latest")
-            .buildConfig(new BuildImageConfiguration.Builder()
-                .from("scratch")
-                .buildx(buildx)
-                .build())
+            .buildConfig(buildImageConfiguration)
             .build();
     }
 

@@ -153,7 +153,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .optimise(valueProvider.getBoolean(OPTIMISE, config.getOptimise()))
             .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config.getEntryPoint()))
             .assembly(extractAssembly(config.getAssemblyConfiguration(), valueProvider))
-            .assemblies(extractAssemblies(config.getAssemblyConfigurations(), valueProvider))
+            .assemblies(extractAssemblies(config.getAssembliesConfiguration(), valueProvider))
             .env(CollectionUtils.mergeMaps(
                 valueProvider.getMap(ENV_BUILD, config.getEnv()),
                 valueProvider.getMap(ENV, Collections.emptyMap())
@@ -275,6 +275,12 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @SuppressWarnings("deprecation")
     private AssemblyConfiguration extractAssembly(AssemblyConfiguration config, ValueProvider valueProvider) {
+        Map<String, String> assemblyProperties = valueProvider.getMap(ASSEMBLY, Collections.emptyMap());
+
+        if (assemblyProperties == null || assemblyProperties.isEmpty()) {
+            return config;
+        }
+
         if (config == null) {
             config = new AssemblyConfiguration();
         }
@@ -324,8 +330,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         return new BuildXConfiguration.Builder()
             .builderName(valueProvider.getString(BUILDX_BUILDERNAME, config.getBuilderName()))
-            .cache(valueProvider.getString(BUILDX_CACHE, config.getCache()))
             .configFile(valueProvider.getString(BUILDX_CONFIGFILE, config.getConfigFile()))
+            .dockerStateDir(valueProvider.getString(BUILDX_DOCKERSTATEDIR, config.getDockerStateDir()))
             .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))
             .build();
     }

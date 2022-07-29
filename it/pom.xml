@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.fabric8.dmp</groupId>
     <artifactId>parent</artifactId>
-    <version>0.40.0-SNAPSHOT</version>
+    <version>0.41.0-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
@@ -15,11 +15,15 @@
 
   <groupId>io.fabric8.dmp.itests</groupId>
   <artifactId>dmp-it-parent</artifactId>
-  <version>0.40.0-SNAPSHOT</version>
+  <version>0.41.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
     <module>builder</module>
+    <module>buildx</module>
+    <module>buildx-contextdir</module>
+    <module>buildx-dependencyset</module>
+    <module>buildx-dockerfile</module>
     <module>docker-compose</module>
     <module>dockerfile</module>
     <module>dockerignore</module>

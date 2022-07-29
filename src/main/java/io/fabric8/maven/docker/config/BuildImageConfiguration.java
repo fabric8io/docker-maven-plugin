@@ -13,13 +13,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
+
+import org.apache.maven.plugins.annotations.Parameter;
 
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -295,16 +297,21 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     /**
-     * @deprecated Use {@link #getAssemblyConfigurations()} instead.
+     * @deprecated Use {@link #getAllAssemblyConfigurations()} instead.
      */
     @Deprecated
     public AssemblyConfiguration getAssemblyConfiguration() {
         return assembly;
     }
 
+
+    /**
+     * Use {@link #getAllAssemblyConfigurations()} unless you specifically want the configuration defined only by <code>assemblies</code>.
+     */
     @Nonnull
-    public List<AssemblyConfiguration> getAssemblyConfigurations() {
+    public List<AssemblyConfiguration> getAssembliesConfiguration() {
         final List<AssemblyConfiguration> assemblyConfigurations = new ArrayList<>();
+
         if (assemblies != null) {
             for (AssemblyConfiguration config : assemblies) {
                 if (config != null) {
@@ -312,9 +319,18 @@ public class BuildImageConfiguration implements Serializable {
                 }
             }
         }
+
+        return assemblyConfigurations;
+    }
+
+    @Nonnull
+    public List<AssemblyConfiguration> getAllAssemblyConfigurations() {
+        final List<AssemblyConfiguration> assemblyConfigurations = getAssembliesConfiguration();
+
         if (assembly != null) {
             assemblyConfigurations.add(assembly);
         }
+
         return assemblyConfigurations;
     }
 
@@ -762,7 +778,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     private void ensureUniqueAssemblyNames(Logger log) {
-        List<AssemblyConfiguration> assemblyConfigurations = getAssemblyConfigurations();
+        List<AssemblyConfiguration> assemblyConfigurations = getAllAssemblyConfigurations();
         Set<String> assemblyNames = new HashSet<>();
         for (AssemblyConfiguration config : assemblyConfigurations) {
             String assemblyName = config.getName();
@@ -797,24 +813,19 @@ public class BuildImageConfiguration implements Serializable {
             File dFile = new File(dockerFile);
             if (dockerFileDir == null && contextDir == null) {
                 return dFile;
-            } else {
-                if(contextDir != null) {
-                    if (dFile.isAbsolute()) {
-                        return dFile;
-                    }
-                    return new File(contextDir, dockerFile);
-                }
-
-                if (dockerFileDir != null) {
-                    if (dFile.isAbsolute()) {
-                        throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
-                    }
-                    log.warn("dockerFileDir parameter is deprecated, please migrate to contextDir");
-                    return new File(dockerFileDir, dockerFile);
-                }
             }
+            if(contextDir != null) {
+                if (dFile.isAbsolute()) {
+                    return dFile;
+                }
+                return new File(contextDir, dockerFile);
+            }
+            if (dFile.isAbsolute()) {
+                throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+            }
+            log.warn("dockerFileDir parameter is deprecated, please migrate to contextDir");
+            return new File(dockerFileDir, dockerFile);
         }
-
 
         if (contextDir != null) {
             return new File(contextDir, "Dockerfile");
@@ -827,7 +838,7 @@ public class BuildImageConfiguration implements Serializable {
         // TODO: Remove the following deprecated handling section
         if (dockerArchive == null) {
             Optional<String> deprecatedDockerFileDir =
-                    getAssemblyConfigurations().stream()
+                    getAllAssemblyConfigurations().stream()
                             .map(AssemblyConfiguration::getDockerFileDir)
                             .filter(Objects::nonNull)
                             .findFirst();

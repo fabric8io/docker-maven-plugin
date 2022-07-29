@@ -59,7 +59,7 @@ public class JibBuildService {
 
             File dockerTarArchive = getAssemblyTarArchive(imageConfig, serviceHub, mojoParameters, log);
 
-            for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAssemblyConfigurations()) {
+            for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAllAssemblyConfigurations()) {
                 // TODO: Improve Assembly Manager so that the effective assemblyFileEntries computed can be properly shared
                 // the call to DockerAssemblyManager.getInstance().createDockerTarArchive should not be necessary,
                 // files should be added using the AssemblyFileEntry list. DockerAssemblyManager, should provide
