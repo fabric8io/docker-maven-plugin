@@ -1,5 +1,5 @@
 # ChangeLog
-* **0.41.0-SNAPSHOT** :
+* **0.41-SNAPSHOT** :
 
 * **0.40.1** (2022-06-11):
   - buildx does not work when specifying Dockerfile location ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1562)) @chonton
