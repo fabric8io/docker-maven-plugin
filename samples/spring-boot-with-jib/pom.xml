@@ -30,7 +30,7 @@
     <dmp.version>${project.version}</dmp.version>
     <docker.build.jib>true</docker.build.jib>
     <docker.user>fabric8</docker.user>
-    <spring.version>2.3.3.RELEASE</spring.version>
+    <spring.version>2.5.12</spring.version>
   </properties>
 
   <dependencies>

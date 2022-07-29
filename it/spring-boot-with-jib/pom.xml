@@ -33,7 +33,7 @@
     <docker.user>fabric8</docker.user>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <spring.version>2.3.3.RELEASE</spring.version>
+    <spring.version>2.5.12</spring.version>
   </properties>
 
   <dependencies>
