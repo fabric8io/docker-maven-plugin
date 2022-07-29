@@ -12,12 +12,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.41.0-SNAPSHOT</version>
+    <version>0.41-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-helloworld</artifactId>
-  <version>0.41.0-SNAPSHOT</version>
+  <version>0.41-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>dmp-it-helloworld</name>
 
