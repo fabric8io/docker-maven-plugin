@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.40.1,</span>
-<span id="revdate">2022-06-11</span>
+<span id="revnumber">version 0.40.2,</span>
+<span id="revdate">2022-07-31</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.40.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.40.2<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2898,6 +2898,11 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect3">
 <h4 id="build-healthcheck">5.1.6. Multi-Architecture Build</h4>
 <div id="build-buildx" class="paragraph">
+<p>Buildx is enabled by setting the <code>&lt;platform&gt;</code> section of buildx configuration.  Only the native platform
+built and loaded into the local repository by the build goal.  All specified platforms are built and
+pushed by the push goal.</p>
+</div>
+<div class="paragraph">
 <p>The <code>&lt;buildx&gt;</code> element within <code>&lt;build&gt;</code> defines how to build multi-architecture images.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
@@ -2915,19 +2920,20 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>builderName</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Name of builder to use with buildx.  If not supplied, a builder instance is dynamically created before each build and destroyed
-after completion of build.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cache directory name, which is <code>cache</code> by default. This directory is used to cache image layers. If the directory name is relative,
-the cache directory is resolved relative to <code>outputDirectory</code>.  If the cache name starts with <code>~/</code>, the cache directory is relative
-to the user&#8217;s home directory.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of builder to use with buildx.  If not supplied, the builder is named <code>maven</code>.  The builder is created as necessary.
+The builder manages the build cache.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>configFile</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration file for builder.  Non-absolute files are relative to the maven project directory.  If the cache name starts with
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration file for builder.  Non-absolute files are relative to the maven project directory.  If configFile starts with
 <code>~/</code>, the configuration file is relative to the user&#8217;s home directory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerStateDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State directory for docker builder.  This directory holds docker builder configurations and context state. Sharing a state
+directory across builds will share the cache and will decrease pull times.
+Non-absolute files are relative to the maven project directory. If dockerConfigDir starts with <code>~/</code>, the configuration directory
+is relative to the user&#8217;s home directory.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platforms</strong></p></td>
@@ -6412,8 +6418,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.40.1<br>
-Last updated 2022-06-11 17:40:20 UTC
+Version 0.40.2<br>
+Last updated 2022-07-31 07:32:59 UTC
 </div>
 </div>
 </body>
