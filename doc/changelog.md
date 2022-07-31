@@ -1,6 +1,15 @@
 # ChangeLog
 * **0.41-SNAPSHOT** :
 
+* **0.40.2** (2022-07-31):
+  - Plugin doesn't abort building an image in case Podman is used and Dockerfile can't be processed ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1512)) @jh-cd 
+  - Bump gson from 2.8.5 to 2.8.9 ([1556](https://github.com/fabric8io/docker-maven-plugin/pull/1556)) @dependabot
+  - Build and load native platform during build goal, build and push all platforms during push goal ([1576](https://github.com/fabric8io/docker-maven-plugin/issues/1576)) @chonton
+  - Remove buildx cache, don't delete builder instances after goal. Use builder instance to cache artifacts ([1579](https://github.com/fabric8io/docker-maven-plugin/pull/1579)) @chonton
+  - Multiple assemblies use the name "maven". Please assign each assembly a unique name ([1558](https://github.com/fabric8io/docker-maven-plugin/issues/1558)) @tbfky
+  - Use `https://index.docker.io/v1/` as default buildx server registry ([1574](https://github.com/fabric8io/docker-maven-plugin/issues/1574)) @chonton
+  - When using buildx, do not force build of native platform  ([1572](https://github.com/fabric8io/docker-maven-plugin/issues/1572)) @chonton
+
 * **0.40.1** (2022-06-11):
   - buildx does not work when specifying Dockerfile location ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1562)) @chonton
   - Use buildx, set tag to current version fails if it contains `-SNAPSHOT` ([1566](https://github.com/fabric8io/docker-maven-plugin/issues/1566)) @chonton
