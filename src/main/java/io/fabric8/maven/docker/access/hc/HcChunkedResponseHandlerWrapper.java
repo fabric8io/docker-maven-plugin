@@ -21,8 +21,6 @@ public class HcChunkedResponseHandlerWrapper implements ResponseHandler<Object> 
     @Override
     public Object handleResponse(HttpResponse response) throws IOException {
         try (InputStream stream = response.getEntity().getContent()) {
-            ByteArrayOutputStream baos = getMultipleReadbleOutputStream(stream);
-            InputStream is = new ByteArrayInputStream(baos.toByteArray());
             // In the previous version of this file the following if() was as follows. The methode isJson() checks
             // by header (not by body):
             //      if(isJson(response)) {
@@ -39,11 +37,18 @@ public class HcChunkedResponseHandlerWrapper implements ResponseHandler<Object> 
             //
             // If no error is detected, the Maven-build goes on despite there was a problem building the
             // image!
-            // The following if() first checks for the application/json Content-Type. If no Content-Type is set,
-            // it tries to detect if the body is JSON. If so, the handler is called.
-            if(isJsonCheckedByHeader(response) || (isMissingContentType(response) && isJsonCheckedByBody(is))){
-                is = new ByteArrayInputStream(baos.toByteArray());
-                EntityStreamReaderUtil.processJsonStream(handler, is);
+            // If the header indicates application/json Content-Type, stream the response to the handler.
+            // If there is no Content-Type header it tries to detect if the body is JSON. If so, the handler is called
+            // with a buffered response.
+            if (isJsonCheckedByHeader(response)) {
+                EntityStreamReaderUtil.processJsonStream(handler, stream);
+            } else if (isMissingContentType(response)) {
+                ByteArrayOutputStream baos = getMultipleReadbleOutputStream(stream);
+                InputStream is = new ByteArrayInputStream(baos.toByteArray());
+                if (isJsonCheckedByBody(is)) {
+                    is = new ByteArrayInputStream(baos.toByteArray());
+                    EntityStreamReaderUtil.processJsonStream(handler, is);
+                }
             }
         }
         return null;
