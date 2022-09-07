@@ -298,12 +298,15 @@ public class BuildService {
         Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
         Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
         Map<String, String> buildArgsFromDockerConfig = addBuildArgsFromDockerConfig();
-        return ImmutableMap.<String, String>builder()
-                .putAll(buildArgsFromDockerConfig)
-                .putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap())
-                .putAll(buildArgsFromProject)
-                .putAll(buildArgsFromSystem)
-                .build();
+
+        //merge build args from all the sources into one map. Different sources maps are allowed to contain duplicate keys between them
+        Map<String, String> mergedBuildArgs = new HashMap<>();
+        mergedBuildArgs.putAll(buildArgsFromDockerConfig);
+        mergedBuildArgs.putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap());
+        mergedBuildArgs.putAll(buildArgsFromProject);
+        mergedBuildArgs.putAll(buildArgsFromSystem);
+
+        return ImmutableMap.copyOf(mergedBuildArgs);
     }
 
     private Map<String, String> addBuildArgsFromProperties(Properties properties) {
