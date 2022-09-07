@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -19,12 +21,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -296,6 +296,37 @@ class BuildServiceTest {
         thenImageIsBuilt();
         verifyTag();
         verifyRemove("oldimage");
+    }
+
+    @Test
+    void testBuildArgsFromDifferentSources() throws MojoExecutionException, DockerAccessException {
+        //takes precedence over others
+        System.setProperty("docker.buildArg.http_proxy", "http://system-props.com");
+
+        Properties mavenProjectProps = new Properties();
+        mavenProjectProps.setProperty("docker.buildArg.http_proxy", "http://project-props.com");
+        Mockito.doReturn(mavenProjectProps).when(mavenProject).getProperties();
+        Mockito.doReturn(mavenProject).when(mojoParameters).getProject();
+
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder().build();
+
+        imageConfig = new ImageConfiguration.Builder()
+                .name("build-image")
+                .alias("build-alias")
+                .buildConfig(buildConfig)
+                .build();
+
+        Map<String, String> buildArgs = new HashMap<>();
+        buildArgs.put("http_proxy", "http://build-context.com");
+
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters).buildArgs(buildArgs)
+                .build();
+
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, null, buildContext, buildArchive);
+        Mockito.verify(docker).buildImage(Mockito.any(), Mockito.any(),
+                Mockito.argThat((BuildOptions options) -> options.getOptions().get("buildargs").equals("{\"http_proxy\":\"http://system-props.com\"}")));
     }
 
     private void givenAnImageConfiguration(String cleanup) {
