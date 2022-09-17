@@ -123,6 +123,22 @@ abstract class MojoTestBase {
             .build();
     }
 
+    ImageConfiguration singleImageConfigurationWithBuildWithSquash(BuildXConfiguration buildx, String contextDir) {
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+                .from("scratch")
+                .buildx(buildx)
+                .args(Collections.singletonMap("foo", "bar"))
+                .contextDir(contextDir)
+                .squash(true)
+                .build();
+        buildImageConfiguration.initAndValidate(log);
+
+        return new Builder()
+                .name("example:latest")
+                .buildConfig(buildImageConfiguration)
+                .build();
+    }
+
     protected ImageConfiguration singleImageWithBuildWithTags(String... tags) {
         return new ImageConfiguration.Builder()
                 .name("example:latest")
