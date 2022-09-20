@@ -135,6 +135,9 @@ public class BuildXService {
                 cmdLine.add(key + '=' + value);
             });
         }
+        if (buildConfiguration.squash()) {
+            cmdLine.add("--squash");
+        }
         if (extraParam != null) {
             cmdLine.add(extraParam);
         }
