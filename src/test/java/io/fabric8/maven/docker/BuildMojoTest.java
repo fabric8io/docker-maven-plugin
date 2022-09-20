@@ -19,8 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
@@ -130,6 +132,19 @@ class BuildMojoTest extends MojoTestBase {
         thenBuildxRun(null, null, false);
     }
 
+    @Test
+    void buildUsingBuildxWithSquash() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithSquash()));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        thenBuildxRun(null, null, true, "--squash");
+    }
+
     private void givenBuildXService() {
         BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
@@ -150,7 +165,7 @@ class BuildMojoTest extends MojoTestBase {
             .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any());
     }
 
-    private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded) throws MojoExecutionException {
+    private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded, String... extraParams) throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
         String config = getOsDependentBuild(buildPath, "docker");
         String buildDir = getOsDependentBuild(buildPath, "build");
@@ -171,10 +186,12 @@ class BuildMojoTest extends MojoTestBase {
         }
 
         if (nativePlatformIncluded) {
-            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx",
-                "build", "--progress=plain", "--builder", builderName,
-                "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar",
-                "--load"), ctxCmdLine);
+            List<String> buildXLine = new ArrayList<>(Arrays.asList("docker", "--config", config, "buildx",
+                    "build", "--progress=plain", "--builder", builderName,
+                    "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar"));
+            buildXLine.addAll(Arrays.asList(extraParams));
+            buildXLine.add("--load");
+            Mockito.verify(exec).process(buildXLine, ctxCmdLine);
         }
     }
 
@@ -207,6 +224,10 @@ class BuildMojoTest extends MojoTestBase {
 
     private ImageConfiguration singleBuildXImageNonNative() {
         return singleImageConfiguration(getBuildXConfiguration(null, NON_NATIVE_PLATFORM), null);
+    }
+
+    private ImageConfiguration singleBuildXImageWithSquash() {
+        return singleImageConfigurationWithBuildWithSquash(getBuildXConfiguration(null, TWO_BUILDX_PLATFORMS), null);
     }
 
 }

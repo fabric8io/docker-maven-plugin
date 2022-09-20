@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.41-SNAPSHOT** :
+  - image/squash option is taken into account when using buildx ([1605](https://github.com/fabric8io/docker-maven-plugin/pull/1605)) @kevinleturc
 
 * **0.40.2** (2022-07-31):
   - Plugin doesn't abort building an image in case Podman is used and Dockerfile can't be processed ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1512)) @jh-cd 
