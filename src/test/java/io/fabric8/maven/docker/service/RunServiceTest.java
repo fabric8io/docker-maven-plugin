@@ -391,7 +391,7 @@ class RunServiceTest {
                 .shmSize(1024L)
                 .memory(1L)
                 .memorySwap(1L)
-                .cpus(1000000000L)
+                .cpus(1.5)
                 .cpuSet("0,1")
                 .isolation("default")
                 .cpuShares(1L)

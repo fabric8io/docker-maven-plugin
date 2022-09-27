@@ -360,9 +360,8 @@ class DockerComposeServiceWrapper {
         return asLong("cpu_shares");
     }
 
-    public Long getCpusCount(){
-        Double cpus = asDouble("cpus");
-        return convertToNanoCpus(cpus);
+    public Double getCpusCount(){
+        return asDouble("cpus");
     }
 
     public List<String> getDevices() {
@@ -447,13 +446,6 @@ class DockerComposeServiceWrapper {
             map.put(parts[0], parts[1]);
         }
         return map;
-    }
-
-    private Long convertToNanoCpus(Double cpus){
-        if(cpus == null){
-            return null;
-        }
-        return (long)(cpus * 1000000000);
     }
 
     private void throwIllegalArgumentException(String msg) {

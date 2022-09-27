@@ -1071,7 +1071,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         Assertions.assertEquals(a("redis"), runConfig.getLinks());
         Assertions.assertEquals((Long) 1L, runConfig.getMemory());
         Assertions.assertEquals((Long) 1L, runConfig.getMemorySwap());
-        Assertions.assertEquals((Long) 1000000000L, runConfig.getCpus());
+        Assertions.assertEquals(1.5, runConfig.getCpus());
         Assertions.assertEquals("default", runConfig.getIsolation());
         Assertions.assertEquals((Long) 1L, runConfig.getCpuShares());
         Assertions.assertEquals("0,1", runConfig.getCpuSet());
@@ -1174,7 +1174,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.CAP_DROP) + ".1", "CAP",
             k(ConfigKey.SYSCTLS) + ".key", "value",
             k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
-            k(ConfigKey.CPUS), "1000000000",
+            k(ConfigKey.CPUS), "1.5",
             k(ConfigKey.CPUSET), "0,1",
             k(ConfigKey.ISOLATION), "default",
             k(ConfigKey.CPUSHARES), "1",

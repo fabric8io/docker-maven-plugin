@@ -123,7 +123,7 @@ public class RunImageConfiguration implements Serializable {
     private Long cpuShares;
 
     @Parameter
-    private Long cpus;
+    private Double cpus;
 
     @Parameter
     private String cpuSet;
@@ -282,7 +282,7 @@ public class RunImageConfiguration implements Serializable {
         return cpuShares;
     }
 
-    public Long getCpus() {
+    public Double getCpus() {
         return cpus;
     }
 
@@ -632,7 +632,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder cpus(Long cpus) {
+        public Builder cpus(Double cpus) {
             config.cpus = cpus;
             return this;
         }

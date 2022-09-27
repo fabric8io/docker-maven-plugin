@@ -156,7 +156,7 @@ class DockerComposeConfigHandlerTest {
         Assertions.assertEquals((Long) 1L, runConfig.getMemory());
         Assertions.assertEquals((Long) 1L, runConfig.getMemorySwap());
         Assertions.assertEquals("0,1", runConfig.getCpuSet());
-        Assertions.assertEquals((Long) 1000000000L, runConfig.getCpus());
+        Assertions.assertEquals(1.5, runConfig.getCpus());
         Assertions.assertEquals("default", runConfig.getIsolation());
         Assertions.assertEquals((Long) 1L, runConfig.getCpuShares());
         Assertions.assertNull(runConfig.getEnvPropertyFile());
