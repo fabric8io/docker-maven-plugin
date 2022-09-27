@@ -81,8 +81,8 @@ public class ContainerHostConfig {
         return add("CpuShares", cpuShares);
     }
 
-    public ContainerHostConfig cpus(Long cpus) {
-        return add ("NanoCpus", cpus);
+    public ContainerHostConfig cpus(Double cpus) {
+        return add ("NanoCpus", convertToNanoCpus(cpus));
     }
 
     public ContainerHostConfig cpuSet(String cpuSet) {
@@ -251,5 +251,12 @@ public class ContainerHostConfig {
             startConfig.addProperty(name, value);
         }
         return this;
+    }
+
+    private Long convertToNanoCpus(Double cpus){
+        if(cpus == null){
+            return null;
+        }
+        return (long)(cpus * 1_000_000_000);
     }
 }

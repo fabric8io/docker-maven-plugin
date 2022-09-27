@@ -234,7 +234,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .tmpfs(valueProvider.getList(TMPFS, config.getTmpfs()))
             .isolation(valueProvider.getString(ISOLATION, config.getIsolation()))
             .cpuShares(valueProvider.getLong(CPUSHARES, config.getCpuShares()))
-            .cpus(valueProvider.getLong(CPUS, config.getCpus()))
+            .cpus(valueProvider.getDouble(CPUS, config.getCpus()))
             .cpuSet(valueProvider.getString(CPUSET, config.getCpuSet()))
             .readOnly(valueProvider.getBoolean(READ_ONLY, config.getReadOnly()))
             .autoRemove(valueProvider.getBoolean(AUTO_REMOVE, config.getAutoRemove()))
