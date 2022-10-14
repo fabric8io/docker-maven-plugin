@@ -19,6 +19,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>build-pom-packaging</module>
     <module>builder</module>
     <module>buildx</module>
     <module>buildx-contextdir</module>

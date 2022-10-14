@@ -12,11 +12,9 @@ import java.util.Enumeration;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.service.BuildXService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.RegistryService;
@@ -28,6 +26,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
  * Mojo for building a data image
@@ -35,7 +34,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 28.07.14
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.TEST)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
     public static final String DMP_PLUGIN_DESCRIPTOR = "META-INF/maven/io.fabric8/dmp-plugin";
