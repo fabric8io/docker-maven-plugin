@@ -4,6 +4,9 @@
   - Allow having build args with same name but different value in various sources, which are overriden in the order of precedence in resulting build args map ([1407](https://github.com/fabric8io/docker-maven-plugin/issues/1407)) @pavelsmolensky
   - Use double for `docker.cpus` property and interpret this value in the same way as Docker config option `--cpus` ([1609](https://github.com/fabric8io/docker-maven-plugin/pull/1609)) @vjuranek
   - NPE from Assembly plugin when POM packaging is used ([1146](https://github.com/fabric8io/docker-maven-plugin/issues/1146)) @slawekjaranowski
+  - Bump `org.yaml:snakeyaml` to v1.32 ([1619](https://github.com/fabric8io/docker-maven-plugin/pull/1619)) @pen4
+  - Bump `com.google.cloud.tools:jib-core` to v0.23.0 ([1620](https://github.com/fabric8io/docker-maven-plugin/pull/1620)) @pen4
+  - Bump `com.google.guava:guava` to v31.1-jre @rohanKanojia
 
 * **0.40.2** (2022-07-31):
   - Plugin doesn't abort building an image in case Podman is used and Dockerfile can't be processed ([1562](https://github.com/fabric8io/docker-maven-plugin/issues/1512)) @jh-cd 
