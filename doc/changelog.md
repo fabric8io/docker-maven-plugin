@@ -1,5 +1,7 @@
 # ChangeLog
 * **0.41-SNAPSHOT** :
+
+* **0.40.3** (2022-12-18):
   - image/squash option is taken into account when using buildx ([1605](https://github.com/fabric8io/docker-maven-plugin/pull/1605)) @kevinleturc
   - Allow having build args with same name but different value in various sources, which are overriden in the order of precedence in resulting build args map ([1407](https://github.com/fabric8io/docker-maven-plugin/issues/1407)) @pavelsmolensky
   - Use double for `docker.cpus` property and interpret this value in the same way as Docker config option `--cpus` ([1609](https://github.com/fabric8io/docker-maven-plugin/pull/1609)) @vjuranek

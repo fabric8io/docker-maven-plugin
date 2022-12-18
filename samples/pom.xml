@@ -8,7 +8,7 @@
   <parent>
     <groupId>io.fabric8.dmp</groupId>
     <artifactId>parent</artifactId>
-    <version>0.41-SNAPSHOT</version>
+    <version>0.40.3</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
@@ -41,7 +41,7 @@
   </modules>
 
   <properties>
-    <latest-released-version>0.40.1</latest-released-version>
+    <latest-released-version>0.40.3</latest-released-version>
   </properties>
 
   <build>
