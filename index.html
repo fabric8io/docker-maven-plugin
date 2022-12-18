@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.40.2,</span>
-<span id="revdate">2022-07-31</span>
+<span id="revnumber">version 0.40.3,</span>
+<span id="revdate">2022-12-18</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -562,7 +562,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#misc-startup">5.1.3. Startup Arguments</a></li>
 <li><a href="#build-buildargs">5.1.4. Build Args</a></li>
 <li><a href="#build-healthcheck">5.1.5. Healthcheck</a></li>
-<li><a href="#build-healthcheck">5.1.6. Multi-Architecture Build</a></li>
+<li><a href="#build-buildx">5.1.6. Multi-Architecture Build</a></li>
 </ul>
 </li>
 <li><a href="#docker:start">5.2. <strong>docker:start</strong></a>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.40.2<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.40.3<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2896,7 +2896,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-healthcheck">5.1.6. Multi-Architecture Build</h4>
+<h4 id="build-buildx">5.1.6. Multi-Architecture Build</h4>
 <div id="build-buildx" class="paragraph">
 <p>Buildx is enabled by setting the <code>&lt;platform&gt;</code> section of buildx configuration.  Only the native platform
 built and loaded into the local repository by the build goal.  All specified platforms are built and
@@ -6418,8 +6418,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.40.2<br>
-Last updated 2022-07-31 07:32:59 UTC
+Version 0.40.3<br>
+Last updated 2022-12-18 17:15:33 UTC
 </div>
 </div>
 </body>
