@@ -72,7 +72,6 @@
     <byte-buddy.version>1.12.10</byte-buddy.version>
     <httpclient.version>4.5.13</httpclient.version>
     <jib-core.version>0.22.0</jib-core.version>
-    <jmockit.version>1.43</jmockit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <maven.version>3.3.9</maven.version>
     <mockito.version>4.5.1</mockito.version>
