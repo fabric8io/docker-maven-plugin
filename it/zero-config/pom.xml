@@ -5,13 +5,13 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.40.3</version>
+    <version>0.41-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8.dmp.itests</groupId>
   <artifactId>dmp-it-zero-config</artifactId>
-  <version>0.40.3</version>
+  <version>0.41-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
