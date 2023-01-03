@@ -68,7 +68,7 @@ public class RegistryService {
 
             AuthConfig authConfig = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
             if (imageConfig.isBuildX()) {
-                buildXService.push(projectPaths, imageConfig, authConfig);
+                buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfig);
             } else {
                 dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfig);
             }
