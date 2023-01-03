@@ -48,17 +48,17 @@ public class BuildXService {
         this.exec = exec;
     }
 
-    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
-        useBuilder(projectPaths, imageConfig, authConfig, buildArchive, this::buildAndLoadNativePlatform);
+    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, String  configuredRegistry, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
+        useBuilder(projectPaths, imageConfig,  configuredRegistry, authConfig, buildArchive, this::buildAndLoadNativePlatform);
     }
 
-    public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig) throws MojoExecutionException {
+    public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
-        useBuilder(projectPaths, imageConfig, authConfig, archive, this::pushMultiPlatform);
+        useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, archive, this::pushMultiPlatform);
     }
 
-    private <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
+    private <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
@@ -68,7 +68,7 @@ public class BuildXService {
         Path configJson = configPath.resolve("config.json");
         try {
             createConfigJson(configJson, authConfig);
-            builder.useBuilder(buildX, builderName, buildDirs, imageConfig, context);
+            builder.useBuilder(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, context);
         } finally {
             removeConfigJson(configJson);
         }
@@ -92,23 +92,23 @@ public class BuildXService {
         }
     }
 
-    private void buildAndLoadNativePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+    private void buildAndLoadNativePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
         // build and load the native image by re-building, image should be cached and build should be quick
         String nativePlatform = dockerAccess.getNativePlatform();
         if (platforms.contains(nativePlatform)) {
-            buildX(buildX, builderName, buildDirs, imageConfig, Collections.singletonList(nativePlatform), buildArchive, "--load");
+            buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, Collections.singletonList(nativePlatform), buildArchive, "--load");
         } else  {
             logger.info("Native platform not specified, no image built");
         }
     }
 
-    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, File buildArchive) throws MojoExecutionException {
+    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         // build and push all images.  The native platform may be re-built, image should be cached and build should be quick
-        buildX(buildX, builderName, buildDirs, imageConfig, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
+        buildX(buildX, builderName, buildDirs, imageConfig, configuredRegistry, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
     }
 
-    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, List<String> platforms, File buildArchive, String extraParam)
+    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String  configuredRegistry, List<String> platforms, File buildArchive, String extraParam)
         throws MojoExecutionException {
 
         BuildImageConfiguration buildConfiguration = imageConfig.getBuildConfiguration();
@@ -122,11 +122,11 @@ public class BuildXService {
         cmdLine.add(String.join(",", platforms));
         buildConfiguration.getTags().forEach(t -> {
                 cmdLine.add("--tag");
-                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName());
+                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName(configuredRegistry));
             }
         );
         cmdLine.add("--tag");
-        cmdLine.add(imageConfig.getName());
+        cmdLine.add(new ImageName(imageConfig.getName()).getFullName(configuredRegistry));
 
         Map<String, String> args = buildConfiguration.getArgs();
         if (args != null) {
@@ -209,7 +209,7 @@ public class BuildXService {
     }
 
     interface Builder<C> {
-        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, C context) throws MojoExecutionException;
+        void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, C context) throws MojoExecutionException;
     }
 
     public interface Exec {

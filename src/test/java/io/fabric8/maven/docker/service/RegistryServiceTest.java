@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 
 /**
@@ -44,6 +45,8 @@ import java.util.Map;
 class RegistryServiceTest {
 
     private Exception actualException;
+    private String registry;
+    private ImageConfiguration imageConfiguration;
 
     // pull
     private String imageName;
@@ -52,14 +55,10 @@ class RegistryServiceTest {
     private AutoPullMode autoPullMode;
     private RegistryService registryService;
     private boolean hasImage;
-    private String registry;
     private Map<String, String> authConfig;
 
     @TempDir
     private File projectBaseDir;
-
-    // push
-    private ImageConfiguration imageConfiguration;
 
     @Mock
     private DockerAccess docker;
@@ -95,6 +94,7 @@ class RegistryServiceTest {
         autoPullMode = null;
         hasImage = false;
         registry = null;
+        imageConfiguration = null;
     }
 
     @ParameterizedTest
@@ -267,13 +267,51 @@ class RegistryServiceTest {
     }
 
     @Test
+    void pushImageWithRegistry() throws DockerAccessException {
+        String registry = "myregistry.com";
+        givenAnImageConfiguration("user/test:1.0.1");
+        givenRegistry(registry);
+
+        whenPushImage();
+
+        thenImageHasBeenPushed();
+        thenRegistryWasUsedWhenPushing(registry);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushImageWithImageRegistry() throws DockerAccessException {
+        String registry = "myregistry.com";
+        givenAnImageConfiguration(registry + "/" + "user/test:1.0.1");
+
+        whenPushImage();
+
+        thenImageHasBeenPushed();
+        thenRegistryWasUsedWhenPushing(registry);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushImageWithImageConfigRegistry() throws DockerAccessException {
+        String registry = "myregistry.com";
+        givenAnImageConfiguration("user/test:1.0.1");
+        andImageConfigRegistry(registry);
+
+        whenPushImage();
+
+        thenImageHasBeenPushed();
+        thenRegistryWasUsedWhenPushing(registry);
+        thenNoExceptionThrown();
+    }
+
+    @Test
     void pushBuildXImage() throws MojoExecutionException {
         givenBuildxImageConfiguration("user/test:1.0.1", null, null, null);
         givenCredentials("skroob", "12345");
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, null, false);
+        thenBuildxImageHasBeenPushed(null, null, false, null);
         thenNoExceptionThrown();
     }
 
@@ -285,7 +323,7 @@ class RegistryServiceTest {
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, "Dockerfile", false);
+        thenBuildxImageHasBeenPushed(null, "Dockerfile", false, null);
         thenNoExceptionThrown();
     }
 
@@ -296,7 +334,7 @@ class RegistryServiceTest {
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed("provided-builder", null, false);
+        thenBuildxImageHasBeenPushed("provided-builder", null, false, null);
         thenNoExceptionThrown();
     }
 
@@ -307,7 +345,45 @@ class RegistryServiceTest {
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, null, true);
+        thenBuildxImageHasBeenPushed(null, null, true, null);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushBuildXImageWithRegistry() throws MojoExecutionException {
+        String registry = "myregistry.com";
+        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+        givenCredentials("King_Roland_of_Druidia", "12345");
+        givenRegistry(registry);
+
+        whenPushImage();
+
+        thenBuildxImageHasBeenPushed(null, null, true, registry);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushBuildXImageWithImageRegistry() throws MojoExecutionException {
+        String registry = "myregistry.com";
+        givenBuildxImageConfiguration(registry + "/" + "user/test:1.0.1", null, null, "perri-air");
+        givenCredentials("King_Roland_of_Druidia", "12345");
+
+        whenPushImage();
+
+        thenBuildxImageHasBeenPushed(null, null, true, registry);
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    void pushBuildXImageWithImageConfigRegistry() throws MojoExecutionException {
+        String registry = "myregistry.com";
+        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+        andImageConfigRegistry(registry);
+        givenCredentials("King_Roland_of_Druidia", "12345");
+
+        whenPushImage();
+
+        thenBuildxImageHasBeenPushed(null, null, true, registry);
         thenNoExceptionThrown();
     }
 
@@ -349,9 +425,13 @@ class RegistryServiceTest {
     private void thenImageHasBeenPushed() throws DockerAccessException {
         Mockito.verify(docker).pushImage(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyInt());
     }
+    private void thenRegistryWasUsedWhenPushing(String registry) throws DockerAccessException {
+        Mockito.verify(docker).pushImage(Mockito.anyString(), Mockito.any(), Mockito.eq(registry), Mockito.anyInt());
+    }
 
-    private void thenBuildxImageHasBeenPushed(String providedBuilder, String relativeDockerfile, boolean tag) throws MojoExecutionException {
-        Path buildPath = projectBaseDir.toPath().resolve("target/docker").resolve("user/test/1.0.1");
+    private void thenBuildxImageHasBeenPushed(String providedBuilder, String relativeDockerfile, boolean tag, String registry) throws MojoExecutionException {
+
+        Path buildPath = projectBaseDir.toPath().resolve("target/docker").resolve(imageConfiguration.getName().replace(":","/"));
         String config = getOsDependentBuild(buildPath, "docker");
         String buildDir = getOsDependentBuild(buildPath, "build");
         String builderName = providedBuilder != null ? providedBuilder : "maven";
@@ -367,9 +447,10 @@ class RegistryServiceTest {
             "build", "--progress=plain", "--builder", builderName,
             "--platform", "linux/amd64,linux/arm64"));
         if (tag) {
-            args.addAll(Arrays.asList("--tag", "user/test:perri-air"));
+            String tagName = imageConfiguration.getBuildConfiguration().getTags().get(0);
+            args.addAll(Arrays.asList("--tag", new ImageName(imageConfiguration.getName(), tagName).getFullName(registry)));
         }
-        args.addAll(Arrays.asList("--tag", "user/test:1.0.1", "--push"));
+        args.addAll(Arrays.asList("--tag", new ImageName(imageConfiguration.getName()).getFullName(registry) , "--push"));
 
         String[] cmds;
         if (relativeDockerfile != null) {
@@ -426,7 +507,9 @@ class RegistryServiceTest {
             RegistryService.RegistryConfig registryConfig =
                 new RegistryService.RegistryConfig.Builder()
                     .authConfigFactory(authConfigFactory)
-                    .authConfig(authConfig).build();
+                    .authConfig(authConfig)
+                    .registry(registry)
+                    .build();
             registryService.pushImages(projectPaths, Collections.singleton(imageConfiguration), 1, registryConfig, false);
         } catch (Exception e) {
             this.actualException = e;
@@ -479,6 +562,12 @@ class RegistryServiceTest {
         buildImageConfiguration.initAndValidate(logger);
         imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
     }
+
+    private void andImageConfigRegistry(String registry) {
+        Objects.requireNonNull(imageConfiguration, "ImageConfiguration must first be set with `givenAnImage....`");
+        imageConfiguration.setRegistry(registry);
+    }
+
 
     private void givenCredentials(String username, String password) throws MojoExecutionException {
         authConfig.put(AuthConfig.AUTH_USERNAME, username);
