@@ -1,5 +1,8 @@
 name: Windows Maven Wrapper Build
 
+env:
+  MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
+
 on:
   push:
     branches:
@@ -21,4 +24,4 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build Project
-        run: ./mvnw.cmd clean install
+        run: ./mvnw.cmd %MAVEN_ARGS% clean install
