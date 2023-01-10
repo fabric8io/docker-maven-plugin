@@ -1,0 +1,41 @@
+name: E2E Tests
+
+env:
+  MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 1 * * *' # Every day at 1
+
+concurrency:
+  # Only run once for latest commit per ref and cancel other (previous) runs.
+  group: ci-e2e-docker-maven-plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Linux Java ${{ matrix.java }} Maven
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [11]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Install Docker Maven Plugin
+        run: mvn ${MAVEN_ARGS} clean install -DskipTests -Djacoco.skip=true
+      - name: Run Integration tests
+        run: |
+          cd it/
+          mvn clean install

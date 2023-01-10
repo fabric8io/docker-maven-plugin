@@ -1,0 +1,48 @@
+name: Sonar PR Scanner
+
+env:
+  MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
+
+on:
+  pull_request:
+
+concurrency:
+  # Only run once for latest commit per ref and cancel other (previous) runs.
+  group: ci-sonar-docker-maven-plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sonar:
+    name: Sonar PR Scanner
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.number }}
+      SONAR_LOGIN_TOKEN: ${{ secrets.SONAR_LOGIN_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
+      - name: Setup Java 11 # Move Sonar analysis to Java 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Maven Sonar
+        run: |
+          ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install \
+             -Dsonar.projectKey=fabric8io_docker-maven-plugin \
+             -Dsonar.organization=fabric8io \
+             -Dsonar.login=${SONAR_LOGIN_TOKEN} \
+             -Dsonar.host.url=https://sonarcloud.io \
+             -Dsonar.pullrequest.base=master \
+             -Dsonar.pullrequest.branch=${GITHUB_BASE_REF} \
+             -Dsonar.pullrequest.key=${PR_NUMBER} \
+             -Dsonar.pullrequest.provider=GitHub \
+             -Dsonar.pullrequest.github.repository=fabric8io/docker-maven-plugin \
+             -Dsonar.github.oauth=${GITHUB_TOKEN}
