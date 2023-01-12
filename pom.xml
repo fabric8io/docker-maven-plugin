@@ -689,7 +689,6 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.login>${env.SONAR_TOKEN}</sonar.login>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
         <sonar.organization>fabric8io</sonar.organization>
         <sonar.projectKey>fabric8io_docker-maven-plugin</sonar.projectKey>
