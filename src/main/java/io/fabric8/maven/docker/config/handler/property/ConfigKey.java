@@ -99,6 +99,7 @@ public enum ConfigKey {
     NAME,
     NAMING_STRATEGY,
     NET,
+    BUILD_NETWORK("build.network")
     NETWORK_MODE("network.mode"),
     NETWORK_NAME("network.name"),
     NETWORK_ALIAS("network.alias"),
