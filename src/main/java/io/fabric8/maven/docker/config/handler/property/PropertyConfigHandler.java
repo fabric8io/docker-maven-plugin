@@ -169,7 +169,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .volumes(valueProvider.getList(VOLUMES, config.getVolumes()))
             .tags(valueProvider.getList(TAGS, config.getTags()))
             .maintainer(valueProvider.getString(MAINTAINER, config.getMaintainer()))
-            .network(valueProvider.getString(NETWORK, config.getNetwork()))
+            .network(valueProvider.getString(BUILD_NETWORK, config.getNetwork()))
             .workdir(valueProvider.getString(WORKDIR, config.getWorkdir()))
             .skip(valueProvider.getBoolean(SKIP_BUILD, config.getSkip()))
             .skipPush(valueProvider.getBoolean(SKIP_PUSH, config.getSkipPush()))
