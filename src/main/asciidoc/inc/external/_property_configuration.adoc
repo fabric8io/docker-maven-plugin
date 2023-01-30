@@ -70,7 +70,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.bind.idx*
 | Sets a list of paths to bind/expose in the container. See <<list-properties>>.
 
-| *docker.build.network.VARIABLE*
+| *docker.build.network*
 | Set the networking mode for the RUN instructions during build
 
 | *docker.buildArg.VARIABLE*
