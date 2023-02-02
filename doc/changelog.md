@@ -1,6 +1,7 @@
 # ChangeLog
 * **0.41-SNAPSHOT** :
   - multi-arch build should use provided repository ([1597](https://github.com/fabric8io/docker-maven-plugin/issues/1597)) @merikan
+  - new property docker.build.network to override the network for RUN directives for docker build ([1636](https://github.com/fabric8io/docker-maven-plugin/pull/1636)) @tulinkry
 
 * **0.40.3** (2022-12-18):
   - image/squash option is taken into account when using buildx ([1605](https://github.com/fabric8io/docker-maven-plugin/pull/1605)) @kevinleturc
