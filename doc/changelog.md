@@ -3,6 +3,7 @@
   - multi-arch build should use provided repository ([1597](https://github.com/fabric8io/docker-maven-plugin/issues/1597)) @merikan
   - new property docker.build.network to override the network for RUN directives for docker build ([1636](https://github.com/fabric8io/docker-maven-plugin/pull/1636)) @tulinkry
   - Update Jib Core to v0.23.0 ([1637](https://github.com/fabric8io/docker-maven-plugin/pull/1637)) @rohanKanojia
+  - Update JNR UnixSocket to v0.38.19
 
 * **0.40.3** (2022-12-18):
   - image/squash option is taken into account when using buildx ([1605](https://github.com/fabric8io/docker-maven-plugin/pull/1605)) @kevinleturc
