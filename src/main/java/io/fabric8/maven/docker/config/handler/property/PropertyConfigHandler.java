@@ -231,6 +231,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .volumes(extractVolumeConfig(config.getVolumeConfiguration(), valueProvider))
             .skip(valueProvider.getBoolean(SKIP_RUN, config.getSkip()))
             .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_RUN, config.getImagePullPolicy()))
+            .platform(valueProvider.getString(PLATFORM, config.getPlatform()))
             .ulimits(extractUlimits(config.getUlimits(), valueProvider))
             .tmpfs(valueProvider.getList(TMPFS, config.getTmpfs()))
             .isolation(valueProvider.getString(ISOLATION, config.getIsolation()))

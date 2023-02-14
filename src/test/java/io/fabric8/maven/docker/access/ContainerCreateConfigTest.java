@@ -108,6 +108,11 @@ class ContainerCreateConfigTest {
         Assertions.assertThrows(IllegalArgumentException.class, ()-> cc.environment("/not/really/a/file",null, mavenProps));
     }
 
+    @Test
+    void platform() {
+        ContainerCreateConfig cc= new ContainerCreateConfig("testImage", "linux/arm64");
+        Assertions.assertEquals("linux/arm64",  cc.getPlatform());
+    }
 
     private JsonArray getEnvArray(ContainerCreateConfig cc) {
         JsonObject config = JsonFactory.newJsonObject(cc.toJson());

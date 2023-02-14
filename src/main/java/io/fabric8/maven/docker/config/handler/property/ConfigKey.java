@@ -106,6 +106,7 @@ public enum ConfigKey {
     NO_CACHE,
     SQUASH,
     OPTIMISE,
+    PLATFORM,
     PORT_PROPERTY_FILE,
     PORTS(ValueCombinePolicy.Merge),
     PRIVILEGED,

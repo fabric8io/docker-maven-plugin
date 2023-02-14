@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the platform run
+  Call it with 'mvn install'.
+  -->
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.42-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-platform-run</artifactId>
+  <version>0.42-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>docker-build</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+          <execution>
+            <id>docker-start</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+            <phase>pre-integration-test</phase>
+          </execution>
+          <execution>
+            <id>docker-stop</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <phase>post-integration-test</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>amd</id>
+      <activation>
+        <os>
+          <arch>x86</arch>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>alpine-amd</name>
+                  <build>
+                    <from>alpine</from>
+                    <buildx>
+                      <platforms>
+                        <platform>linux/amd64</platform>
+                      </platforms>
+                    </buildx>
+                  </build>
+                  <run>
+                    <entryPoint>
+                      <shell>/bin/sh -c</shell>
+                    </entryPoint>
+                    <cmd>
+                      <exec>
+                        <arg>uname -m ; sleep 5</arg>
+                      </exec>
+                    </cmd>
+                    <log>
+                      <file>amd.log</file>
+                    </log>
+                    <platform>linux/amd64</platform>
+                    <wait>
+                      <log>aarch64</log>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>arm</id>
+      <activation>
+        <os>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>alpine</name>
+                  <name>alpine-arm</name>
+                  <build>
+                    <from>alpine</from>
+                    <buildx>
+                      <platforms>
+                        <platform>linux/arm64</platform>
+                      </platforms>
+                    </buildx>
+                  </build>
+                  <run>
+                    <entryPoint>
+                      <shell>/bin/sh -c</shell>
+                    </entryPoint>
+                    <cmd>
+                      <exec>
+                        <arg>uname -m ; sleep 5</arg>
+                      </exec>
+                    </cmd>
+                    <log>
+                      <file>arm.log</file>
+                    </log>
+                    <platform>linux/arm64</platform>
+                    <wait>
+                      <log>aarch64</log>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

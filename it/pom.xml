@@ -33,6 +33,7 @@
     <module>log</module>
     <module>multi-assembly</module>
     <module>net</module>
+    <module>platform-run</module>
     <module>properties</module>
     <module>run-java</module>
     <module>smallest</module>
