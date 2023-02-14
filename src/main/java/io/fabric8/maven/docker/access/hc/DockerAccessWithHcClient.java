@@ -229,7 +229,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public String createContainer(ContainerCreateConfig containerConfig, String containerName)
             throws DockerAccessException {
         String createJson = containerConfig.toJson();
-        String url = urlBuilder.createContainer(containerName);
+        String url = urlBuilder.createContainer(containerName, containerConfig.getPlatform());
         log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_POST_WITH_REQUEST, url, createJson);
         try {
             String response =

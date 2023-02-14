@@ -59,9 +59,10 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String createContainer(String name) {
+    public String createContainer(String name, String platform) {
         return u("containers/create")
                 .p("name", name)
+                .p("platform", platform)
                 .build();
     }
 

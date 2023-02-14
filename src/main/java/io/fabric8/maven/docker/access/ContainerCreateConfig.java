@@ -22,10 +22,16 @@ public class ContainerCreateConfig {
 
     private final JsonObject createConfig = new JsonObject();
     private final String imageName;
+    private final String platform;
+
+    public ContainerCreateConfig(String imageName, String platform) {
+        this.imageName = imageName;
+        this.platform = platform;
+        createConfig.addProperty("Image", imageName);
+    }
 
     public ContainerCreateConfig(String imageName) {
-        this.imageName = imageName;
-        createConfig.addProperty("Image", imageName);
+        this(imageName, null);
     }
 
     public ContainerCreateConfig binds(List<String> volumes) {
@@ -108,6 +114,10 @@ public class ContainerCreateConfig {
 
     public String getImageName() {
         return imageName;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 
     public ContainerCreateConfig hostname(String hostname) {

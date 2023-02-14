@@ -191,6 +191,12 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private String imagePullPolicy;
 
+    /**
+     * Use explicit platform
+     */
+    @Parameter
+    private String platform;
+
     // Mount the container's root filesystem as read only
     @Parameter
     private Boolean readOnly;
@@ -417,6 +423,10 @@ public class RunImageConfiguration implements Serializable {
 
     public String getImagePullPolicy() {
         return imagePullPolicy;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 
     public String getContainerNamePattern() {
@@ -695,6 +705,13 @@ public class RunImageConfiguration implements Serializable {
         public Builder imagePullPolicy(String imagePullPolicy) {
             if (imagePullPolicy != null) {
                 config.imagePullPolicy = imagePullPolicy;
+            }
+            return this;
+        }
+
+        public Builder platform(String platform) {
+            if (platform != null) {
+                config.platform = platform;
             }
             return this;
         }

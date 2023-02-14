@@ -109,6 +109,12 @@ class UrlBuilderTest {
     }
 
     @Test
+    void createContainer() throws URISyntaxException {
+        UrlBuilder builder = new UrlBuilder("", "1.0");
+        Assertions.assertEquals(new URI("/1.0/containers/create?name=image&platform=linux%2Farm64"), new URI(builder.createContainer("image", "linux/arm64")));
+    }
+
+    @Test
     void loadImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
         Assertions.assertEquals(new URI("/1.0/images/load"), new URI(builder.loadImage()));

@@ -366,7 +366,7 @@ public class RunService {
                                                 GavLabel gavLabel, Properties mavenProps, File baseDir)
             throws DockerAccessException {
         try {
-            ContainerCreateConfig config = new ContainerCreateConfig(imageName)
+            ContainerCreateConfig config = new ContainerCreateConfig(imageName, runConfig.getPlatform())
                     .hostname(runConfig.getHostname())
                     .domainname(runConfig.getDomainname())
                     .user(runConfig.getUser())
