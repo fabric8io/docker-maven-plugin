@@ -1,9 +1,15 @@
 
 [[build-buildx]]
 
-Buildx is enabled by setting the `<platform>` section of buildx configuration.  Only the native platform
-built and loaded into the local repository by the build goal.  All specified platforms are built and
-pushed by the push goal.
+Buildx is enabled when there is a non-empty `<platform>` element inside the  `<buildx>` configuration.  Only the native platform
+is built and saved in the local image cache by the `build` goal.  All specified platforms are built and pushed into the remote
+repository by the `push` goal. This behavior is to prevent non-native images from tainting the local image cache.
+
+The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name. The
+recommended `<buildx>` configuration is to specify all supported platforms, including the native platform, in the `<platforms>`
+element.  This allows local integration testing of the build image from the local cache. During install or deploy phase, the
+build machine will build and push all images to the registry.  Any downstream consumers, regardless of native architecture, will
+be able to use the multi-architecture image.
 
 The `<buildx>` element within `<build>` defines how to build multi-architecture images.
 
@@ -28,6 +34,45 @@ Non-absolute files are relative to the maven project directory. If dockerConfigD
 is relative to the user's home directory.
 
 | *platforms*
-| A list of `<platform>` elements specifying platform to build.  A platform has syntax of `OS/architecture` (e.g. linux/amd64, linux/arm64, darwin/amd64).
+| A list of `<platform>` elements specifying platform to build.  A platform has syntax of `OS/architecture` (e.g. linux/amd64,
+linux/arm64, darwin/amd64).  Each `<platform>` element may have a comma separated list of platforms.  Empty `<platform>`
+elements are ignored.  If no platform architecture is specified, buildx is *not* used.  You can use
 
 |===
+
+.Examples
+The recommended configuration is setting a top level property with the list of platforms to build.
+
+[source,xml]
+----
+<properties>
+  <docker.platforms></docker.platforms>
+</properties>
+----
+
+Then in the image configuration, use the following;
+
+[source,xml]
+----
+<configuration>
+  <images>
+    <image>
+      <name>${project.groupId}.${project.artifactId}</name>
+      <build>
+        <buildx>
+          <platforms>
+            <platform>${docker.platforms}</platform>
+          </platforms>
+        </buildx>
+        <!-- add other configuration ... -->
+      </build>
+    </image>
+  </images>
+</configuration>
+----
+
+You can now override the built platforms using a command line define:
+[source,bash]
+----
+mvn clean deploy -Ddocker.platforms=linux/amd64,linux/arm64
+----
