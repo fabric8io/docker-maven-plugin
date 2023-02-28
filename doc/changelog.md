@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.43-SNAPSHOT** :
+
 * **0.42.0** (2023-02-28):
   - Support `docker run --platform` ([1641](https://github.com/fabric8io/docker-maven-plugin/issues/1641)) @chonton
   - Update buildx documentation to amplify the build behavior ([1646](https://github.com/fabric8io/docker-maven-plugin/pull/1646)) @chonton
