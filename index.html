@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.41.0,</span>
-<span id="revdate">2023-02-06</span>
+<span id="revnumber">version 0.42.0,</span>
+<span id="revdate">2023-02-28</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.41.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.42.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2898,9 +2898,16 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect3">
 <h4 id="build-buildx">5.1.6. Multi-Architecture Build</h4>
 <div id="build-buildx" class="paragraph">
-<p>Buildx is enabled by setting the <code>&lt;platform&gt;</code> section of buildx configuration.  Only the native platform
-built and loaded into the local repository by the build goal.  All specified platforms are built and
-pushed by the push goal.</p>
+<p>Buildx is enabled when there is a non-empty <code>&lt;platform&gt;</code> element inside the  <code>&lt;buildx&gt;</code> configuration.  Only the native platform
+is built and saved in the local image cache by the <code>build</code> goal.  All specified platforms are built and pushed into the remote
+repository by the <code>push</code> goal. This behavior is to prevent non-native images from tainting the local image cache.</p>
+</div>
+<div class="paragraph">
+<p>The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name. The
+recommended <code>&lt;buildx&gt;</code> configuration is to specify all supported platforms, including the native platform, in the <code>&lt;platforms&gt;</code>
+element.  This allows local integration testing of the build image from the local cache. During install or deploy phase, the
+build machine will build and push all images to the registry.  Any downstream consumers, regardless of native architecture, will
+be able to use the multi-architecture image.</p>
 </div>
 <div class="paragraph">
 <p>The <code>&lt;buildx&gt;</code> element within <code>&lt;build&gt;</code> defines how to build multi-architecture images.</p>
@@ -2937,10 +2944,53 @@ is relative to the user&#8217;s home directory.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platforms</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;platform&gt;</code> elements specifying platform to build.  A platform has syntax of <code>OS/architecture</code> (e.g. linux/amd64, linux/arm64, darwin/amd64).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;platform&gt;</code> elements specifying platform to build.  A platform has syntax of <code>OS/architecture</code> (e.g. linux/amd64,
+linux/arm64, darwin/amd64).  Each <code>&lt;platform&gt;</code> element may have a comma separated list of platforms.  Empty <code>&lt;platform&gt;</code>
+elements are ignored.  If no platform architecture is specified, buildx is <strong>not</strong> used.  You can use</p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<div class="title">Examples</div>
+<p>The recommended configuration is setting a top level property with the list of platforms to build.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+  <span class="tag">&lt;docker.platforms&gt;</span><span class="tag">&lt;/docker.platforms&gt;</span>
+<span class="tag">&lt;/properties&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in the image configuration, use the following;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;images&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="tag">&lt;name&gt;</span>${project.groupId}.${project.artifactId}<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;build&gt;</span>
+        <span class="tag">&lt;buildx&gt;</span>
+          <span class="tag">&lt;platforms&gt;</span>
+            <span class="tag">&lt;platform&gt;</span>${docker.platforms}<span class="tag">&lt;/platform&gt;</span>
+          <span class="tag">&lt;/platforms&gt;</span>
+        <span class="tag">&lt;/buildx&gt;</span>
+        <span class="comment">&lt;!-- add other configuration ... --&gt;</span>
+      <span class="tag">&lt;/build&gt;</span>
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can now override the built platforms using a command line define:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bash">mvn clean deploy -Ddocker.platforms=linux/amd64,linux/arm64</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -3013,6 +3063,11 @@ is relative to the user&#8217;s home directory.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platform</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an explicit platform to use when starting a docker container</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.platform</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>showLogs</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
@@ -3042,6 +3097,10 @@ is relative to the user&#8217;s home directory.</p></td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoRemove</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> automatically remove the container when it exits. This has no effect if <a href="#start-restart">Restart Policy</a> has been set.</p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>capAdd</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>add</code> elements to specify kernel parameters to add to the container.</p></td>
@@ -3161,10 +3220,6 @@ is relative to the user&#8217;s home directory.</p></td>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>readOnly</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> mount the container&#8217;s root filesystem as read only</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoRemove</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> automatically remove the container when it exits. This has no effect if <a href="#start-restart">Restart Policy</a> has been set.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-restart"><strong>restartPolicy</strong></a></p></td>
@@ -6422,7 +6477,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.41.0<br>
+Version 0.42.0<br>
 Last updated 2021-06-27 16:27:39 IST
 </div>
 </div>
