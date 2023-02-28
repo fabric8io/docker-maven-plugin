@@ -6,11 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import com.google.cloud.tools.jib.api.Credential;
-import com.google.cloud.tools.jib.api.TarImage;
 
+import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -32,6 +31,10 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.JibServiceUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
+
+import static io.fabric8.maven.docker.service.JibBuildService.prepareImageConfiguration;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class JibBuildServiceTest {
@@ -70,11 +73,11 @@ class JibBuildServiceTest {
         mockAuthConfigFactory(true, registryConfig);
         // When
         Credential credential = JibBuildService.getRegistryCredentials(
-                registryConfig, true, imageConfiguration, logger);
+                registryConfig, true, imageConfiguration);
         // Then
         Assertions.assertNotNull(credential);
-        Assertions.assertEquals("testuserpush", credential.getUsername());
-        Assertions.assertEquals("testpass", credential.getPassword());
+        assertEquals("testuserpush", credential.getUsername());
+        assertEquals("testpass", credential.getPassword());
     }
 
     @Test
@@ -90,11 +93,11 @@ class JibBuildServiceTest {
         mockAuthConfigFactory(false, registryConfig);
         // When
         Credential credential = JibBuildService.getRegistryCredentials(
-                registryConfig, false, imageConfiguration, logger);
+                registryConfig, false, imageConfiguration);
         // Then
         Assertions.assertNotNull(credential);
-        Assertions.assertEquals("testuserpull", credential.getUsername());
-        Assertions.assertEquals("testpass", credential.getPassword());
+        assertEquals("testuserpull", credential.getUsername());
+        assertEquals("testpass", credential.getPassword());
     }
 
     @Test
@@ -109,7 +112,7 @@ class JibBuildServiceTest {
 
         // Then
         Assertions.assertNotNull(tarArchive);
-        Assertions.assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
+        assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
                 tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
     }
 
@@ -126,7 +129,7 @@ class JibBuildServiceTest {
 
         // Then
         Assertions.assertNotNull(tarArchive);
-        Assertions.assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
+        assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
                 tarArchive.getAbsolutePath().substring(projectBaseDir.toString().length()));
     }
 
@@ -138,12 +141,12 @@ class JibBuildServiceTest {
         JibBuildService.prependRegistry(imageConfiguration, "quay.io");
         // Then
         Assertions.assertNotNull(imageConfiguration);
-        Assertions.assertEquals("quay.io/test/testimage:0.0.1", imageConfiguration.getName());
+        assertEquals("quay.io/test/testimage:0.0.1", imageConfiguration.getName());
     }
 
     @Test
     void testPushWithNoConfigurations() {
-        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = Mockito.mockStatic(JibServiceUtil.class)) {
+        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = mockStatic(JibServiceUtil.class)) {
             // Given
             jibServiceUtilMock
                 .when(() -> JibServiceUtil.jibPush(Mockito.any(ImageConfiguration.class), Mockito.any(Credential.class), Mockito.any(File.class), Mockito.any(Logger.class)))
@@ -159,7 +162,6 @@ class JibBuildServiceTest {
     @Test
     void testBuildCallsBuildContainer(@TempDir Path tmpDir) throws Exception {
         // ARRANGE
-        Mockito.when(project.getProperties()).thenReturn(new Properties());
         setupServiceHubExpectations(tmpDir.toFile());
         setupDockerAssemblyExpectations(tmpDir);
         final RegistryService.RegistryConfig registryConfig = new RegistryService.RegistryConfig.Builder()
@@ -170,7 +172,7 @@ class JibBuildServiceTest {
         JibBuildService jibBuildService = new JibBuildService(serviceHub, params, logger);
         ImageConfiguration imageConfiguration = getImageConfiguration();
 
-        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = Mockito.mockStatic(JibServiceUtil.class)) {
+        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = mockStatic(JibServiceUtil.class)) {
             jibServiceUtilMock.when(() -> JibServiceUtil.getBaseImage(imageConfiguration)).thenCallRealMethod();
             // ACT
             jibBuildService.build("docker", imageConfiguration, registryConfig);
@@ -183,7 +185,7 @@ class JibBuildServiceTest {
     @Test
     @Disabled("Cannot intercept JibServiceUtil.pushImage() to prevent actual image creation")
     void testPushWithConfiguration(@TempDir Path tmpDir) throws Exception {
-        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = Mockito.mockStatic(JibServiceUtil.class)) {
+        try (MockedStatic<JibServiceUtil> jibServiceUtilMock = mockStatic(JibServiceUtil.class)) {
             // Given
             setupServiceHubExpectations(tmpDir.toFile());
             setupDockerAssemblyExpectations(tmpDir);
@@ -201,6 +203,24 @@ class JibBuildServiceTest {
                 Mockito.eq(Credential.from("testuserpush", "testpass")),
                 Mockito.any(File.class),
                 Mockito.eq(logger)));
+        }
+    }
+
+    @Test
+    void prepareImageConfiguration_whenDockerRegistryPropertySet_thenImageConfigurationShouldHaveRegistry() {
+        try (MockedStatic<EnvUtil> envUtilMockedStatic = mockStatic(EnvUtil.class)) {
+            // Given
+            envUtilMockedStatic.when(() -> EnvUtil.firstRegistryOf(null, null, null)).thenReturn("registry-from-docker-registry-env.io");
+            ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+                .name("test/foo:bar")
+                .build();
+            RegistryService.RegistryConfig registryConfig = new RegistryService.RegistryConfig();
+
+            // When
+            ImageConfiguration result = prepareImageConfiguration(imageConfiguration, registryConfig);
+
+            // Then
+            assertEquals("registry-from-docker-registry-env.io/test/foo:bar", result.getName());
         }
     }
 
