@@ -204,7 +204,7 @@ public class JibServiceUtil {
     }
 
     static ImageFormat getImageFormat(String jibImageFormat) {
-        if (jibImageFormat != null && jibImageFormat.toLowerCase().equalsIgnoreCase("oci")) {
+        if (jibImageFormat != null && jibImageFormat.equalsIgnoreCase("oci")) {
             return ImageFormat.OCI;
         }
         return ImageFormat.Docker;

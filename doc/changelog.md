@@ -1,5 +1,9 @@
 # ChangeLog
 * **0.42-SNAPSHOT** :
+  - Support `docker run --platform` ([1641](https://github.com/fabric8io/docker-maven-plugin/issues/1641)) @chonton
+  - Update buildx documentation to amplify the build behavior ([1646](https://github.com/fabric8io/docker-maven-plugin/pull/1646)) @chonton
+  - Default to native platform when creating container ([1645](https://github.com/fabric8io/docker-maven-plugin/pull/1645)) @chonton
+  - JIB ignores the `DOCKER_REGISTRY` environment variable ([1617](https://github.com/fabric8io/docker-maven-plugin/issues/1617)) @rohanKanojia
 
 * **0.41.0** (2023-02-06):
   - multi-arch build should use provided repository ([1597](https://github.com/fabric8io/docker-maven-plugin/issues/1597)) @merikan
