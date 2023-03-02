@@ -34,7 +34,7 @@ public class BuildXConfiguration implements Serializable {
 
     @Nonnull
     public List<String> getPlatforms() {
-        return EnvUtil.removeEmptyEntries(platforms);
+        return EnvUtil.splitAtCommasAndTrim(platforms);
     }
 
     public String getBuilderName() {
