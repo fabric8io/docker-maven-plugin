@@ -101,7 +101,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         BuildService buildService= hub.getBuildService();
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
         if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
-            if (imageConfig.isBuildX()) {
+            if (imageConfig.isBuildX() && !imageConfig.getBuildConfiguration().getBuildX().useBuildxOnlyOnPush()) {
                 hub.getBuildXService().build(createProjectPaths(), imageConfig, null, getAuthConfig(imageConfig), buildArchiveFile);
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);

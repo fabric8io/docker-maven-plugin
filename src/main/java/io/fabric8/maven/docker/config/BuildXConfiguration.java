@@ -32,6 +32,14 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private List<String> platforms;
 
+    /**
+     * Use buildx only on push phase.
+     * This will speed up the build overall as buildx will not
+     * be used to load the image locally
+     */
+    @Parameter(defaultValue = "false")
+    private boolean useBuildxOnlyOnPush;
+
     @Nonnull
     public List<String> getPlatforms() {
         return EnvUtil.splitAtCommasAndTrim(platforms);
@@ -53,6 +61,9 @@ public class BuildXConfiguration implements Serializable {
         return !getPlatforms().isEmpty();
     }
 
+    public boolean useBuildxOnlyOnPush() {
+        return useBuildxOnlyOnPush;
+    }
 
     public static class Builder {
 
@@ -92,6 +103,11 @@ public class BuildXConfiguration implements Serializable {
             if (!config.platforms.isEmpty()) {
                 isEmpty = false;
             }
+            return this;
+        }
+
+        public Builder useBuildxOnlyOnPush(boolean useBuildxOnlyOnPush) {
+            config.useBuildxOnlyOnPush = useBuildxOnlyOnPush;
             return this;
         }
     }

@@ -145,6 +145,17 @@ class BuildMojoTest extends MojoTestBase {
         thenBuildxRun(null, null, true, "--squash");
     }
 
+    @Test
+    void buildUsingBuildxOnPushOnly() throws IOException, MojoExecutionException {
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithBuildxOnPush()));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        Mockito.verifyNoInteractions(exec);
+    }
+
     private void givenBuildXService() {
         BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
@@ -228,6 +239,14 @@ class BuildMojoTest extends MojoTestBase {
 
     private ImageConfiguration singleBuildXImageWithSquash() {
         return singleImageConfigurationWithBuildWithSquash(getBuildXConfiguration(null, TWO_BUILDX_PLATFORMS), null);
+    }
+
+    private ImageConfiguration singleBuildXImageWithBuildxOnPush() {
+        return singleImageConfiguration(new BuildXConfiguration.Builder()
+                        .configFile(null)
+                        .platforms(Arrays.asList(TWO_BUILDX_PLATFORMS))
+                        .useBuildxOnlyOnPush(true)
+                        .build(), null);
     }
 
 }
