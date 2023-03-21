@@ -34,7 +34,6 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
@@ -337,7 +336,6 @@ public class StartMojo extends AbstractDockerMojo {
             pullImage(registryService, imageConfig, pullRegistry);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-
             NetworkConfig config = runConfig.getNetworkingConfig();
             List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
             List<VolumeConfiguration> volumes = getVolumes();

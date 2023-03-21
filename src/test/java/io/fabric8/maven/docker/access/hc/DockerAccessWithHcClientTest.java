@@ -37,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class DockerAccessWithHcClientTest {
@@ -552,7 +553,7 @@ class DockerAccessWithHcClientTest {
 
     private void thenImageWasPulled(int pushPullRetries) throws IOException {
         ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
-        Mockito.verify(mockDelegate)
+        Mockito.verify(mockDelegate, times(pushPullRetries))
                 .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
 
         String postUrl = urlCapture.getValue();

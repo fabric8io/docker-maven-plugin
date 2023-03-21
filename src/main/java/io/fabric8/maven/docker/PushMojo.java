@@ -30,9 +30,6 @@ public class PushMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
-    
-    @Parameter(property = "docker.push.retries", defaultValue = "0")
-    private int retries;
 
     /**
      * {@inheritDoc}
@@ -51,14 +48,14 @@ public class PushMojo extends AbstractDockerMojo {
     }
 
     private void executeDockerPush(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
-        hub.getRegistryService().pushImages(createProjectPaths(), getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        hub.getRegistryService().pushImages(createProjectPaths(), getResolvedImages(), getPushRetries(), getRegistryConfig(pushRegistry), skipTag);
     }
 
     private void executeJibPush(ServiceHub hub) throws MojoExecutionException {
         log.info("Pushing Container image with [[B]]JIB(Java Image Builder)[[B]] mode");
         JibBuildService jibBuildService = new JibBuildService(hub, new MojoParameters(session, project, null, null, null,
                 settings, sourceDirectory, outputDirectory, null), log);
-        jibBuildService.push(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        jibBuildService.push(getResolvedImages(), getPushRetries(), getRegistryConfig(pushRegistry), skipTag);
     }
 
 }

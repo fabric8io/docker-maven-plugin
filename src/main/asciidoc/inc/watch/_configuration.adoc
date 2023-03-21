@@ -55,14 +55,14 @@ below how this can be specified.
 | `docker.keepRunning`
 
 | *keepContainer*
-| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
+| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `false`.
 | `docker.keepContainer`
 
 | *removeVolumes*
 | if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
 | `docker.removeVolumes`
 
-| *retries*
+| *pullRetries*
 | If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
 | `docker.pull.retries`
 |===

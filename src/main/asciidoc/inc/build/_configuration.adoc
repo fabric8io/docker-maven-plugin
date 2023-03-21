@@ -120,9 +120,6 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | *shell*
 | Shell to be used for the *runCmds*. It contains *arg* elements which are defining the executable and its params.
 
-| *retries*
-| If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
-
 | *runCmds*
 | Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* into the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
 

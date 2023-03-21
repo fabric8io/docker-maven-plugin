@@ -9,7 +9,7 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 | Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
 | `docker.containerNamePattern`
 
-| *retries*
+| *pullRetries*
 | If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
 | `docker.pull.retries`
 

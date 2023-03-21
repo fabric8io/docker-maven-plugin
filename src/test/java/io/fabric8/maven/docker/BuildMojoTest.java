@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
     private static final String NON_NATIVE_PLATFORM = "linux/amd64";
@@ -239,6 +241,29 @@ class BuildMojoTest extends MojoTestBase {
 
         thenAuthContainsRegistry(TEST_REGISTRY);
         thenAuthContainsRegistry("custom-registry.org");
+    }
+
+    @Test
+    void getPullRetries_whenPullRetriesConfigured_thenUsePullRetries() {
+        givenMavenProject(buildMojo);
+        buildMojo.pullRetries = 2;
+
+        assertEquals(2, buildMojo.getPullRetries());
+    }
+
+    @Test
+    void getPullRetries_whenRetriesConfigured_thenUseRetries() {
+        givenMavenProject(buildMojo);
+        buildMojo.retries = 2;
+
+        assertEquals(2, buildMojo.getPullRetries());
+    }
+
+    @Test
+    void getPullRetries_whenNothingConfigured_thenReturnDefaultValue() {
+        givenMavenProject(buildMojo);
+
+        assertEquals(0, buildMojo.getPullRetries());
     }
 
     private void givenBuildXService() {
