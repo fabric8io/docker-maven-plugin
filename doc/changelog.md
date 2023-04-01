@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.43-SNAPSHOT** :
+  - Update Jnr Jffi dependency to v1.3.11 ([1660](https://github.com/fabric8io/docker-maven-plugin/issues/1660)) @rohanKanojia
 
 * **0.42.0** (2023-02-28):
   - Support `docker run --platform` ([1641](https://github.com/fabric8io/docker-maven-plugin/issues/1641)) @chonton

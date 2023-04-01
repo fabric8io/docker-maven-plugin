@@ -72,6 +72,8 @@
     <byte-buddy.version>1.12.10</byte-buddy.version>
     <httpclient.version>4.5.13</httpclient.version>
     <jib-core.version>0.23.0</jib-core.version>
+    <jnr-jffi.version>1.3.11</jnr-jffi.version>
+    <jnr-unixsocket.version>0.38.19</jnr-unixsocket.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <maven.version>3.3.9</maven.version>
     <mockito.version>4.5.1</mockito.version>
@@ -86,7 +88,26 @@
     <dependency>
       <groupId>com.github.jnr</groupId>
       <artifactId>jnr-unixsocket</artifactId>
-      <version>0.38.19</version>
+      <version>${jnr-unixsocket.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.github.jnr</groupId>
+          <artifactId>jffi</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.jnr</groupId>
+      <artifactId>jffi</artifactId>
+      <version>${jnr-jffi.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.jnr</groupId>
+      <artifactId>jffi</artifactId>
+      <version>${jnr-jffi.version}</version>
+      <classifier>native</classifier>
     </dependency>
 
     <dependency>
