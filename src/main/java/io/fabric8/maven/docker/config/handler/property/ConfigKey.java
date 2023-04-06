@@ -45,6 +45,8 @@ public enum ConfigKey {
     BUILDX_BUILDERNAME("buildx.builderName"),
     BUILDX_CONFIGFILE("buildx.configFile"),
     BUILDX_DOCKERSTATEDIR("buildx.dockerStateDir"),
+    BUILDX_ATTESTATION_PROVENANCE("buildx.attestations.provenance"),
+    BUILDX_ATTESTATION_SBOM("buildx.attestations.sbom"),
     CAP_ADD,
     CAP_DROP,
     SYSCTLS,

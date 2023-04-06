@@ -14,6 +14,7 @@ public class BuildXConfiguration implements Serializable {
      */
     @Parameter
     private String builderName;
+
     /**
      * Configuration file to create builder
      */
@@ -32,10 +33,11 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private List<String> platforms;
 
-    @Nonnull
-    public List<String> getPlatforms() {
-        return EnvUtil.splitAtCommasAndTrim(platforms);
-    }
+    /**
+     * Attestation configuration
+     */
+    @Parameter
+    private AttestationConfiguration attestations;
 
     public String getBuilderName() {
         return builderName;
@@ -53,6 +55,14 @@ public class BuildXConfiguration implements Serializable {
         return !getPlatforms().isEmpty();
     }
 
+    @Nonnull
+    public List<String> getPlatforms() {
+        return EnvUtil.splitAtCommasAndTrim(platforms);
+    }
+
+    public AttestationConfiguration getAttestations() {
+        return attestations;
+    }
 
     public static class Builder {
 
@@ -90,6 +100,14 @@ public class BuildXConfiguration implements Serializable {
         public Builder platforms(List<String> platforms) {
             config.platforms = EnvUtil.removeEmptyEntries(platforms);
             if (!config.platforms.isEmpty()) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder attestations(AttestationConfiguration attestations) {
+            config.attestations = attestations;
+            if (attestations != null) {
                 isEmpty = false;
             }
             return this;

@@ -437,30 +437,29 @@ class RegistryServiceTest {
         String builderName = providedBuilder != null ? providedBuilder : "maven";
 
         if (providedBuilder == null) {
-            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx"),
-                "create", "--driver", "docker-container", "--name", builderName);
+            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx", "create", "--driver", "docker-container", "--name", builderName));
         }
 
-        List<String> args = new ArrayList<>();
-        args.addAll(Arrays.asList(
-            "docker", "--config", config, "buildx",
-            "build", "--progress=plain", "--builder", builderName,
-            "--platform", "linux/amd64,linux/arm64"));
+        List<String> cmds =
+            BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx", "build",
+                "--progress=plain", "--builder", builderName, "--platform",
+                "linux/amd64,linux/arm64", "--tag",
+                new ImageName(imageConfiguration.getName()).getFullName(registry));
         if (tag) {
             String tagName = imageConfiguration.getBuildConfiguration().getTags().get(0);
-            args.addAll(Arrays.asList("--tag", new ImageName(imageConfiguration.getName(), tagName).getFullName(registry)));
+            BuildXService.append(cmds, "--tag",
+                new ImageName(imageConfiguration.getName(), tagName).getFullName(registry));
         }
-        args.addAll(Arrays.asList("--tag", new ImageName(imageConfiguration.getName()).getFullName(registry) , "--push"));
 
-        String[] cmds;
         if (relativeDockerfile != null) {
             Path dockerBuild = buildPath.resolve("tmp/docker-build");
-            cmds = new String[] { "--file=" + dockerBuild.resolve(relativeDockerfile), dockerBuild.toString() };
+            BuildXService.append(cmds, "--file=" + dockerBuild.resolve(relativeDockerfile), dockerBuild.toString());
         } else {
-            cmds = new String[] { buildDir };
+            cmds.add(buildDir);
         }
+        BuildXService.append(cmds, "--push");
 
-        Mockito.verify(exec).process(args, cmds);
+        Mockito.verify(exec).process(cmds);
     }
 
     private void thenImageHasBeenTagged() throws DockerAccessException {

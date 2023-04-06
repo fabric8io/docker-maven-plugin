@@ -4,6 +4,7 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.AttestationConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -116,19 +117,13 @@ public class BuildXService {
         BuildImageConfiguration buildConfiguration = imageConfig.getBuildConfiguration();
 
         List<String> cmdLine = new ArrayList<>(buildX);
-        cmdLine.add("build");
-        cmdLine.add("--progress=plain");
-        cmdLine.add("--builder");
-        cmdLine.add(builderName);
-        cmdLine.add("--platform");
-        cmdLine.add(String.join(",", platforms));
+        append(cmdLine, "build", "--progress=plain", "--builder", builderName, "--platform",
+            String.join(",", platforms), "--tag",
+            new ImageName(imageConfig.getName()).getFullName(configuredRegistry));
         buildConfiguration.getTags().forEach(t -> {
-                cmdLine.add("--tag");
-                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName(configuredRegistry));
-            }
-        );
-        cmdLine.add("--tag");
-        cmdLine.add(new ImageName(imageConfig.getName()).getFullName(configuredRegistry));
+            cmdLine.add("--tag");
+            cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName(configuredRegistry));
+        });
 
         Map<String, String> args = buildConfiguration.getArgs();
         if (args != null) {
@@ -137,24 +132,46 @@ public class BuildXService {
                 cmdLine.add(key + '=' + value);
             });
         }
+
+        AttestationConfiguration attestations = buildConfiguration.getBuildX().getAttestations();
+        if (attestations != null) {
+            if (Boolean.TRUE.equals(attestations.getSbom())) {
+                cmdLine.add("--sbom=true");
+            }
+            String provenance = attestations.getProvenance();
+            if (provenance != null) {
+                switch (provenance) {
+                    case "min":
+                    case "max":
+                        cmdLine.add("--provenance=mode=" + provenance);
+                        break;
+                    case "false":
+                    case "true":
+                        cmdLine.add("--provenance=" + provenance);
+                        break;
+                    default:
+                        logger.error("Unsupported provenance mode %s", provenance);
+                }
+            }
+        }
+
         if (buildConfiguration.squash()) {
             cmdLine.add("--squash");
+        }
+
+        File contextDir = buildConfiguration.getContextDir();
+        if (contextDir != null) {
+            Path destinationPath = getContextPath(buildArchive);
+            Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
+            append(cmdLine, "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString());
+        } else {
+            cmdLine.add(buildDirs.getOutputDirectory().getAbsolutePath());
         }
         if (extraParam != null) {
             cmdLine.add(extraParam);
         }
 
-        String[] ctxCmds;
-        File contextDir = buildConfiguration.getContextDir();
-        if (contextDir != null) {
-            Path destinationPath = getContextPath(buildArchive);
-            Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
-            ctxCmds = new String[] { "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString() };
-        } else {
-            ctxCmds = new String[] { buildDirs.getOutputDirectory().getAbsolutePath() };
-        }
-
-        int rc = exec.process(cmdLine, ctxCmds);
+        int rc = exec.process(cmdLine);
         if (rc != 0) {
             throw new MojoExecutionException("Error status (" + rc + ") when building");
         }
@@ -197,12 +214,14 @@ public class BuildXService {
         }
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
         if(Files.notExists(builderPath)) {
+            List<String> cmds = new ArrayList<>(buildX);
+            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
             String buildConfig = buildXConfiguration.getConfigFile();
-            int rc = exec.process(buildX, buildConfig == null
-                ? new String[] { "create", "--driver", "docker-container", "--name", builderName }
-                : new String[] { "create", "--driver", "docker-container", "--name", builderName, "--config",
-                buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString() }
-            );
+            if(buildConfig != null) {
+                append(cmds, "--config",
+                buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString());
+            }
+            int rc = exec.process(cmds);
             if (rc != 0) {
                 throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
             }
@@ -210,12 +229,17 @@ public class BuildXService {
         return builderName;
     }
 
+    public static <T> List<T> append(List<T> collection, T... members) {
+        collection.addAll(Arrays.asList(members));
+        return collection;
+    }
+
     interface Builder<C> {
         void useBuilder(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, C context) throws MojoExecutionException;
     }
 
     public interface Exec {
-        int process(List<String> buildX, String... cmd) throws MojoExecutionException;
+        int process(List<String> cmdArgs) throws MojoExecutionException;
     }
 
     public static class DefaultExec implements Exec {
@@ -225,26 +249,19 @@ public class BuildXService {
             this.logger = logger;
         }
 
-        @Override public int process(List<String> buildX, String... cmd) throws MojoExecutionException {
-            List<String> cmdLine;
-            if (cmd.length > 0) {
-                cmdLine = new ArrayList<>(buildX);
-                cmdLine.addAll(Arrays.asList(cmd));
-            } else {
-                cmdLine = buildX;
-            }
+        @Override public int process(List<String> cmdArgs) throws MojoExecutionException {
             try {
-                logger.info(String.join(" ", cmdLine));
-                ProcessBuilder builder = new ProcessBuilder(cmdLine);
+                logger.info(String.join(" ", cmdArgs));
+                ProcessBuilder builder = new ProcessBuilder(cmdArgs);
                 Process process = builder.start();
                 pumpStream(process.getInputStream());
                 pumpStream(process.getErrorStream());
                 return process.waitFor();
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                throw new MojoExecutionException("Interrupted while executing " + cmdLine, ex);
+                throw new MojoExecutionException("Interrupted while executing " + cmdArgs, ex);
             } catch (IOException ex) {
-                throw new MojoExecutionException("unable to execute " + cmdLine, ex);
+                throw new MojoExecutionException("unable to execute " + cmdArgs, ex);
             }
         }
 
