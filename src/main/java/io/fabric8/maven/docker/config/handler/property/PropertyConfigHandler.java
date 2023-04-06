@@ -15,6 +15,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import io.fabric8.maven.docker.config.AttestationConfiguration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -335,6 +336,18 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .configFile(valueProvider.getString(BUILDX_CONFIGFILE, config.getConfigFile()))
             .dockerStateDir(valueProvider.getString(BUILDX_DOCKERSTATEDIR, config.getDockerStateDir()))
             .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))
+            .attestations(extractAttestations(config.getAttestations(), valueProvider))
+            .build();
+    }
+
+    private AttestationConfiguration extractAttestations(AttestationConfiguration config, ValueProvider valueProvider) {
+        if (config == null) {
+            config = new AttestationConfiguration();
+        }
+
+        return new AttestationConfiguration.Builder()
+            .provenance(valueProvider.getString(BUILDX_ATTESTATION_PROVENANCE, config.getProvenance()))
+            .sbom(valueProvider.getBoolean(BUILDX_ATTESTATION_SBOM, config.getSbom()))
             .build();
     }
 

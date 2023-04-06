@@ -46,6 +46,10 @@ is relative to the user's home directory.
 linux/arm64, darwin/amd64).  Each `<platform>` element may have a comma separated list of platforms.  Empty `<platform>`
 elements are ignored.  If no platform architecture is specified, buildx is *not* used.  You can use
 
+| *attestations*
+| The configuration of attestation modes.  The `<provenance>` element may be set to `min`,
+`max`, or `false`. The `<sbom>` element may be set to `true` or `false`. The `<provenance>`
+element defaults to `min` and the `<sbom>` element defaults to `false`.
 |===
 
 .Examples
