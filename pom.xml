@@ -87,18 +87,6 @@
 
     <dependency>
       <groupId>com.github.jnr</groupId>
-      <artifactId>jnr-unixsocket</artifactId>
-      <version>${jnr-unixsocket.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.github.jnr</groupId>
-          <artifactId>jffi</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.jnr</groupId>
       <artifactId>jffi</artifactId>
       <version>${jnr-jffi.version}</version>
     </dependency>
@@ -108,6 +96,18 @@
       <artifactId>jffi</artifactId>
       <version>${jnr-jffi.version}</version>
       <classifier>native</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.jnr</groupId>
+      <artifactId>jnr-unixsocket</artifactId>
+      <version>${jnr-unixsocket.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.github.jnr</groupId>
+          <artifactId>jffi</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
