@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.42.0,</span>
-<span id="revdate">2023-02-28</span>
+<span id="revnumber">version 0.42.1,</span>
+<span id="revdate">2023-04-06</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.42.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.42.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -3063,11 +3063,6 @@ elements are ignored.  If no platform architecture is specified, buildx is <stro
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platform</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an explicit platform to use when starting a docker container</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.platform</code></p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>showLogs</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
@@ -3212,6 +3207,10 @@ elements are ignored.  If no platform architecture is specified, buildx is <stro
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-port-mapping"><strong>ports</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-port-mapping">Port mappings</a> for exposing container ports to host ports.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>platform</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an explicit platform to use when starting a docker container. May be set with property <code>docker.platform</code>.  Defaults to native platform.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>privileged</strong></p></td>
@@ -6477,8 +6476,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.42.0<br>
-Last updated 2021-06-27 16:27:39 IST
+Version 0.42.1<br>
+Last updated 2023-03-21 11:02:02 IST
 </div>
 </div>
 </body>
