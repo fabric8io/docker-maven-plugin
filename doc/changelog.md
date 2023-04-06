@@ -1,6 +1,8 @@
 # ChangeLog
-* **0.43-SNAPSHOT** :
+* **0.42.1** (2023-04-06):
   - Update Jnr Jffi dependency to v1.3.11 ([1660](https://github.com/fabric8io/docker-maven-plugin/issues/1660)) @rohanKanojia
+  - Update run platform documentation ([1652](https://github.com/fabric8io/docker-maven-plugin/pull/1652)) @chonton
+  - buildx should split platforms by comma as documented ([1651](https://github.com/fabric8io/docker-maven-plugin/pull/1651)) @chonton
 
 * **0.42.0** (2023-02-28):
   - Support `docker run --platform` ([1641](https://github.com/fabric8io/docker-maven-plugin/issues/1641)) @chonton
