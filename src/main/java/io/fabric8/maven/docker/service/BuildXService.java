@@ -49,7 +49,7 @@ public class BuildXService {
     }
 
     public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, String  configuredRegistry, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
-        useBuilder(projectPaths, imageConfig,  configuredRegistry, authConfig, buildArchive, this::buildAndLoadNativePlatform);
+        useBuilder(projectPaths, imageConfig,  configuredRegistry, authConfig, buildArchive, this::buildAndLoadSinglePlatform);
     }
 
     public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig) throws MojoExecutionException {
@@ -92,14 +92,16 @@ public class BuildXService {
         }
     }
 
-    private void buildAndLoadNativePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
+    private void buildAndLoadSinglePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
-        // build and load the native image by re-building, image should be cached and build should be quick
+        // build and load the single-platform image by re-building, image should be cached and build should be quick
         String nativePlatform = dockerAccess.getNativePlatform();
-        if (platforms.contains(nativePlatform)) {
+        if (platforms.size() == 1) {
+            buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, platforms, buildArchive, "--load");
+        } else if (platforms.contains(nativePlatform)) {
             buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, Collections.singletonList(nativePlatform), buildArchive, "--load");
         } else  {
-            logger.info("Native platform not specified, no image built");
+            logger.info("More than one platform specified not including native %s, no image built", nativePlatform);
         }
     }
 
