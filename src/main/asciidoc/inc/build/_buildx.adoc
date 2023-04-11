@@ -1,15 +1,21 @@
 
 [[build-buildx]]
 
-Buildx is enabled when there is a non-empty `<platform>` element inside the  `<buildx>` configuration.  Only the native platform
-is built and saved in the local image cache by the `build` goal.  All specified platforms are built and pushed into the remote
-repository by the `push` goal. This behavior is to prevent non-native images from tainting the local image cache.
+Buildx is enabled when there is a non-empty `<platform>` element inside the  `<buildx>` configuration.
 
-The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name. The
-recommended `<buildx>` configuration is to specify all supported platforms, including the native platform, in the `<platforms>`
-element.  This allows local integration testing of the build image from the local cache. During install or deploy phase, the
-build machine will build and push all images to the registry.  Any downstream consumers, regardless of native architecture, will
-be able to use the multi-architecture image.
+The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name.
+Thus the `build` goal will build and save a single-architecture image to the local image cache if possible:
+
+* If the `<platform>` element contains a single platform, that image will be built.
+* If the `<platform>` element contains more than one platform including the native platform, the native platform be used.
+* If the `<platform>` element contains more than one platform not including the native platform, no image will be built.
+
+These rules only apply to the image built and loaded into the local image cache with the `build` goal.  They do not apply to the `push` goal which will always build and push either a single-architecture or multi-architecture image with whatever platforms are specified in the `<platform>` element.
+
+The recommended `<buildx>` configuration is to specify all supported platforms, including the native platform, in the
+`<platform>` element.  This allows local integration testing of the build image from the local cache. During install or deploy
+phase, the build machine will build and push a multi-architecture image containing all specified platforms to the registry.
+Any downstream consumers, regardless of native architecture, will be able to use the multi-architecture image.
 
 The `<buildx>` element within `<build>` defines how to build multi-architecture images.
 
