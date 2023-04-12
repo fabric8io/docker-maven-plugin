@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.43-SNAPSHOT**:
+  - Make buildx build single non-native platform if requested ([1665](https://github.com/fabric8io/docker-maven-plugin/pull/1665)) @martyvona
 
 * **0.42.1** (2023-04-06):
   - Update Jnr Jffi dependency to v1.3.11 ([1660](https://github.com/fabric8io/docker-maven-plugin/issues/1660)) @rohanKanojia
