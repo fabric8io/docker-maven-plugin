@@ -10,7 +10,9 @@ Thus the `build` goal will build and save a single-architecture image to the loc
 * If the `<platform>` element contains more than one platform including the native platform, the native platform be used.
 * If the `<platform>` element contains more than one platform not including the native platform, no image will be built.
 
-These rules only apply to the image built and loaded into the local image cache with the `build` goal.  They do not apply to the `push` goal which will always build and push either a single-architecture or multi-architecture image with whatever platforms are specified in the `<platform>` element.
+These rules only apply to the image built and loaded into the local image cache with the `build` goal.  They do not apply to the
+`push` goal which will always build and push either a single-architecture or multi-architecture image with whatever platforms
+are specified in the `<platform>` element.
 
 The recommended `<buildx>` configuration is to specify all supported platforms, including the native platform, in the
 `<platform>` element.  This allows local integration testing of the build image from the local cache. During install or deploy
