@@ -58,7 +58,7 @@ public class BuildXService {
         useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, archive, this::pushMultiPlatform);
     }
 
-    private <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
+    protected <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
@@ -74,7 +74,7 @@ public class BuildXService {
         }
     }
 
-    private void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
+    protected void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(configJson, StandardCharsets.UTF_8,
             StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
         ) {
@@ -84,7 +84,7 @@ public class BuildXService {
         }
     }
 
-    private void removeConfigJson(Path configJson) {
+    protected void removeConfigJson(Path configJson) {
         try {
             Files.deleteIfExists(configJson);
         } catch (IOException e) {
@@ -92,7 +92,7 @@ public class BuildXService {
         }
     }
 
-    private void buildAndLoadSinglePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
+    protected void buildAndLoadSinglePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
         // build and load the single-platform image by re-building, image should be cached and build should be quick
         String nativePlatform = dockerAccess.getNativePlatform();
@@ -105,12 +105,12 @@ public class BuildXService {
         }
     }
 
-    private void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
+    protected void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         // build and push all images.  The native platform may be re-built, image should be cached and build should be quick
         buildX(buildX, builderName, buildDirs, imageConfig, configuredRegistry, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
     }
 
-    private void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String  configuredRegistry, List<String> platforms, File buildArchive, String extraParam)
+    protected void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String  configuredRegistry, List<String> platforms, File buildArchive, String extraParam)
         throws MojoExecutionException {
 
         BuildImageConfiguration buildConfiguration = imageConfig.getBuildConfiguration();
@@ -160,7 +160,7 @@ public class BuildXService {
         }
     }
 
-    private Path getContextPath(File buildArchive) throws MojoExecutionException {
+    protected Path getContextPath(File buildArchive) throws MojoExecutionException {
         String archiveName = buildArchive.getName();
         String fileName = archiveName.substring(0, archiveName.indexOf('.'));
         File destinationDirectory = new File(buildArchive.getParentFile(), fileName);
@@ -174,14 +174,14 @@ public class BuildXService {
         return destinationPath;
     }
 
-    private Path getDockerStateDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
+    protected Path getDockerStateDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
         String stateDir = buildConfiguration.getBuildX().getDockerStateDir();
         Path dockerStatePath = buildDirs.getBuildPath(stateDir != null ? EnvUtil.resolveHomeReference(stateDir) : "docker");
         createDirectory(dockerStatePath);
         return dockerStatePath;
     }
 
-    private void createDirectory(Path cachePath) {
+    protected void createDirectory(Path cachePath) {
         try {
             Files.createDirectories(cachePath);
         } catch (IOException e) {
@@ -189,7 +189,7 @@ public class BuildXService {
         }
     }
 
-    private String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
+    protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
         String builderName = buildXConfiguration.getBuilderName();
         if (builderName == null) {
