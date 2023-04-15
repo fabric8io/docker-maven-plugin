@@ -13,6 +13,7 @@ import com.google.cloud.tools.jib.api.TarImage;
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat;
+import com.google.cloud.tools.jib.api.buildplan.Platform;
 import com.google.cloud.tools.jib.api.buildplan.Port;
 import com.google.cloud.tools.jib.event.events.ProgressEvent;
 import com.google.cloud.tools.jib.event.progress.ProgressEventHandler;
@@ -20,7 +21,6 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.model.Image;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -102,7 +102,17 @@ public class JibServiceUtil {
                                                                       ImageConfiguration imageConfiguration, Credential pullRegistryCredential) throws InvalidImageReferenceException {
         final JibContainerBuilder containerBuilder = Jib.from(getRegistryImage(getBaseImage(imageConfiguration), pullRegistryCredential))
                 .setFormat(getImageFormat(jibImageFormat));
+        if (imageConfiguration.isBuildX()) {
+            List<String> osAndArchs = imageConfiguration.getBuildConfiguration().getBuildX().getPlatforms();
+            Set<Platform> jibPlatforms = osAndArchs.stream().map(JibServiceUtil::toJibPlatform).collect(Collectors.toSet());
+            containerBuilder.setPlatforms(jibPlatforms);
+        }
         return populateContainerBuilderFromImageConfiguration(containerBuilder, imageConfiguration);
+    }
+
+    private static Platform toJibPlatform(String osAndArch) {
+        int slash = osAndArch.indexOf('/');
+        return new Platform(osAndArch.substring(slash + 1), osAndArch.substring(0, slash));
     }
 
     public static String getFullImageName(ImageConfiguration imageConfiguration, String tag) {
