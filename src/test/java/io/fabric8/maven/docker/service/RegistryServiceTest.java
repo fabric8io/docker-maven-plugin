@@ -437,11 +437,11 @@ class RegistryServiceTest {
         String builderName = providedBuilder != null ? providedBuilder : "maven";
 
         if (providedBuilder == null) {
-            Mockito.verify(exec).process(Arrays.asList("docker", "--config", config, "buildx", "create", "--driver", "docker-container", "--name", builderName));
+            Mockito.verify(exec).process(Arrays.asList("docker", "buildx", "create", "--driver", "docker-container", "--name", builderName, "--node",  builderName+"0"));
         }
 
         List<String> cmds =
-            BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx", "build",
+            BuildXService.append(new ArrayList<>(), "docker", "buildx", "build",
                 "--progress=plain", "--builder", builderName, "--platform",
                 "linux/amd64,linux/arm64", "--tag",
                 new ImageName(imageConfiguration.getName()).getFullName(registry));

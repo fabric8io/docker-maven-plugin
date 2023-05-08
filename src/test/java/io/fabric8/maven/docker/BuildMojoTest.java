@@ -295,15 +295,15 @@ class BuildMojoTest extends MojoTestBase {
         String configFile = relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) : null;
 
         List<String> cmds =
-            BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx",
-                "create", "--driver", "docker-container", "--name", "maven");
+            BuildXService.append(new ArrayList<>(), "docker",  "buildx",
+                "create", "--driver", "docker-container", "--name", "maven" , "--node", "maven0");
         if (configFile != null) {
             BuildXService.append(cmds, "--config", configFile.replace('/', File.separatorChar));
         }
         Mockito.verify(exec).process(cmds);
 
         if (nativePlatformIncluded) {
-            List<String> buildXLine = BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx",
+            List<String> buildXLine = BuildXService.append(new ArrayList<>(), "docker",  "buildx",
                     "build", "--progress=plain", "--builder", "maven",
                     "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar");
 
