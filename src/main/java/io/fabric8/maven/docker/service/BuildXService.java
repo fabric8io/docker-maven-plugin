@@ -63,7 +63,7 @@ public class BuildXService {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
-        List<String> buildX = Arrays.asList("docker", "--config", configPath.toString(), "buildx");
+        List<String> buildX = Arrays.asList("docker", "buildx");
 
         String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
         Path configJson = configPath.resolve("config.json");
@@ -215,7 +215,7 @@ public class BuildXService {
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
         if(Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
+            append(cmds, "create", "--driver", "docker-container", "--name", builderName, "--node", builderName + "0");
             String buildConfig = buildXConfiguration.getConfigFile();
             if(buildConfig != null) {
                 append(cmds, "--config",
