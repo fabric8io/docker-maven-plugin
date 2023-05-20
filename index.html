@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.42.1,</span>
-<span id="revdate">2023-04-06</span>
+<span id="revnumber">version 0.43.0,</span>
+<span id="revdate">2023-05-20</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.42.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.43.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2898,16 +2898,35 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect3">
 <h4 id="build-buildx">5.1.6. Multi-Architecture Build</h4>
 <div id="build-buildx" class="paragraph">
-<p>Buildx is enabled when there is a non-empty <code>&lt;platform&gt;</code> element inside the  <code>&lt;buildx&gt;</code> configuration.  Only the native platform
-is built and saved in the local image cache by the <code>build</code> goal.  All specified platforms are built and pushed into the remote
-repository by the <code>push</code> goal. This behavior is to prevent non-native images from tainting the local image cache.</p>
+<p>Buildx is enabled when there is a non-empty <code>&lt;platform&gt;</code> element inside the  <code>&lt;buildx&gt;</code> configuration.</p>
 </div>
 <div class="paragraph">
-<p>The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name. The
-recommended <code>&lt;buildx&gt;</code> configuration is to specify all supported platforms, including the native platform, in the <code>&lt;platforms&gt;</code>
-element.  This allows local integration testing of the build image from the local cache. During install or deploy phase, the
-build machine will build and push all images to the registry.  Any downstream consumers, regardless of native architecture, will
-be able to use the multi-architecture image.</p>
+<p>The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name.
+Thus the <code>build</code> goal will build and save a single-architecture image to the local image cache if possible:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the <code>&lt;platform&gt;</code> element contains a single platform, that image will be built.</p>
+</li>
+<li>
+<p>If the <code>&lt;platform&gt;</code> element contains more than one platform including the native platform, the native platform be used.</p>
+</li>
+<li>
+<p>If the <code>&lt;platform&gt;</code> element contains more than one platform not including the native platform, no image will be built.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>These rules only apply to the image built and loaded into the local image cache with the <code>build</code> goal.  They do not apply to the
+<code>push</code> goal which will always build and push either a single-architecture or multi-architecture image with whatever platforms
+are specified in the <code>&lt;platform&gt;</code> element.</p>
+</div>
+<div class="paragraph">
+<p>The recommended <code>&lt;buildx&gt;</code> configuration is to specify all supported platforms, including the native platform, in the
+<code>&lt;platform&gt;</code> element.  This allows local integration testing of the build image from the local cache. During install or deploy
+phase, the build machine will build and push a multi-architecture image containing all specified platforms to the registry.
+Any downstream consumers, regardless of native architecture, will be able to use the multi-architecture image.</p>
 </div>
 <div class="paragraph">
 <p>The <code>&lt;buildx&gt;</code> element within <code>&lt;build&gt;</code> defines how to build multi-architecture images.</p>
@@ -2947,6 +2966,12 @@ is relative to the user&#8217;s home directory.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;platform&gt;</code> elements specifying platform to build.  A platform has syntax of <code>OS/architecture</code> (e.g. linux/amd64,
 linux/arm64, darwin/amd64).  Each <code>&lt;platform&gt;</code> element may have a comma separated list of platforms.  Empty <code>&lt;platform&gt;</code>
 elements are ignored.  If no platform architecture is specified, buildx is <strong>not</strong> used.  You can use</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>attestations</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The configuration of attestation modes.  The <code>&lt;provenance&gt;</code> element may be set to <code>min</code>,
+<code>max</code>, or <code>false</code>. The <code>&lt;sbom&gt;</code> element may be set to <code>true</code> or <code>false</code>. The <code>&lt;provenance&gt;</code>
+element defaults to <code>min</code> and the <code>&lt;sbom&gt;</code> element defaults to <code>false</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -6476,7 +6501,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.42.1<br>
+Version 0.43.0<br>
 Last updated 2023-03-21 11:02:02 IST
 </div>
 </div>
