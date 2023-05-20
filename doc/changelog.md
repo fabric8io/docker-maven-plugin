@@ -1,5 +1,7 @@
 # ChangeLog
-* **0.43.0** (2023-05-20)
+* **0.44-SNAPSHOT**:
+
+* **0.43.0** (2023-05-20):
   - Make buildx build single non-native platform if requested ([1665](https://github.com/fabric8io/docker-maven-plugin/pull/1665)) @martyvona
   - Support for buildx option to disable attestations ([1661](https://github.com/fabric8io/docker-maven-plugin/issues/1661)) @chonton
 

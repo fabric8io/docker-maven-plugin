@@ -5,12 +5,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.43.0</version>
+    <version>0.44-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-build-pom-packaging</artifactId>
-  <version>0.43.0</version>
+  <version>0.44-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <description>Docker Maven Plugin Integration Test - pom packaging and plugin which use dependencies collections</description>
