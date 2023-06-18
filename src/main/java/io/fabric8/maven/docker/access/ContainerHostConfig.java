@@ -16,6 +16,7 @@ import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerHostConfig {
 
+    private static final String HOST_GATEWAY = "host-gateway";
     final JsonObject startConfig = new JsonObject();
 
     public ContainerHostConfig() {}
@@ -98,11 +99,7 @@ public class ContainerHostConfig {
                     throw new IllegalArgumentException("extraHosts must be in the form <host:host|ip>");
                 }
 
-                try {
-                    mapped.add(i, parts[0] + ":" + InetAddress.getByName(parts[1]).getHostAddress());
-                } catch (UnknownHostException e) {
-                    throw new IllegalArgumentException("unable to resolve ip address for " + parts[1], e);
-                }
+                mapped.add(i, parts[0] + ":" + resolveHostAddress(parts[1]));
             }
             return addAsArray("ExtraHosts", mapped);
         }
@@ -230,6 +227,17 @@ public class ContainerHostConfig {
             startConfig.add(propKey, JsonFactory.newJsonArray(props));
         }
         return this;
+    }
+
+    private String resolveHostAddress(String host) {
+        if (HOST_GATEWAY.equalsIgnoreCase(host)) {
+            return host;
+        }
+        try {
+            return InetAddress.getByName(host).getHostAddress();
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("unable to resolve ip address for " + host, e);
+        }
     }
 
     private ContainerHostConfig add(String name, String value) {

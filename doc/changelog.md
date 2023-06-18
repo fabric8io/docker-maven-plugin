@@ -1,5 +1,7 @@
 # ChangeLog
 * **0.44-SNAPSHOT**:
+  - Resolve registry auth URL by registry ID ([1688](https://github.com/fabric8io/docker-maven-plugin/issues/1688)) @wajda
+  - Allow 'host-gateway' as non-resolvable hostname in extraHosts ([1527](https://github.com/fabric8io/docker-maven-plugin/issues/1527)) @azaaiman
 
 * **0.43.0** (2023-05-20):
   - Make buildx build single non-native platform if requested ([1665](https://github.com/fabric8io/docker-maven-plugin/pull/1665)) @martyvona

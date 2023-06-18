@@ -41,6 +41,14 @@ class ContainerHostConfigTest {
     }
 
     @Test
+    void testExtraHostsAcceptsHostGateway() {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        hc.extraHosts(Collections.singletonList("host.docker.internal:host-gateway"));
+
+        Assertions.assertEquals("{\"ExtraHosts\":[\"host.docker.internal:host-gateway\"]}", hc.toJson());
+    }
+
+    @Test
     void testUlimits() {
         Object data[] = {
             "{Ulimits: [{Name:bla, Hard:2048, Soft: 1024}]}", "bla", 2048, 1024,
