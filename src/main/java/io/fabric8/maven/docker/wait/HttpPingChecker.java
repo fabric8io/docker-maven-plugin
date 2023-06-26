@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
@@ -32,6 +33,7 @@ public class HttpPingChecker implements WaitChecker {
     private String url;
     private String method;
     private boolean allowAllHosts;
+    private final Logger log;
 
     // Disable HTTP client retries by default.
     private static final int HTTP_CLIENT_RETRIES = 0;
@@ -46,9 +48,10 @@ public class HttpPingChecker implements WaitChecker {
      * @param method HTTP method to use
      * @param status status code to check
      */
-    public HttpPingChecker(String url, String method, String status) {
+    public HttpPingChecker(String url, String method, String status, Logger log) {
         this.url = url;
         this.method = method;
+        this.log = log;
 
         Matcher matcher = Pattern.compile("^(\\d+)\\s*\\.\\.+\\s*(\\d+)$").matcher(status);
         if (matcher.matches()) {
@@ -59,12 +62,12 @@ public class HttpPingChecker implements WaitChecker {
         }
     }
 
-    public HttpPingChecker(String waitUrl) {
-        this(waitUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, WaitConfiguration.DEFAULT_STATUS_RANGE);
+    public HttpPingChecker(String waitUrl, final Logger log) {
+        this(waitUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, WaitConfiguration.DEFAULT_STATUS_RANGE, log);
     }
 
-    public HttpPingChecker(String url, String method, String status, boolean allowAllHosts) {
-        this(url, method, status);
+    public HttpPingChecker(String url, String method, String status, boolean allowAllHosts, final Logger log) {
+        this(url, method, status, log);
         this.allowAllHosts = allowAllHosts;
     }
 
@@ -74,6 +77,7 @@ public class HttpPingChecker implements WaitChecker {
             return ping();
         } catch (IOException exception) {
             // Could occur and then the check is always considered as failed
+            log.debug("Check failed due to %s: %s", exception.getMessage(), exception);
             return false;
         }
     }
@@ -109,11 +113,13 @@ public class HttpPingChecker implements WaitChecker {
                     .build();
         }
 
+        log.debug("Checking %s %s", method.toUpperCase(), url);
         try (CloseableHttpResponse response = httpClient.execute(RequestBuilder.create(method.toUpperCase()).setUri(url).build())) {
             int responseCode = response.getStatusLine().getStatusCode();
             if (responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
                 throw new IllegalArgumentException("Invalid or not supported HTTP method '" + method.toUpperCase() + "' for checking " + url);
             }
+            log.debug("%s %s returned %s",method.toUpperCase(), url, responseCode);
             return responseCode >= statusMin && responseCode <= statusMax;
         } finally {
           httpClient.close();

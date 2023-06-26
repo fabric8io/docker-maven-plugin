@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
+import static org.mockito.Mockito.mock;
+
 /**
  * @author roland
  * @since 18.10.14
@@ -33,11 +35,12 @@ class WaitUtilTest {
     static int port;
     static String httpPingUrl;
     private static String serverMethodToAssert;
+    private final static Logger logger = mock(Logger.class);
 
     @Test
     void httpFail()  {
 
-        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
+        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/", logger);
       Assertions.assertThrows(TimeoutException.class, ()->  wait(500, checker));
     }
 
@@ -51,35 +54,35 @@ class WaitUtilTest {
 
     @Test
     void httpSuccess() throws TimeoutException, PreconditionFailedException {
-        HttpPingChecker checker = new HttpPingChecker(httpPingUrl);
+        HttpPingChecker checker = new HttpPingChecker(httpPingUrl, logger);
         long waited = wait(700, checker);
         Assertions.assertTrue( waited < 700,"Waited less than 700ms: " + waited);
     }
 
     @Test
     void containerNotRunningButWaitConditionOk() throws TimeoutException, PreconditionFailedException {
-        HttpPingChecker checker = new HttpPingChecker(httpPingUrl);
+        HttpPingChecker checker = new HttpPingChecker(httpPingUrl, logger);
         long waited = wait(1,700, checker);
         Assertions.assertTrue( waited < 700,"Waited less than 700ms: " + waited);
     }
 
     @Test
     void containerNotRunningAndWaitConditionNok()  {
-        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
+        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/", logger);
         Assertions.assertThrows(PreconditionFailedException.class, ()-> wait(0, 700, checker));
     }
 
     @Test
     void httpSuccessWithStatus() throws TimeoutException, PreconditionFailedException {
         for (String status : new String[] { "200", "200 ... 300", "200..250" }) {
-            long waited = wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, status));
+            long waited = wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, status, logger));
             Assertions.assertTrue( waited < 700,"Waited less than  700ms: " + waited);
         }
     }
 
     @Test
     void httpFailWithStatus()  {
-        HttpPingChecker checker = new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, "500");
+        HttpPingChecker checker = new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, "500", logger);
         Assertions.assertThrows(TimeoutException.class, ()->wait(700, checker));
     }
 
@@ -87,7 +90,7 @@ class WaitUtilTest {
     void httpSuccessWithGetMethod() throws Exception {
         serverMethodToAssert = "GET";
         try {
-            HttpPingChecker checker = new HttpPingChecker(httpPingUrl, "GET", WaitConfiguration.DEFAULT_STATUS_RANGE);
+            HttpPingChecker checker = new HttpPingChecker(httpPingUrl, "GET", WaitConfiguration.DEFAULT_STATUS_RANGE, logger);
             long waited = wait(700, checker);
             Assertions.assertTrue( waited < 700,"Waited less than 500ms: " + waited);
         } finally {
@@ -191,7 +194,7 @@ class WaitUtilTest {
 
         // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
         try {
-            wait(700, new HttpPingChecker(httpPingUrl));
+            wait(700, new HttpPingChecker(httpPingUrl, logger));
         } catch (TimeoutException | PreconditionFailedException exp) {
             // expected
         }
