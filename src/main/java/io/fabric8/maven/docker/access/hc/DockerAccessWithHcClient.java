@@ -481,7 +481,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
         JsonObject imageDetails = JsonFactory.newJsonObject(response.getBody());
-        JsonArray tagsArr = imageDetails.get("RepoTags").getAsJsonArray();
+
+        JsonElement repoTags = imageDetails.get("RepoTags");
+        if (repoTags.isJsonNull()) {
+            return Collections.emptyList();
+        }
+
+        JsonArray tagsArr = repoTags.getAsJsonArray();
         if (tagsArr.size() == 0) {
             return Collections.emptyList();
         }
