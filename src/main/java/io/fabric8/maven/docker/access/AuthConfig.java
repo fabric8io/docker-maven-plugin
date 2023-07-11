@@ -111,13 +111,17 @@ public class AuthConfig {
     }
 
     public String toJson() {
+        return toJsonObject().toString();
+    }
+
+    public JsonObject toJsonObject() {
         JsonObject creds = new JsonObject();
         creds.addProperty("auth", encodeBase64(username + ":" + password));
         JsonObject auths = new JsonObject();
         auths.add(getRegistryUrl(registry), creds);
         JsonObject root = new JsonObject();
         root.add("auths", auths);
-        return root.toString();
+        return root;
     }
 
     // ======================================================================================================

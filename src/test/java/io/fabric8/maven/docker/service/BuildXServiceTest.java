@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
@@ -57,7 +57,7 @@ class BuildXServiceTest {
     private final ProjectPaths projectPaths = new ProjectPaths(new File("project-base-dir"), "output-dir");
     private final String configuredRegistry = "configured-registry";
     private final File buildArchive = new File("build-archive");
-    private final AuthConfig authConfig = null;
+    private final AuthConfigList authConfig = null;
 
     @BeforeEach
     void setup() throws Exception {

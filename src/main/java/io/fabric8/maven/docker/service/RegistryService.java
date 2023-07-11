@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -68,7 +69,7 @@ public class RegistryService {
 
             AuthConfig authConfig = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
             if (imageConfig.isBuildX()) {
-                buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfig);
+                buildXService.push(projectPaths, imageConfig, configuredRegistry, new AuthConfigList(authConfig));
             } else {
                 dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfig);
             }
