@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.service;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -49,17 +49,17 @@ public class BuildXService {
         this.exec = exec;
     }
 
-    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, String  configuredRegistry, AuthConfig authConfig, File buildArchive) throws MojoExecutionException {
+    public void build(ProjectPaths projectPaths, ImageConfiguration imageConfig, String  configuredRegistry, AuthConfigList authConfig, File buildArchive) throws MojoExecutionException {
         useBuilder(projectPaths, imageConfig,  configuredRegistry, authConfig, buildArchive, this::buildAndLoadSinglePlatform);
     }
 
-    public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig) throws MojoExecutionException {
+    public void push(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfigList authConfig) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
         useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, archive, this::pushMultiPlatform);
     }
 
-    protected <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfig authConfig, C context, Builder<C> builder) throws MojoExecutionException {
+    protected <C> void useBuilder(ProjectPaths projectPaths, ImageConfiguration imageConfig, String configuredRegistry, AuthConfigList authConfig, C context, Builder<C> builder) throws MojoExecutionException {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
@@ -75,7 +75,7 @@ public class BuildXService {
         }
     }
 
-    protected void createConfigJson(Path configJson, AuthConfig authConfig) throws MojoExecutionException {
+    protected void createConfigJson(Path configJson, AuthConfigList authConfig) throws MojoExecutionException {
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(configJson, StandardCharsets.UTF_8,
             StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
         ) {

@@ -17,6 +17,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.GavLabel;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
 import org.apache.maven.monitor.logging.DefaultLog;
 import org.apache.maven.project.MavenProject;
@@ -81,6 +82,9 @@ abstract class MojoTestBase {
 
     @Mock
     protected AuthConfigFactory authConfigFactory;
+
+    @Mock
+    protected MavenSession session;
 
     protected String projectGroupId;
     protected String projectArtifactId;
@@ -240,6 +244,7 @@ abstract class MojoTestBase {
         mojo.log = ansiLogger;
         mojo.outputDirectory= "target/docker";
         mojo.authConfigFactory= authConfigFactory;
+        mojo.session = session;
 
         mojo.setPluginContext(new HashMap<>());
         mojo.getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, logDispatcher);

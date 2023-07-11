@@ -1,17 +1,22 @@
 package io.fabric8.maven.docker;
 
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AttestationConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.BuildXService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -23,13 +28,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
     private static final String NON_NATIVE_PLATFORM = "linux/amd64";
     private static final String NATIVE_PLATFORM = "linux/arm64";
     private static final String[] TWO_BUILDX_PLATFORMS = { NATIVE_PLATFORM, NON_NATIVE_PLATFORM };
+
+    private static final String TEST_REGISTRY = "test-registry.org";
 
     @InjectMocks
     private BuildMojo buildMojo;
@@ -197,11 +206,73 @@ class BuildMojoTest extends MojoTestBase {
         thenBuildxRun(null, null, true, null);
     }
 
+    @Test
+    void buildUsingBuildxWithAuth() throws IOException, MojoExecutionException {
+        Mockito.doReturn(Mockito.mock(BuildXService.class)).when(serviceHub).getBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithContext(null)));
+        givenPackaging("jar");
+
+        AuthConfig authConfig = getAuthConfig();
+        givenAuthConfig(authConfig);
+
+        whenMojoExecutes();
+
+        thenAuthMatches(authConfig);
+    }
+
+    @Test
+    void buildUsingBuildxWithMultipleAuth() throws IOException, MojoExecutionException {
+        Mockito.doReturn(Mockito.mock(BuildXService.class)).when(serviceHub).getBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleImageWithAuthRegistry(
+                BuildMojoTest.class.getResource("/docker/Dockerfile.custom_registry.test").getPath()
+        )));
+        givenPackaging("jar");
+
+        givenAuthConfig(getAuthConfig(), "custom-registry.org");
+        givenAuthConfig(getAuthConfig(), TEST_REGISTRY);
+
+        whenMojoExecutes();
+
+        thenAuthContainsRegistry(TEST_REGISTRY);
+        thenAuthContainsRegistry("custom-registry.org");
+    }
+
     private void givenBuildXService() {
         BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
         Mockito.doReturn(buildXService).when(serviceHub).getBuildXService();
         Mockito.doReturn(NATIVE_PLATFORM).when(dockerAccess).getNativePlatform();
+    }
+
+    private void givenAuthConfig(AuthConfig authConfig) throws MojoExecutionException {
+        Mockito.doReturn(authConfig).when(buildMojo.authConfigFactory).createAuthConfig(
+                Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    private void givenAuthConfig(AuthConfig authConfig, String registry) throws MojoExecutionException {
+        authConfig.setRegistry(registry);
+        Mockito.doReturn(authConfig).when(buildMojo.authConfigFactory).createAuthConfig(
+                Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(registry));
+    }
+
+    private void thenAuthMatches(AuthConfig authConfig) throws MojoExecutionException {
+        ArgumentCaptor<AuthConfigList> authConfigList = ArgumentCaptor.forClass(AuthConfigList.class);
+        Mockito.verify(serviceHub.getBuildXService()).build(
+                Mockito.any(), Mockito.any(), Mockito.any(), authConfigList.capture(), Mockito.any());
+
+        Assertions.assertEquals(authConfig.toJson(), authConfigList.getValue().toJson());
+    }
+
+    private void thenAuthContainsRegistry(String expectedRegistry) throws MojoExecutionException {
+        ArgumentCaptor<AuthConfigList> authConfigList = ArgumentCaptor.forClass(AuthConfigList.class);
+        Mockito.verify(serviceHub.getBuildXService()).build(
+                Mockito.any(), Mockito.any(), Mockito.any(), authConfigList.capture(), Mockito.any());
+
+        Assertions.assertTrue(authConfigList.getValue().toJson().contains(expectedRegistry));
     }
 
     private void thenBuildRun() throws DockerAccessException, MojoExecutionException {
@@ -299,5 +370,26 @@ class BuildMojoTest extends MojoTestBase {
         return singleImageConfiguration(getBuildXPlatforms(TWO_BUILDX_PLATFORMS).attestations(
                 new AttestationConfiguration.Builder().sbom(sbom).provenance(provenance).build())
             .build(), null);
+    }
+
+    protected ImageConfiguration singleImageWithAuthRegistry(String dockerFile) {
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+                .dockerFile(dockerFile)
+                .buildx(getBuildXPlatforms(TWO_BUILDX_PLATFORMS).build())
+                .build();
+        buildImageConfiguration.initAndValidate(log);
+
+        return new ImageConfiguration.Builder()
+                .name(TEST_REGISTRY + "/example:latest")
+                .buildConfig(buildImageConfiguration)
+                .build();
+    }
+
+    private AuthConfig getAuthConfig() {
+        Map<String,String> map = new HashMap<>();
+        map.put(AuthConfig.AUTH_USERNAME,"username");
+        map.put(AuthConfig.AUTH_PASSWORD,"#>secrets??");
+        map.put(AuthConfig.AUTH_EMAIL,"username@email.org");
+        return new AuthConfig(map);
     }
 }

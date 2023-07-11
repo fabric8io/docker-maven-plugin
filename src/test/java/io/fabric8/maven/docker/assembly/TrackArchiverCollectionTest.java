@@ -52,6 +52,7 @@ class TrackArchiverCollectionTest {
         Assertions.assertNotNull(files);
         List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
         Assertions.assertEquals(0, entries.size());
+        Thread.sleep(1000); // Wait before touching the file so the modified time is different
         FileUtils.touch(tempFile);
         entries = files.getUpdatedEntriesAndRefresh();
         Assertions.assertEquals(1, entries.size());
@@ -64,6 +65,7 @@ class TrackArchiverCollectionTest {
         Assertions.assertNotNull(deps);
         entries = deps.getUpdatedEntriesAndRefresh();
         Assertions.assertEquals(0, entries.size());
+        Thread.sleep(1000); // Wait before touching the file so the modified time is different
         FileUtils.touch(tempFile2);
         entries = deps.getUpdatedEntriesAndRefresh();
         Assertions.assertEquals(1, entries.size());

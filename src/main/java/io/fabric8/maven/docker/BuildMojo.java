@@ -7,10 +7,15 @@ import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -19,9 +24,11 @@ import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -113,7 +120,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     }
 
 
-    private AuthConfig getAuthConfig(ImageConfiguration imageConfig) throws MojoExecutionException {
+    private AuthConfigList getAuthConfig(ImageConfiguration imageConfig) throws MojoExecutionException {
         // TODO: refactor similar code in RegistryService#pushImages
         RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
 
@@ -123,7 +130,59 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             imageConfig.getRegistry(),
             registryConfig.getRegistry());
 
-        return registryConfig.createAuthConfig(false, imageName.getUser(), configuredRegistry);
+        AuthConfig authConfig = registryConfig.createAuthConfig(false, imageName.getUser(), configuredRegistry);
+        AuthConfigList authConfigList = new AuthConfigList();
+        if (authConfig != null) {
+            authConfigList.addAuthConfig(authConfig);
+        }
+
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        Set<String> fromRegistries = getRegistriesForPull(buildConfig);
+        for (String fromRegistry : fromRegistries) {
+            if (configuredRegistry.equalsIgnoreCase(fromRegistry)) {
+                continue;
+            }
+            registryConfig = getRegistryConfig(fromRegistry);
+            AuthConfig additionalAuth = registryConfig.createAuthConfig(false, imageName.getUser(), fromRegistry);
+            authConfigList.addAuthConfig(additionalAuth);
+        }
+
+        return authConfigList;
+    }
+
+    private Set<String> getRegistriesForPull(BuildImageConfiguration buildConfig) {
+        Set<String> registries = new HashSet<>();
+        List<String> fromImages = extractBaseFromDockerfile(buildConfig);
+        for (String fromImage : fromImages) {
+            ImageName imageName = new ImageName(fromImage);
+
+            if (imageName.hasRegistry()) {
+                registries.add(imageName.getRegistry());
+            }
+        }
+        return registries;
+    }
+
+    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig) {
+        if (buildConfig.getDockerFile() == null || !buildConfig.getDockerFile().exists()) {
+            if (buildConfig.getFrom() != null && !buildConfig.getFrom().isEmpty()) {
+                return Collections.singletonList(buildConfig.getFrom());
+            }
+            return Collections.emptyList();
+        }
+
+        List<String> fromImage;
+        try {
+            MojoParameters mojoParameters = createMojoParameters();
+            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(mojoParameters);
+            fromImage = DockerFileUtil.extractBaseImages(
+                    fullDockerFilePath,
+                    DockerFileUtil.createInterpolator(mojoParameters, buildConfig.getFilter()),
+                    buildConfig.getArgs());
+        } catch (IOException e) {
+            return Collections.emptyList();
+        }
+        return fromImage;
     }
 
     // We ignore an already existing date file and always return the current date
