@@ -16,7 +16,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +71,7 @@ class DockerAccessWithHcClientTest {
     @BeforeEach
     public void setup() throws IOException {
         Mockito.doReturn("{\"ApiVersion\":\"1.40\",\"Os\":\"linux\",\"Arch\":\"amd64\"}")
-            .when(mockDelegate).get(BASE_URL + "/version", HTTP_OK);
+                .when(mockDelegate).get(BASE_URL + "/version", HTTP_OK);
 
         client = new DockerAccessWithHcClient(BASE_URL, null, 1, mockLogger) {
             @Override
@@ -241,6 +240,25 @@ class DockerAccessWithHcClientTest {
         Assertions.assertEquals("1.40", client.getServerApiVersion());
     }
 
+    @Test
+    void testRepoTagsIsNull() throws IOException {
+        String imagesId = "123123";
+        ApacheHttpClientDelegate.HttpBodyAndStatus bodyAndStatus = new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, "{\"RepoTags\": null}");
+
+        Mockito.doReturn(bodyAndStatus)
+                .when(mockDelegate)
+                .get(
+                        Mockito.eq(BASE_URL + "/v1.40/images/" + imagesId + "/json"),
+                        Mockito.any(ApacheHttpClientDelegate.BodyAndStatusResponseHandler.class),
+                        Mockito.eq(HTTP_OK),
+                        Mockito.eq(HTTP_NOT_FOUND)
+                );
+
+        List<String> imageTags = client.getImageTags(imagesId);
+        Assertions.assertTrue(imageTags.isEmpty());
+    }
+
+
     private void givenAnImageName(String imageName) {
         this.imageName = imageName;
     }
@@ -289,12 +307,12 @@ class DockerAccessWithHcClientTest {
         }
 
         Mockito.doReturn(array.toString())
-            .when(mockDelegate)
-            .get(Mockito.anyString(), Mockito.eq(HTTP_OK));
+                .when(mockDelegate)
+                .get(Mockito.anyString(), Mockito.eq(HTTP_OK));
     }
 
     private void givenThePushWillFailAndEventuallySucceed(final int retries) throws IOException {
-        failPost(retries-1);
+        failPost(retries - 1);
     }
 
     private void givenThePushWillFail(final int failures) throws IOException {
@@ -303,49 +321,49 @@ class DockerAccessWithHcClientTest {
 
     private void failPost(int retries) throws IOException {
         for (int i = 0; i < retries; ++i) {
-            Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error-"+i))
-                .when(mockDelegate)
-                .post(Mockito.anyString(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+            Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error-" + i))
+                    .when(mockDelegate)
+                    .post(Mockito.anyString(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
         }
     }
 
     private void givenThePostWillFail() throws IOException {
         Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
-            .when(mockDelegate)
-            .post(Mockito.anyString(), Mockito.any(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+                .when(mockDelegate)
+                .post(Mockito.anyString(), Mockito.any(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
     }
 
     @SuppressWarnings("unchecked")
     private void givenThatGetWillSucceedWithOk() throws IOException {
         Mockito.doReturn(HTTP_OK)
-            .when(mockDelegate)
-            .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
+                .when(mockDelegate)
+                .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
     }
 
     @SuppressWarnings("unchecked")
     private void givenThatGetWillSucceedWithNotFound() throws IOException {
         Mockito.doReturn(HTTP_NOT_FOUND)
-            .when(mockDelegate)
-            .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
+                .when(mockDelegate)
+                .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
     }
 
     private void givenTheGetWillFail() throws IOException {
         Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
-            .when(mockDelegate)
-            .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+                .when(mockDelegate)
+                .get(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
     }
 
     private void givenTheGetWithoutResponseHandlerWillFail() throws IOException {
         Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
-            .when(mockDelegate)
-            .get(Mockito.anyString(), Mockito.eq(HTTP_OK));
+                .when(mockDelegate)
+                .get(Mockito.anyString(), Mockito.eq(HTTP_OK));
     }
 
     @SuppressWarnings("unchecked")
     private void givenThatDeleteWillSucceed() throws IOException {
         Mockito.doReturn(new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, "body"))
-            .when(mockDelegate)
-            .delete(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
+                .when(mockDelegate)
+                .delete(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
     }
 
     private void thenImageWasNotPushed() {
@@ -359,9 +377,9 @@ class DockerAccessWithHcClientTest {
     private void thenPushSucceeded(String imageNameWithoutTag, String tag) throws IOException {
         ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
         Mockito.verify(mockDelegate)
-            .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+                .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
 
-            String expectedUrl = String.format("%s/v1.40/images/%s%%2F%s/push?force=1&tag=%s", BASE_URL, registry,
+        String expectedUrl = String.format("%s/v1.40/images/%s%%2F%s/push?force=1&tag=%s", BASE_URL, registry,
                 imageNameWithoutTag, tag);
         Assertions.assertEquals(expectedUrl, urlCapture.getValue());
     }
@@ -374,9 +392,9 @@ class DockerAccessWithHcClientTest {
     private void thenImageWasTagged(String imageNameWithoutTag, String tag) throws IOException {
         ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
         Mockito.verify(mockDelegate)
-            .post(urlCapture.capture(), Mockito.eq(HTTP_CREATED));
+                .post(urlCapture.capture(), Mockito.eq(HTTP_CREATED));
 
-            String expectedUrl = String.format("%s/v1.40/images/%s%%3A%s/tag?force=0&repo=%s%%2F%s&tag=%s", BASE_URL,
+        String expectedUrl = String.format("%s/v1.40/images/%s%%3A%s/tag?force=0&repo=%s%%2F%s&tag=%s", BASE_URL,
                 imageNameWithoutTag, tag, registry, imageNameWithoutTag, tag);
         Assertions.assertEquals(expectedUrl, urlCapture.getValue());
     }
@@ -467,16 +485,16 @@ class DockerAccessWithHcClientTest {
 
     private void givenPostCallThrowsException() throws IOException {
         Mockito.doThrow(new IOException("Problem with images/create"))
-            .when(mockDelegate)
-            .post(Mockito.anyString(), Mockito.any(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+                .when(mockDelegate)
+                .post(Mockito.anyString(), Mockito.any(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
     }
 
     private void thenImageWasPulled() throws IOException {
         ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
         Mockito.verify(mockDelegate)
-            .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
+                .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
 
-        String postUrl= urlCapture.getValue();
+        String postUrl = urlCapture.getValue();
         Assertions.assertNotNull(postUrl);
         Assertions.assertEquals("tcp://1.2.3.4:2375/v1.40/images/create?tag=1.1", postUrl);
     }
