@@ -242,22 +242,39 @@ class DockerAccessWithHcClientTest {
 
     @Test
     void testRepoTagsIsNull() throws IOException {
-        String imagesId = "123123";
+        String imageId = "123123";
         ApacheHttpClientDelegate.HttpBodyAndStatus bodyAndStatus = new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, "{\"RepoTags\": null}");
 
         Mockito.doReturn(bodyAndStatus)
                 .when(mockDelegate)
                 .get(
-                        Mockito.eq(BASE_URL + "/v1.40/images/" + imagesId + "/json"),
+                        Mockito.eq(BASE_URL + "/v1.40/images/" + imageId + "/json"),
                         Mockito.any(ApacheHttpClientDelegate.BodyAndStatusResponseHandler.class),
                         Mockito.eq(HTTP_OK),
                         Mockito.eq(HTTP_NOT_FOUND)
                 );
 
-        List<String> imageTags = client.getImageTags(imagesId);
+        List<String> imageTags = client.getImageTags(imageId);
         Assertions.assertTrue(imageTags.isEmpty());
     }
 
+    @Test
+    void testNoRepoTagsInInspect() throws IOException {
+        String imageId = "123123";
+        ApacheHttpClientDelegate.HttpBodyAndStatus bodyAndStatus = new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, "{}");
+
+        Mockito.doReturn(bodyAndStatus)
+                .when(mockDelegate)
+                .get(
+                        Mockito.eq(BASE_URL + "/v1.40/images/" + imageId + "/json"),
+                        Mockito.any(ApacheHttpClientDelegate.BodyAndStatusResponseHandler.class),
+                        Mockito.eq(HTTP_OK),
+                        Mockito.eq(HTTP_NOT_FOUND)
+                );
+
+        List<String> imageTags = client.getImageTags(imageId);
+        Assertions.assertTrue(imageTags.isEmpty());
+    }
 
     private void givenAnImageName(String imageName) {
         this.imageName = imageName;
