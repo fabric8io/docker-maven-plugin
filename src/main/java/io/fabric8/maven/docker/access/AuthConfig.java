@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.access;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -23,6 +24,10 @@ public class AuthConfig {
     public static final String AUTH_EMAIL = "email";
     public static final String AUTH_AUTH = "auth";
     public static final String AUTH_IDENTITY_TOKEN = "identityToken";
+
+    public static final String REGISTRY_DOCKER_IO = "docker.io";
+    public static final String REGISTRY_DOCKER_IO_URL = "https://index.docker.io/v1/";
+    public static final String REGISTRY_DEFAULT = REGISTRY_DOCKER_IO;
 
     private final String username;
     private final String password;
@@ -109,7 +114,7 @@ public class AuthConfig {
         JsonObject creds = new JsonObject();
         creds.addProperty("auth", encodeBase64(username + ":" + password));
         JsonObject auths = new JsonObject();
-        auths.add(registry != null ? registry : "https://index.docker.io/v1/", creds);
+        auths.add(getRegistryUrl(registry), creds);
         JsonObject root = new JsonObject();
         root.add("auths", auths);
         return root.toString();
@@ -152,5 +157,21 @@ public class AuthConfig {
         if (value != null) {
             ret.addProperty(key, value);
         }
+    }
+
+    /**
+     * This method returns registry authentication URL.
+     * In most cases it will be the same as registry, but for some it could be different.
+     * For example for "docker.io" the authentication URL should be exactly "https://index.docker.io/v1/"
+     *
+     * @param registry registry or null. If registry is null the default one is used (see REGISTRY_DEFAULT).
+     * @return authentication URL for the given registry.
+     */
+    private static String getRegistryUrl(final String registry) {
+        final String reg = registry != null ? registry : REGISTRY_DEFAULT;
+        if (REGISTRY_DOCKER_IO.equals(StringUtils.substringBefore(reg, "/"))) {
+            return REGISTRY_DOCKER_IO_URL;
+        }
+        return reg;
     }
 }
