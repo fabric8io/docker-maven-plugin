@@ -45,6 +45,28 @@ class AuthConfigTest {
         Assertions.assertEquals("{\"auths\":{\"druidia.com/registry\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
     }
 
+    @Test
+    void toJsonConfig_dockerio() {
+        // This test covers a fix for the issue #1688.
+        // When the registry is `docker.io` the auth URL has to be a predefined constant.
+        AuthConfig config = new AuthConfig("king.roland", "12345", "king_roland@druidia.com", null);
+
+        // default registry (docker.io)
+        Assertions.assertEquals("{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
+
+        // docker.io explicitly set
+        config.setRegistry("docker.io");
+        Assertions.assertEquals("{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
+
+        // docker.io with a trailing slash
+        config.setRegistry("docker.io/");
+        Assertions.assertEquals("{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
+
+        // docker.io with a username
+        config.setRegistry("docker.io/smith");
+        Assertions.assertEquals("{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"a2luZy5yb2xhbmQ6MTIzNDU=\"}}}", config.toJson());
+    }
+
     private void check(AuthConfig config) {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
