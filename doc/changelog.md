@@ -1,7 +1,11 @@
 # ChangeLog
-* **0.44-SNAPSHOT**:
+* **0.43.1** (2023-07-28):
   - Resolve registry auth URL by registry ID ([1688](https://github.com/fabric8io/docker-maven-plugin/issues/1688)) @wajda
   - Allow 'host-gateway' as non-resolvable hostname in extraHosts ([1527](https://github.com/fabric8io/docker-maven-plugin/issues/1527)) @azaaiman
+  - Bump guava from `31.1-jre` to `32.0.1-jre` ([1686](https://github.com/fabric8io/docker-maven-plugin/pull/1686)) @dependabot
+  - Bump jib-core from `0.23.0` to `0.24.0` ([1686](https://github.com/fabric8io/docker-maven-plugin/pull/1686)) @rohanKanojia
+  - Fix unauthorized error with buildx needing multiple credentials ([1583](https://github.com/fabric8io/docker-maven-plugin/issues/1583)) @eocantu
+  - Add logger to HTTP ping checker ([1689](https://github.com/fabric8io/docker-maven-plugin/pull/1689)) @ryanrishi
 
 * **0.43.0** (2023-05-20):
   - Make buildx build single non-native platform if requested ([1665](https://github.com/fabric8io/docker-maven-plugin/pull/1665)) @martyvona
