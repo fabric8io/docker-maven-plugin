@@ -1,4 +1,7 @@
 # ChangeLog
+
+* **0.44-SNAPSHOT**:
+
 * **0.43.1** (2023-07-28):
   - Resolve registry auth URL by registry ID ([1688](https://github.com/fabric8io/docker-maven-plugin/issues/1688)) @wajda
   - Allow 'host-gateway' as non-resolvable hostname in extraHosts ([1527](https://github.com/fabric8io/docker-maven-plugin/issues/1527)) @azaaiman

@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.43.1</version>
+    <version>0.44-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-docker-compose</artifactId>
-  <version>0.43.1</version>
+  <version>0.44-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
