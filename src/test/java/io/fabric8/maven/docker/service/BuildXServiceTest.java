@@ -1,16 +1,19 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.jupiter.api.Assertions;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -27,6 +30,11 @@ import io.fabric8.maven.docker.util.ProjectPaths;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.WARN)
@@ -103,14 +111,55 @@ class BuildXServiceTest {
                                                         Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
-    private void givenAnImageConfiguration(String... platforms) {
+    @Test
+    void useBuilder_whenConfigProvided_thenAddConfigOptionToBuildX(@TempDir File temporaryFolder) throws MojoExecutionException, IOException {
+        // Given
+        File dockerBuildKitToml = new File(temporaryFolder, "buildkitd.toml");
+        Files.createFile(dockerBuildKitToml.toPath());
+        BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
+        Mockito.doReturn(temporaryFolder.toPath()).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
+        givenAnImageConfiguration(new BuildXConfiguration.Builder()
+            .dockerStateDir(temporaryFolder.getAbsolutePath())
+            .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
+            .build());
 
+        // When
+        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive, builder);
+
+        // Then
+        ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
+        Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
+        assertEquals(Arrays.asList("docker", "--config", temporaryFolder.getAbsolutePath(), "buildx"), buildXArgCaptor.getValue());
+    }
+
+    @Test
+    void useBuilder_whenNoConfigProvided_thenDoNotAddConfigOptionToBuildX() throws MojoExecutionException {
+        // Given
+        BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
+        givenAnImageConfiguration(new BuildXConfiguration.Builder()
+            .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
+            .build());
+
+        // When
+        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive, builder);
+
+        // Then
+        ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
+        Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
+        assertEquals(Arrays.asList("docker", "buildx"), buildXArgCaptor.getValue());
+    }
+
+    private void givenAnImageConfiguration(String... platforms) {
         final BuildXConfiguration buildxConfig = new BuildXConfiguration.Builder()
             .platforms(Arrays.asList(platforms))
             .build();
 
+        givenAnImageConfiguration(buildxConfig);
+    }
+
+    private void givenAnImageConfiguration(BuildXConfiguration buildXConfiguration) {
         final BuildImageConfiguration buildImageConfig = new BuildImageConfiguration.Builder()
-            .buildx(buildxConfig)
+            .buildx(buildXConfiguration)
             .build();
 
         imageConfig = new ImageConfiguration.Builder()
