@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.44-SNAPSHOT**:
+  - Make `--config` from buildx command string generation optional ([1673](https://github.com/fabric8io/docker-maven-plugin/pull/1673)) @robfrank
 
 * **0.43.1** (2023-07-28):
   - Resolve registry auth URL by registry ID ([1688](https://github.com/fabric8io/docker-maven-plugin/issues/1688)) @wajda
