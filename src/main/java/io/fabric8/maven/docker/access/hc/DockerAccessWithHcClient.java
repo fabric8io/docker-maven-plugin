@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker.access.hc;
 
-import static java.net.HttpURLConnection.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -64,6 +62,13 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.TimestampFactory;
+
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
@@ -481,7 +486,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
         JsonObject imageDetails = JsonFactory.newJsonObject(response.getBody());
-        JsonArray tagsArr = imageDetails.get("RepoTags").getAsJsonArray();
+
+        JsonElement repoTags = imageDetails.get("RepoTags");
+        if (repoTags == null || repoTags.isJsonNull()) {
+            return Collections.emptyList();
+        }
+
+        JsonArray tagsArr = repoTags.getAsJsonArray();
         if (tagsArr.size() == 0) {
             return Collections.emptyList();
         }
