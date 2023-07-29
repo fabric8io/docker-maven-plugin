@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.44-SNAPSHOT**:
+* **0.43.2** (2023-07-29):
   - Make `--config` from buildx command string generation optional ([1673](https://github.com/fabric8io/docker-maven-plugin/pull/1673)) @robfrank
 
 * **0.43.1** (2023-07-28):
