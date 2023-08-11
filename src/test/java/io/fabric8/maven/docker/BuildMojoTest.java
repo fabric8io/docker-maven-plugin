@@ -291,7 +291,6 @@ class BuildMojoTest extends MojoTestBase {
     private void thenBuildxRun(String relativeConfigFile, String contextDir,
         boolean nativePlatformIncluded, String attestation) throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
-        String config = getOsDependentBuild(buildPath, "docker");
         String configFile = relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) : null;
 
         List<String> cmds =

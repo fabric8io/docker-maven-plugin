@@ -10,13 +10,17 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.access.AuthConfigList;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -129,7 +133,7 @@ public class AuthConfigFactory {
         }
 
         // Finally check ~/.docker/config.json
-        ret = getAuthConfigFromDockerConfig(registry);
+        ret = getAuthConfigFromDockerConfig(log, registry);
         if (ret != null) {
             ret.setRegistry(registry);
             log.debug("AuthConfig: credentials from ~/.docker/config.json");
@@ -496,22 +500,37 @@ public class AuthConfigFactory {
         return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
     }
 
-    private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
+    public static boolean hasAuthForRegistryInDockerConfig(Logger logger, String registry, AuthConfigList authConfigList) throws MojoExecutionException {
+        String registryToLookup = Optional.ofNullable(registry).orElse(DOCKER_LOGIN_DEFAULT_REGISTRY);
+        AuthConfig authConfigFromDockerConfig = getAuthConfigFromDockerConfig(logger, registryToLookup);
+        if (authConfigFromDockerConfig != null) {
+            String authsInDockerConfig = new String(Base64.getEncoder().encode((authConfigFromDockerConfig.getUsername() + ":" + authConfigFromDockerConfig.getPassword()).getBytes(StandardCharsets.UTF_8)));
+            return authConfigList.toJson().contains(authsInDockerConfig);
+        }
+        return false;
+    }
+
+    private static AuthConfig getAuthConfigFromDockerConfig(Logger log, String registry) throws MojoExecutionException {
         JsonObject dockerConfig = DockerFileUtil.readDockerConfig();
         if (dockerConfig == null) {
             return null;
         }
-        String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
+        String registryToLookup;
+        if (registry != null && Arrays.stream(DEFAULT_REGISTRIES).noneMatch(r -> r.equalsIgnoreCase(registry))) {
+            registryToLookup = registry;
+        } else {
+            registryToLookup = DOCKER_LOGIN_DEFAULT_REGISTRY;
+        }
 
         if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
             if (dockerConfig.has("credHelpers")) {
                 final JsonObject credHelpers = dockerConfig.getAsJsonObject("credHelpers");
                 if (credHelpers.has(registryToLookup)) {
-                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.get(registryToLookup).getAsString());
+                    return extractAuthConfigFromCredentialsHelper(log, registryToLookup, credHelpers.get(registryToLookup).getAsString());
                 }
             }
             if (dockerConfig.has("credsStore")) {
-                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.get("credsStore").getAsString());
+                return extractAuthConfigFromCredentialsHelper(log, registryToLookup, dockerConfig.get("credsStore").getAsString());
             }
         }
 
@@ -522,7 +541,7 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromDockerConfigAuths(String registryToLookup, JsonObject auths) {
+    private static AuthConfig extractAuthConfigFromDockerConfigAuths(String registryToLookup, JsonObject auths) {
         JsonObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
@@ -533,7 +552,7 @@ public class AuthConfigFactory {
         return new AuthConfig(auth, email, identityToken);
     }
 
-    private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {
+    private static AuthConfig extractAuthConfigFromCredentialsHelper(Logger log, String registryToLookup, String credConfig) throws MojoExecutionException {
         CredentialHelperClient credentialHelper = new CredentialHelperClient(log, credConfig);
         String version = credentialHelper.getVersion();
         log.debug("AuthConfig: credentials from credential helper/store %s%s",
@@ -542,7 +561,7 @@ public class AuthConfigFactory {
         return credentialHelper.getAuthConfig(registryToLookup);
     }
 
-    private JsonObject getCredentialsNode(JsonObject auths,String registryToLookup) {
+    private static JsonObject getCredentialsNode(JsonObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
             return auths.getAsJsonObject(registryToLookup);
         }

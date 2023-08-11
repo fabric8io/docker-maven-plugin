@@ -20,7 +20,9 @@ public class AuthConfigList {
 
     public AuthConfigList(AuthConfig authConfig) {
         this();
-        authConfigs.add(authConfig);
+        if (authConfig != null) {
+            authConfigs.add(authConfig);
+        }
     }
 
     public void addAuthConfig(AuthConfig authConfig) {
@@ -42,5 +44,13 @@ public class AuthConfigList {
         }
 
         return root.toString();
+    }
+
+    public boolean isEmpty() {
+        return authConfigs.isEmpty();
+    }
+
+    public int size() {
+        return authConfigs.size();
     }
 }

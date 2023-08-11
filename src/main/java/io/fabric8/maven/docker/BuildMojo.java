@@ -29,6 +29,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.MojoParameters;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -139,12 +140,14 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         Set<String> fromRegistries = getRegistriesForPull(buildConfig);
         for (String fromRegistry : fromRegistries) {
-            if (configuredRegistry.equalsIgnoreCase(fromRegistry)) {
+            if (StringUtils.isNotBlank(configuredRegistry) && configuredRegistry.equalsIgnoreCase(fromRegistry)) {
                 continue;
             }
             registryConfig = getRegistryConfig(fromRegistry);
             AuthConfig additionalAuth = registryConfig.createAuthConfig(false, imageName.getUser(), fromRegistry);
-            authConfigList.addAuthConfig(additionalAuth);
+            if (additionalAuth != null) {
+                authConfigList.addAuthConfig(additionalAuth);
+            }
         }
 
         return authConfigList;

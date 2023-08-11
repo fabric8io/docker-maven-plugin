@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.44-SNAPSHOT** :
+  - Only add `--config` to buildx command string when authentication credentials are coming from outside sources
 
 * **0.43.2** (2023-07-29):
   - Make `--config` from buildx command string generation optional ([1673](https://github.com/fabric8io/docker-maven-plugin/pull/1673)) @robfrank
