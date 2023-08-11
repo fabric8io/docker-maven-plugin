@@ -1,12 +1,13 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.io.File;
 import java.nio.file.Paths;
 
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.util.DockerFileUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.Mockito;
 import org.mockito.quality.Strictness;
@@ -35,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.WARN)
@@ -65,7 +68,7 @@ class BuildXServiceTest {
     private final ProjectPaths projectPaths = new ProjectPaths(new File("project-base-dir"), "output-dir");
     private final String configuredRegistry = "configured-registry";
     private final File buildArchive = new File("build-archive");
-    private final AuthConfigList authConfig = null;
+    private AuthConfigList authConfigList;
 
     @BeforeEach
     void setup() throws Exception {
@@ -77,13 +80,14 @@ class BuildXServiceTest {
 
         Mockito.doReturn(Paths.get("docker-state-dir")).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
         Mockito.doReturn("maven").when(buildx).createBuilder(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        authConfigList = null;
     }
 
     @Test
     void testBuildNativePlatform() throws Exception {
         givenAnImageConfiguration(NATIVE);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
         verifyBuildXPlatforms(NATIVE);
     }
 
@@ -91,7 +95,7 @@ class BuildXServiceTest {
     void testBuildForeignPlatform() throws Exception {
         givenAnImageConfiguration(FOREIGN1);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
         verifyBuildXPlatforms(FOREIGN1);
     }
 
@@ -99,32 +103,31 @@ class BuildXServiceTest {
     void testBuildNativePlatformWithForeign() throws Exception {
         givenAnImageConfiguration(NATIVE, FOREIGN1);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
         verifyBuildXPlatforms(NATIVE);
     }
 
     @Test
     void testBuildForeignPlatforms() throws Exception {
         givenAnImageConfiguration(FOREIGN1, FOREIGN2);
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
         Mockito.verify(buildx, Mockito.times(0)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                                                         Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
-    void useBuilder_whenConfigProvided_thenAddConfigOptionToBuildX(@TempDir File temporaryFolder) throws MojoExecutionException, IOException {
+    void useBuilder_whenConfiguredRegistryAbsentInDockerRegistry_thenAddConfigOptionToBuildX(@TempDir File temporaryFolder) throws MojoExecutionException, IOException {
         // Given
-        File dockerBuildKitToml = new File(temporaryFolder, "buildkitd.toml");
-        Files.createFile(dockerBuildKitToml.toPath());
         BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
         Mockito.doReturn(temporaryFolder.toPath()).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
+        authConfigList = new AuthConfigList(new AuthConfig("testuser", "testpassword", null, null, null));
         givenAnImageConfiguration(new BuildXConfiguration.Builder()
             .dockerStateDir(temporaryFolder.getAbsolutePath())
             .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
             .build());
 
         // When
-        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive, builder);
+        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, builder);
 
         // Then
         ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
@@ -133,20 +136,27 @@ class BuildXServiceTest {
     }
 
     @Test
-    void useBuilder_whenNoConfigProvided_thenDoNotAddConfigOptionToBuildX() throws MojoExecutionException {
-        // Given
-        BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
-        givenAnImageConfiguration(new BuildXConfiguration.Builder()
-            .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
-            .build());
+    void useBuilder_whenAuthConfigFromDockerConfig_thenDoNotAddConfigOptionToBuildX() throws MojoExecutionException {
+        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+            // Given
+            AuthConfig registryAuthConfig = new AuthConfig("user", "password", null, null);
+            registryAuthConfig.setRegistry(configuredRegistry);
+            authConfigList = new AuthConfigList(registryAuthConfig);
+            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+                .thenReturn(registryAuthConfig.toJsonObject());
+            BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
+            givenAnImageConfiguration(new BuildXConfiguration.Builder()
+                .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
+                .build());
 
-        // When
-        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfig, buildArchive, builder);
+            // When
+            buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, builder);
 
-        // Then
-        ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
-        Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
-        assertEquals(Arrays.asList("docker", "buildx"), buildXArgCaptor.getValue());
+            // Then
+            ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
+            Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
+            assertEquals(Arrays.asList("docker", "buildx"), buildXArgCaptor.getValue());
+        }
     }
 
     private void givenAnImageConfiguration(String... platforms) {

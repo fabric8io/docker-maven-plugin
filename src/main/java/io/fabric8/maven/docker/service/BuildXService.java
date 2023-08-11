@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static io.fabric8.maven.docker.util.AuthConfigFactory.hasAuthForRegistryInDockerConfig;
+
 public class BuildXService {
     private final DockerAccess dockerAccess;
     private final DockerAssemblyManager dockerAssemblyManager;
@@ -63,10 +65,10 @@ public class BuildXService {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
-        File[] configDirFiles = configPath.toFile().listFiles();
         List<String> buildX = new ArrayList<>();
         buildX.add("docker");
-        if (configDirFiles != null && configDirFiles.length > 0) {
+        if (authConfig != null && !authConfig.isEmpty() &&
+            !hasAuthForRegistryInDockerConfig(logger, configuredRegistry, authConfig)) {
             buildX.add("--config");
             buildX.add(configPath.toString());
         }

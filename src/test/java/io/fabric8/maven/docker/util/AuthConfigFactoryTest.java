@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 import org.apache.http.entity.StringEntity;
@@ -49,6 +50,9 @@ import java.util.Map;
 import static java.util.Collections.singletonMap;
 import static java.util.UUID.randomUUID;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * @author roland
@@ -215,8 +219,8 @@ class AuthConfigFactoryTest {
             Assertions.fail("MojoExecutionException not thrown");
         } catch (MojoExecutionException expectedException) {
             Throwable cause = expectedException.getCause();
-            Assertions.assertTrue(cause instanceof IOException);
-            Assertions.assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist get'"));
+            assertTrue(cause instanceof IOException);
+            assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist get'"));
         }
     }
 
@@ -230,8 +234,8 @@ class AuthConfigFactoryTest {
             Assertions.fail("MojoExecutionException not thrown");
         } catch (MojoExecutionException expectedException) {
             Throwable cause = expectedException.getCause();
-            Assertions.assertTrue(cause instanceof IOException);
-            Assertions.assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"));
+            assertTrue(cause instanceof IOException);
+            assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"));
         }
     }
 
@@ -245,8 +249,78 @@ class AuthConfigFactoryTest {
             Assertions.fail("MojoExecutionException not thrown");
         } catch (MojoExecutionException expectedException) {
             Throwable cause = expectedException.getCause();
-            Assertions.assertTrue(cause instanceof IOException);
-            Assertions.assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"));
+            assertTrue(cause instanceof IOException);
+            assertTrue(cause.getMessage().startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"));
+        }
+    }
+
+    @Test
+    void hasAuthForRegistryInDockerConfig_whenRegistryAbsentInDockerConfig_thenReturnFalse() throws Exception {
+        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+            // Given
+            AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
+            authConfig.setRegistry("unknown-registry.io");
+            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+                .thenReturn(authConfig.toJsonObject());
+
+            // When
+            boolean result = AuthConfigFactory.hasAuthForRegistryInDockerConfig(log, "configured-registry.io", new AuthConfigList());
+
+            // Then
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void hasAuthForRegistryInDockerConfig_whenRegistryInDockerConfigButDifferentUser_thenReturnFalse() throws Exception {
+        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+            // Given
+            AuthConfig authConfigInDockerConfig = new AuthConfig("user", "secret", null, null, null);
+            authConfigInDockerConfig.setRegistry("configured-registry.io");
+            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+                .thenReturn(authConfigInDockerConfig.toJsonObject());
+            AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
+            authConfig.setRegistry("configured-registry.io");
+
+            // When
+            boolean result = AuthConfigFactory.hasAuthForRegistryInDockerConfig(log, "configured-registry.io", new AuthConfigList(authConfig));
+
+            // Then
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void hasAuthForRegistryInDockerConfig_whenRegistryInDockerConfig_thenReturnTrue() throws Exception {
+        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+            // Given
+            AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
+            authConfig.setRegistry("configured-registry.io");
+            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+                .thenReturn(authConfig.toJsonObject());
+
+            // When
+            boolean result = AuthConfigFactory.hasAuthForRegistryInDockerConfig(log, "configured-registry.io", new AuthConfigList(authConfig));
+
+            // Then
+            assertTrue(result);
+        }
+    }
+
+    @Test
+    void hasAuthForRegistryInDockerConfig_whenDefaultDockerRegistryInDockerConfig_thenReturnTrue() throws Exception {
+        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+            // Given
+            AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
+            authConfig.setRegistry("https://index.docker.io/v1/");
+            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+                .thenReturn(authConfig.toJsonObject());
+
+            // When
+            boolean result = AuthConfigFactory.hasAuthForRegistryInDockerConfig(log, "docker.io", new AuthConfigList(authConfig));
+
+            // Then
+            assertTrue(result);
         }
     }
 
@@ -259,7 +333,7 @@ class AuthConfigFactoryTest {
     }
 
     private void executeProcessWithTempHomeDir(HomeDirExecutor executor) throws IOException, MojoExecutionException {
-        try (MockedStatic<ExternalCommand> mocked = Mockito.mockStatic(ExternalCommand.class)) {
+        try (MockedStatic<ExternalCommand> mocked = mockStatic(ExternalCommand.class)) {
             String[] cmd = Mockito.any();
             mocked.when(() -> ExternalCommand.startCommand(cmd)).thenThrow(new IOException());
             executeWithTempHomeDir(executor);
@@ -406,7 +480,7 @@ class AuthConfigFactoryTest {
 
             Assertions.fail("MojoExecutionException not thrown");
         } catch (MojoExecutionException expectedException) {
-            Assertions.assertTrue(expectedException.getMessage().contains(".kube/config"));
+            assertTrue(expectedException.getMessage().contains(".kube/config"));
         }
     }
 

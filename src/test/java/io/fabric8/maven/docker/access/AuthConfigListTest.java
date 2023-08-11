@@ -18,6 +18,24 @@ class AuthConfigListTest {
     }
 
     @Test
+    void authConfigConstructor() {
+        // Given
+        AuthConfig a1 = getAuthConfig();
+        // When
+        AuthConfigList authConfigList = new AuthConfigList(a1);
+        // Then
+        assertEquals(1, authConfigList.size());
+    }
+
+    @Test
+    void authConfigConstructorWithNullArg() {
+        // Given + When
+        AuthConfigList authConfigList = new AuthConfigList(null);
+        // Then
+        assertTrue(authConfigList.isEmpty());
+    }
+
+    @Test
     void emptyList() {
         AuthConfigList authConfigList = new AuthConfigList();
 

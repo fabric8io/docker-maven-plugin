@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.44-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-buildx-push</artifactId>
+  <properties>
+    <docker.platforms>linux/amd64,linux/arm64</docker.platforms>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>ttl.sh/%a:1h</name>
+              <build>
+                <dockerFileDir>${project.basedir}</dockerFileDir>
+                <buildx>
+                  <platforms>
+                    <platform>${docker.platforms}</platform>
+                  </platforms>
+                  <attestations>
+                    <provenance>false</provenance>
+                  </attestations>
+                </buildx>
+              </build>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>docker-build</id>
+            <goals>
+              <goal>build</goal>
+              <goal>push</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

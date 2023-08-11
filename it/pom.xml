@@ -25,6 +25,7 @@
     <module>buildx-contextdir</module>
     <module>buildx-dependencyset</module>
     <module>buildx-dockerfile</module>
+    <module>buildx-push</module>
     <module>docker-compose</module>
     <module>dockerfile</module>
     <module>dockerignore</module>
