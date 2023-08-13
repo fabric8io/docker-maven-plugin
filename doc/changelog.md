@@ -1,4 +1,5 @@
 # ChangeLog
+* **0.44-SNAPSHOT**:
 
 * **0.43.3** (2023-08-13):
   - Only add `--config` to buildx command string when authentication credentials are coming from outside sources
