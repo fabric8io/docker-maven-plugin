@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static io.fabric8.maven.docker.util.AuthConfigFactory.hasAuthForRegistryInDockerConfig;
@@ -217,14 +218,12 @@ public class BuildXService {
 
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
-        String builderName = buildXConfiguration.getBuilderName();
-        if (builderName == null) {
-            builderName= "maven";
-        }
+        String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+        String nodeName = Optional.ofNullable(buildXConfiguration.getNodeName()).orElse(builderName + "0");
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
         if(Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName, "--node", builderName + "0");
+            append(cmds, "create", "--driver", "docker-container", "--name", builderName, "--node", nodeName);
             String buildConfig = buildXConfiguration.getConfigFile();
             if(buildConfig != null) {
                 append(cmds, "--config",

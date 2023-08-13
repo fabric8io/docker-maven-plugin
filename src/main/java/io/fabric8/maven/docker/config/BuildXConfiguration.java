@@ -39,6 +39,9 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private AttestationConfiguration attestations;
 
+    @Parameter
+    private String nodeName;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -49,6 +52,10 @@ public class BuildXConfiguration implements Serializable {
 
     public String getDockerStateDir() {
         return dockerStateDir;
+    }
+
+    public String getNodeName() {
+        return nodeName;
     }
 
     public boolean isBuildX() {
@@ -76,6 +83,14 @@ public class BuildXConfiguration implements Serializable {
         public Builder builderName(String builderName) {
             config.builderName = builderName;
             if (builderName != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder nodeName(String nodeName) {
+            config.nodeName = nodeName;
+            if (nodeName != null) {
                 isEmpty = false;
             }
             return this;
