@@ -333,6 +333,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         return new BuildXConfiguration.Builder()
             .builderName(valueProvider.getString(BUILDX_BUILDERNAME, config.getBuilderName()))
+            .nodeName(valueProvider.getString(BUILDX_NODENAME, config.getNodeName()))
             .configFile(valueProvider.getString(BUILDX_CONFIGFILE, config.getConfigFile()))
             .dockerStateDir(valueProvider.getString(BUILDX_DOCKERSTATEDIR, config.getDockerStateDir()))
             .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))

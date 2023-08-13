@@ -113,7 +113,7 @@ class PushMojoBuildXTest {
     assertEquals(1, defaultExecMockedConstruction.constructed().size());
     BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
     verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
-        "--driver", "docker-container", "--name", "testbuilder", "--node", "testbuilder0"));
+        "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
     verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
         "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
         "--tag", "test.example.org/testuser/sample-test-image:latest",
@@ -137,7 +137,7 @@ class PushMojoBuildXTest {
       assertEquals(1, defaultExecMockedConstruction.constructed().size());
       BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
       verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
-          "--driver", "docker-container", "--name", "testbuilder", "--node", "testbuilder0"));
+          "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
       verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
           "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
           "--tag", "test.example.org/testuser/sample-test-image:latest",
@@ -162,7 +162,7 @@ class PushMojoBuildXTest {
     assertEquals(1, defaultExecMockedConstruction.constructed().size());
     BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
     verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "create",
-        "--driver", "docker-container", "--name", "testbuilder", "--node", "testbuilder0"));
+        "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
     verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "build",
         "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
         "--tag", "test.example.org/testuser/sample-test-image:latest",
@@ -184,7 +184,7 @@ class PushMojoBuildXTest {
       assertEquals(1, defaultExecMockedConstruction.constructed().size());
       BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
       verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "create",
-          "--driver", "docker-container", "--name", "testbuilder", "--node", "testbuilder0"));
+          "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
       verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "build",
           "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
           "--tag", "test.example.org/testuser/sample-test-image:latest",
@@ -203,6 +203,7 @@ class PushMojoBuildXTest {
             .buildx(new BuildXConfiguration.Builder()
                 .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
                 .builderName("testbuilder")
+                .nodeName("testnode")
                 .build())
             .build())
         .build();

@@ -43,6 +43,7 @@ public enum ConfigKey {
     BUILD_OPTIONS,
     BUILDX_PLATFORMS("buildx.platforms", ValueCombinePolicy.Merge),
     BUILDX_BUILDERNAME("buildx.builderName"),
+    BUILDX_NODENAME("buildx.nodeName"),
     BUILDX_CONFIGFILE("buildx.configFile"),
     BUILDX_DOCKERSTATEDIR("buildx.dockerStateDir"),
     BUILDX_ATTESTATION_PROVENANCE("buildx.attestations.provenance"),
