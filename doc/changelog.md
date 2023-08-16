@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.44-SNAPSHOT**:
+  - Always pass `--config` option for latest versions of Docker CLI ([1701](https://github.com/fabric8io/docker-maven-plugin/issues/1701))
 
 * **0.43.3** (2023-08-13):
   - Only add `--config` to buildx command string when authentication credentials are coming from outside sources

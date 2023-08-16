@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AttestationConfiguration;
@@ -12,6 +13,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.BufferedReader;
@@ -36,6 +38,8 @@ import java.util.concurrent.CompletableFuture;
 import static io.fabric8.maven.docker.util.AuthConfigFactory.hasAuthForRegistryInDockerConfig;
 
 public class BuildXService {
+    private static final int DOCKER_CLI_BUILDX_CONFIG_COMPATIBLE_MAJOR_VERSION = 23;
+    private static final String DOCKER = "docker";
     private final DockerAccess dockerAccess;
     private final DockerAssemblyManager dockerAssemblyManager;
     private final Logger logger;
@@ -67,9 +71,8 @@ public class BuildXService {
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
         List<String> buildX = new ArrayList<>();
-        buildX.add("docker");
-        if (authConfig != null && !authConfig.isEmpty() &&
-            !hasAuthForRegistryInDockerConfig(logger, configuredRegistry, authConfig)) {
+        buildX.add(DOCKER);
+        if (isDockerCLINotLegacy() || shouldAddConfigInLegacyDockerCLI(authConfig, configuredRegistry)) {
             buildX.add("--config");
             buildX.add(configPath.toString());
         }
@@ -83,6 +86,31 @@ public class BuildXService {
         } finally {
             removeConfigJson(configJson);
         }
+    }
+
+    private boolean shouldAddConfigInLegacyDockerCLI(AuthConfigList authConfigList, String configuredRegistry) throws MojoExecutionException {
+        return authConfigList != null && !authConfigList.isEmpty() &&
+            !hasAuthForRegistryInDockerConfig(logger, configuredRegistry, authConfigList);
+    }
+
+    private boolean isDockerCLINotLegacy() {
+        DockerVersionExternalCommand dockerVersionExternalCommand = new DockerVersionExternalCommand(logger);
+        try {
+            dockerVersionExternalCommand.execute();
+        } catch (IOException e) {
+            logger.info("Failure in getting docker CLI version", e);
+        }
+        String version = dockerVersionExternalCommand.getVersion();
+        if (StringUtils.isNotBlank(version)) {
+            version = version.replaceAll("(^')|('$)", "");
+            String[] versionParts = version.split("\\.");
+            logger.info("Using Docker CLI " + version);
+            if (versionParts.length >= 3) {
+                int cliMajorVersion = Integer.parseInt(versionParts[0]);
+                return cliMajorVersion >= DOCKER_CLI_BUILDX_CONFIG_COMPATIBLE_MAJOR_VERSION;
+            }
+        }
+        return false;
     }
 
     protected void createConfigJson(Path configJson, AuthConfigList authConfig) throws MojoExecutionException {
@@ -203,7 +231,7 @@ public class BuildXService {
 
     protected Path getDockerStateDir(BuildImageConfiguration buildConfiguration, BuildDirs buildDirs) {
         String stateDir = buildConfiguration.getBuildX().getDockerStateDir();
-        Path dockerStatePath = buildDirs.getBuildPath(stateDir != null ? EnvUtil.resolveHomeReference(stateDir) : "docker");
+        Path dockerStatePath = buildDirs.getBuildPath(stateDir != null ? EnvUtil.resolveHomeReference(stateDir) : DOCKER);
         createDirectory(dockerStatePath);
         return dockerStatePath;
     }
@@ -219,11 +247,14 @@ public class BuildXService {
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
         String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
-        String nodeName = Optional.ofNullable(buildXConfiguration.getNodeName()).orElse(builderName + "0");
+        String nodeName = buildXConfiguration.getNodeName();
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
         if(Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName, "--node", nodeName);
+            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
+            if (nodeName != null) {
+                append(cmds, "--node", nodeName);
+            }
             String buildConfig = buildXConfiguration.getConfigFile();
             if(buildConfig != null) {
                 append(cmds, "--config",
@@ -283,6 +314,30 @@ public class BuildXService {
                     logger.error("failed redirecting stream %s", e.getMessage());
                 }
             });
+        }
+    }
+
+    public static class DockerVersionExternalCommand extends ExternalCommand {
+        private final StringBuilder outputBuilder;
+        public DockerVersionExternalCommand(Logger logger) {
+            super(logger);
+            outputBuilder = new StringBuilder();
+        }
+
+        @Override
+        protected String[] getArgs() {
+            return new String[] {DOCKER, "version", "--format", "'{{.Client.Version}}'"};
+        }
+
+        @Override
+        protected void processLine(String line) {
+            if (StringUtils.isNotBlank(line)) {
+                outputBuilder.append(line);
+            }
+        }
+
+        public String getVersion() {
+            return outputBuilder.toString();
         }
     }
 }

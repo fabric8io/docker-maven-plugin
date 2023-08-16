@@ -32,7 +32,7 @@ The `<buildx>` element within `<build>` defines how to build multi-architecture 
 The builder manages the build cache.
 
 | *nodeName*
-| Specify the name of the node to be created or modified. If none is specified, it is the name of the builder it belongs to, with an index `0` number suffix.
+| Specify the name of the node to be created or modified.
 
 | *configFile*
 | Configuration file for builder.  Non-absolute files are relative to the maven project directory.  If configFile starts with
