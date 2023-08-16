@@ -23,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
@@ -57,6 +59,8 @@ class PushMojoBuildXTest {
   private File expectedDockerStateConfigDir;
   private Settings mockedMavenSettings;
   private MockedConstruction<BuildXService.DefaultExec> defaultExecMockedConstruction;
+  private MockedConstruction<BuildXService.DockerVersionExternalCommand> dockerVersionExternalCommandMockedConstruction;
+  private String dockerClIVersion;
 
   @BeforeEach
   void setup() throws MojoExecutionException, MojoFailureException, IOException, ComponentLookupException, SecDispatcherException {
@@ -84,6 +88,9 @@ class PushMojoBuildXTest {
     when(mockedSecDispatcher.decrypt(anyString())).thenReturn("testpassword");
     Map<String, Object> pluginContext = new HashMap<>();
     defaultExecMockedConstruction = mockConstruction(BuildXService.DefaultExec.class);
+    dockerVersionExternalCommandMockedConstruction = mockConstruction(BuildXService.DockerVersionExternalCommand.class, (mock, ctx) -> {
+      when(mock.getVersion()).thenReturn(dockerClIVersion);
+    });
     this.pushMojo = new PushMojo();
     this.pushMojo.setPluginContext(pluginContext);
     pushMojo.verbose = "true";
@@ -100,31 +107,41 @@ class PushMojoBuildXTest {
   @AfterEach
   void tearDown() {
     defaultExecMockedConstruction.close();
+    dockerVersionExternalCommandMockedConstruction.close();
   }
 
   @Test
-  @DisplayName("docker:push buildx, no auth, then don't add --config option to buildx")
-  void execute_whenNoAuthConfig_thenRunBuildXCommandWithAddedConfig() throws MojoExecutionException, MojoFailureException {
+  @DisplayName("legacy docker CLI, docker:push buildx, no auth, then don't add --config option to buildx")
+  void execute_whenNoAuthConfig_thenRunBuildXCommandWithNoConfig() throws MojoExecutionException, MojoFailureException {
     // Given
+    givenDockerCLIVersion("20.0.14");
+
     // When
     pushMojo.execute();
 
     // Then
-    assertEquals(1, defaultExecMockedConstruction.constructed().size());
-    BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
-    verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
-        "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
-    verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
-        "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
-        "--tag", "test.example.org/testuser/sample-test-image:latest",
-        expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
+    verifyNoDockerConfigAddedToBuildX();
   }
 
   @Test
-  @DisplayName("docker:push buildx, auth from ~/.docker/config.json, then don't add --config option to buildx")
-  void execute_whenAuthConfigFromLocalDockerConfig_thenDoNotAddConfigToDockerBuildXCommand() throws MojoExecutionException, MojoFailureException {
+  @DisplayName("docker CLI 23.0.6, docker:push buildx, no auth, then add --config option to buildx")
+  void execute_whenNoAuthConfigAndDockerCLIPost23_thenRunBuildXCommandWithAddedConfig() throws MojoExecutionException, MojoFailureException {
+    // Given
+    givenDockerCLIVersion("23.0.6+azure-2");
+
+    // When
+    pushMojo.execute();
+
+    // Then
+    verifyDockerConfigOptionAddedToBuildX();
+  }
+
+  @Test
+  @DisplayName("legacy docker CLI, docker:push buildx, auth from ~/.docker/config.json, then don't add --config option to buildx")
+  void execute_whenLegacyDockerCLIAndAuthConfigFromLocalDockerConfig_thenDoNotAddConfigToDockerBuildXCommand() throws MojoExecutionException, MojoFailureException {
     try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
       // Given
+      givenDockerCLIVersion("20.0.14");
       AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
       authConfig.setRegistry("test.example.org");
       dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
@@ -134,21 +151,34 @@ class PushMojoBuildXTest {
       pushMojo.execute();
 
       // Then
-      assertEquals(1, defaultExecMockedConstruction.constructed().size());
-      BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
-      verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
-          "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
-      verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
-          "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
-          "--tag", "test.example.org/testuser/sample-test-image:latest",
-          expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
+      verifyNoDockerConfigAddedToBuildX();
     }
   }
 
   @Test
-  @DisplayName("docker:push buildx, auth from ~/.m2/settings.xml, then add --config option to buildx")
-  void execute_whenAuthConfigFromMavenSettings_thenAddConfigToDockerBuildXCommand() throws MojoExecutionException, MojoFailureException {
+  @DisplayName("23.0.6+azure-2 docker CLI, docker:push buildx, auth from ~/.docker/config.json, then don't add --config option to buildx")
+  void execute_whenAuthConfigFromLocalDockerConfig_thenAddConfigToDockerBuildXCommand() throws MojoExecutionException, MojoFailureException {
+    try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+      // Given
+      givenDockerCLIVersion("'23.0.6+azure-2'");
+      AuthConfig authConfig = new AuthConfig("testuser", "testpassword", null, null, null);
+      authConfig.setRegistry("test.example.org");
+      dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
+          .thenReturn(authConfig.toJsonObject());
+
+      // When
+      pushMojo.execute();
+
+      // Then
+      verifyDockerConfigOptionAddedToBuildX();
+    }
+  }
+
+  @ParameterizedTest(name = "docker CLI {0} docker:push buildx, auth from ~/.m2/settings.xml, then add --config option to buildx")
+  @ValueSource(strings = {"20.0.14", "'23.0.6+azure-2'"})
+  void execute_whenAuthConfigFromMavenSettings_thenAddConfigToDockerBuildXCommand(String dockerClIVersion) throws MojoExecutionException, MojoFailureException {
     // Given
+    givenDockerCLIVersion(dockerClIVersion);
     Server server = new Server();
     server.setId("test.example.org");
     server.setUsername("testuser");
@@ -159,6 +189,41 @@ class PushMojoBuildXTest {
     pushMojo.execute();
 
     // Then
+    verifyDockerConfigOptionAddedToBuildX();
+  }
+
+  @ParameterizedTest(name = "docker CLI {0} docker:push buildx, auth from properties, then add --config option to buildx")
+  @ValueSource(strings = {"20.0.14", "'23.0.6+azure-2'"})
+  void execute_whenAuthConfigFromProperties_thenAddConfigOptionToBuildXCommand(String dockerClIVersion) throws MojoExecutionException, MojoFailureException {
+    try {
+      // Given
+      givenDockerCLIVersion(dockerClIVersion);
+      System.setProperty("docker.push.username", "testuser");
+      System.setProperty("docker.push.password", "testpassword");
+
+      // When
+      pushMojo.execute();
+
+      // Then
+      verifyDockerConfigOptionAddedToBuildX();
+    } finally {
+      System.clearProperty("docker.push.username");
+      System.clearProperty("docker.push.password");
+    }
+  }
+
+  private void verifyNoDockerConfigAddedToBuildX() throws MojoExecutionException {
+    assertEquals(1, defaultExecMockedConstruction.constructed().size());
+    BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
+    verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
+        "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
+    verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
+        "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
+        "--tag", "test.example.org/testuser/sample-test-image:latest",
+        expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
+  }
+
+  private void verifyDockerConfigOptionAddedToBuildX() throws MojoExecutionException {
     assertEquals(1, defaultExecMockedConstruction.constructed().size());
     BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
     verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "create",
@@ -167,32 +232,6 @@ class PushMojoBuildXTest {
         "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
         "--tag", "test.example.org/testuser/sample-test-image:latest",
         expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
-  }
-
-  @Test
-  @DisplayName("docker:push buildx, auth from properties, then add --config option to buildx")
-  void execute_whenAuthConfigFromProperties_thenAddConfigOptionToBuildXCommand() throws MojoExecutionException, MojoFailureException {
-    try {
-      // Given
-      System.setProperty("docker.push.username", "testuser");
-      System.setProperty("docker.push.password", "testpassword");
-
-      // When
-      pushMojo.execute();
-
-      // Then
-      assertEquals(1, defaultExecMockedConstruction.constructed().size());
-      BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
-      verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "create",
-          "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
-      verify(defaultExec).process(Arrays.asList("docker", "--config", expectedDockerStateConfigDir.getAbsolutePath(), "buildx", "build",
-          "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
-          "--tag", "test.example.org/testuser/sample-test-image:latest",
-          expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
-    } finally {
-      System.clearProperty("docker.push.username");
-      System.clearProperty("docker.push.password");
-    }
   }
 
   private ImageConfiguration createImageConfiguration() {
@@ -207,5 +246,9 @@ class PushMojoBuildXTest {
                 .build())
             .build())
         .build();
+  }
+
+  private void givenDockerCLIVersion(String version) {
+    dockerClIVersion = version;
   }
 }

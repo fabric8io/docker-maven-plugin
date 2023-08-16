@@ -26,6 +26,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 
 /**
@@ -62,6 +64,7 @@ class RegistryServiceTest {
     private boolean hasImage;
     private Map<String, String> authConfig;
     private MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic;
+    private MockedConstruction<BuildXService.DockerVersionExternalCommand> dockerVersionExternalCommandMockedConstruction;
 
     @TempDir
     private File projectBaseDir;
@@ -102,11 +105,13 @@ class RegistryServiceTest {
         registry = null;
         imageConfiguration = null;
         dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class);
+        dockerVersionExternalCommandMockedConstruction = mockConstruction(BuildXService.DockerVersionExternalCommand.class);
     }
 
     @AfterEach
     void tearDown() {
         dockerFileUtilMockedStatic.close();
+        dockerVersionExternalCommandMockedConstruction.close();
     }
 
     @ParameterizedTest
@@ -576,6 +581,7 @@ class RegistryServiceTest {
         BuildXConfiguration buildx = new BuildXConfiguration.Builder()
             .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
             .builderName(builderName)
+            .nodeName("maven0")
             .build();
         givenImageNameAndBuildX(imageName, buildx, dockerFile, tag);
     }

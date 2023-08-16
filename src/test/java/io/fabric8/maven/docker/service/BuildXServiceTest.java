@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.Mockito;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,6 +72,7 @@ class BuildXServiceTest {
     private final String configuredRegistry = "configured-registry";
     private final File buildArchive = new File("build-archive");
     private AuthConfigList authConfigList;
+    private MockedConstruction<BuildXService.DockerVersionExternalCommand> dockerVersionExternalCommandMockedConstruction;
 
     @BeforeEach
     void setup() throws Exception {
@@ -81,6 +85,12 @@ class BuildXServiceTest {
         Mockito.doReturn(Paths.get("docker-state-dir")).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
         Mockito.doReturn("maven").when(buildx).createBuilder(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         authConfigList = null;
+        dockerVersionExternalCommandMockedConstruction = mockConstruction(BuildXService.DockerVersionExternalCommand.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        dockerVersionExternalCommandMockedConstruction.close();
     }
 
     @Test
