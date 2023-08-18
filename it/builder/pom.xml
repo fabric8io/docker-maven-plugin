@@ -28,7 +28,7 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.43.4</version>
+    <version>0.44-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 

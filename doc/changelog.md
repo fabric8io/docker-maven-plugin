@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.44-SNAPSHOT**:
+
 * **0.43.4** (2023-08-18):
   - Always pass `--config` option for latest versions of Docker CLI ([1701](https://github.com/fabric8io/docker-maven-plugin/issues/1701))
 
