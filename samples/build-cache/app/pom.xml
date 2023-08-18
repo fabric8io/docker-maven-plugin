@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.fabric8.dmp.samples.build-cache</groupId>
     <artifactId>parent</artifactId>
-    <version>0.44-SNAPSHOT</version>
+    <version>0.43.4</version>
   </parent>
 
   <artifactId>app</artifactId>
