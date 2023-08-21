@@ -268,6 +268,13 @@ public class BuildXService {
             if (nodeName != null) {
                 append(cmds, "--node", nodeName);
             }
+
+            if (buildXConfiguration.getDriverOpts() != null) {
+                buildXConfiguration.getDriverOpts().forEach((key, value) -> {
+                    append(cmds, "--driver-opt", key + '=' + value);
+                });
+            }
+
             String buildConfig = buildXConfiguration.getConfigFile();
             if(buildConfig != null) {
                 append(cmds, "--config",

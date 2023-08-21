@@ -6,6 +6,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public class BuildXConfiguration implements Serializable {
 
@@ -54,6 +55,12 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private String cacheTo;
 
+    /**
+     * Map of driver options
+     */
+    @Parameter
+    private Map<String, String> driverOpts;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -89,6 +96,10 @@ public class BuildXConfiguration implements Serializable {
 
     public AttestationConfiguration getAttestations() {
         return attestations;
+    }
+
+    public Map<String, String> getDriverOpts() {
+        return driverOpts;
     }
 
     public static class Builder {
@@ -148,9 +159,18 @@ public class BuildXConfiguration implements Serializable {
             return this;
         }
 
+
         public Builder cacheFrom(String cacheFrom) {
             config.cacheFrom = cacheFrom;
             if (cacheFrom != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder driverOpts(Map<String, String> driverOpts) {
+            config.driverOpts = driverOpts;
+            if (driverOpts != null) {
                 isEmpty = false;
             }
             return this;

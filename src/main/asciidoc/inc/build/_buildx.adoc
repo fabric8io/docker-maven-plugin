@@ -31,6 +31,9 @@ The `<buildx>` element within `<build>` defines how to build multi-architecture 
 | Name of builder to use with buildx.  If not supplied, the builder is named `maven`.  The builder is created as necessary.
 The builder manages the build cache.
 
+| *driverOpts*
+| Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created.
+
 | *nodeName*
 | Specify the name of the node to be created or modified.
 
