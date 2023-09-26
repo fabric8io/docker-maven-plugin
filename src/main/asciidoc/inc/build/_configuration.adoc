@@ -143,6 +143,9 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 
 | *workdir*
 | Directory to change to when starting the container.
+
+| *useDefaultExcludes*
+| If set to true this plugin won't include any hidden files in the docker image.
 |===
 
 From this configuration this Plugin creates an in-memory Dockerfile,

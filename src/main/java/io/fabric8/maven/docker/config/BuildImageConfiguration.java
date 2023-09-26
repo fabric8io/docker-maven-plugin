@@ -196,6 +196,10 @@ public class BuildImageConfiguration implements Serializable {
     @Parameter
     private Map<String,String> buildOptions;
 
+    //Default file exclusions
+    @Parameter
+    private Boolean useDefaultExcludes;
+
     /**
      * Map specifying the create image options to provide to the docker daemon when pulling or importing an image.
      *
@@ -407,6 +411,11 @@ public class BuildImageConfiguration implements Serializable {
         return skipPush != null ? skipPush : false;
     }
 
+    public boolean useDefaultExcludes() {
+
+        return useDefaultExcludes != null ? useDefaultExcludes : true;
+    }
+
     public Boolean getNoCache() {
         return noCache != null ? noCache : nocache;
     }
@@ -425,6 +434,11 @@ public class BuildImageConfiguration implements Serializable {
 
     public Boolean getSkipPush() {
         return skipPush;
+    }
+
+    public Boolean getUseDefaultExcludes() {
+
+        return useDefaultExcludes;
     }
 
     public ArchiveCompression getCompression() {
@@ -726,6 +740,12 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder createImageOptions(Map<String, String> createImageOptions) {
             config.createImageOptions = createImageOptions;
+            return this;
+        }
+
+        public Builder useDefaultExcludes(Boolean useDefaultExcludes) {
+
+            config.useDefaultExcludes = useDefaultExcludes;
             return this;
         }
 

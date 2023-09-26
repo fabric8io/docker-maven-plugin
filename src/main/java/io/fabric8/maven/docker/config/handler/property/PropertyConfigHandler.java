@@ -181,6 +181,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .dockerFile(valueProvider.getString(DOCKER_FILE, config.getDockerFileRaw()))
             .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config.getDockerFileDirRaw()))
             .buildOptions(valueProvider.getMap(BUILD_OPTIONS, config.getBuildOptions()))
+            .useDefaultExcludes(valueProvider.getBoolean(USE_DEFAULT_EXCLUDES, config.getUseDefaultExcludes()))
             .filter(valueProvider.getString(FILTER, config.getFilterRaw()))
             .user(valueProvider.getString(USER, config.getUser()))
             .healthCheck(extractHealthCheck(config.getHealthCheck(), valueProvider))

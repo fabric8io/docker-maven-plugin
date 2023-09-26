@@ -176,7 +176,7 @@ public class DockerAssemblyManager {
                         // Interpolated Dockerfile is already added as it was created into the output directory when
                         // using dir dir mode
                         excludeDockerfile(fileSet, dockerFile);
-
+                        fileSet.setUsingDefaultExcludes(buildConfig.useDefaultExcludes());
                         // If the content is added as archive, then we need to add the Dockerfile from the builddir
                         // directly to docker.tar (as the output builddir is not picked up in archive mode)
                         if (isArchive(assemblyConfigurations)) {
