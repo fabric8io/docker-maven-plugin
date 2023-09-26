@@ -128,6 +128,7 @@ public enum ConfigKey {
     STOP_NAME_PATTERN,
     COPY_NAME_PATTERN,
     TAGS(ValueCombinePolicy.Merge),
+    USE_DEFAULT_EXCLUDES,
     TMPFS,
     ULIMITS,
     USER,
