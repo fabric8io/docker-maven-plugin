@@ -92,6 +92,15 @@ class DockerComposeConfigHandlerTest {
         Assertions.assertEquals(1, netSvc.getAliases().size());
         Assertions.assertEquals("alias1", netSvc.getAliases().get(0));
     }
+    
+    @Test
+    void longDependsOn() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose-long-depends-on.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        Assertions.assertEquals(5, configs.size());
+        Assertions.assertEquals(Arrays.asList("service2", "service3"), configs.get(0).getRunConfiguration().getDependsOn());
+        Assertions.assertEquals(Arrays.asList("service3", "service4", "service5"), configs.get(1).getRunConfiguration().getDependsOn());
+    }
 
     @Test
     void positiveVersionTest() throws IOException, MavenFilteringException {

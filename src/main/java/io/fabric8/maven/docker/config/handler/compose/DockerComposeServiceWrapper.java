@@ -15,6 +15,7 @@ import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
 
 
@@ -114,7 +115,13 @@ class DockerComposeServiceWrapper {
     }
 
     List<String> getDependsOn() {
-        return asList("depends_on");
+        try {
+            return asList("depends_on");
+        // With the new long style of depends_on since compose 2.1+, this may be a map.
+        // Maps' keys still are the container names though.
+        } catch (ClassCastException e) {
+            return new ArrayList<>(asMap("depends_on").keySet());
+        }
     }
 
     List<String> getDns() {
