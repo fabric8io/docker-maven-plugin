@@ -36,6 +36,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -118,6 +119,34 @@ class BuildXServiceTest {
     }
 
     @Test
+    void testNoCacheIsPropagatedToBuildx(@TempDir File temporaryFolder) throws Exception {
+
+        //Given
+        buildNoCacheConfigUsingBuildx(temporaryFolder);
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentPresentInExec("--no-cache");
+    }
+
+    private void buildNoCacheConfigUsingBuildx(File temporaryFolder) {
+        BuildXConfiguration buildXConfiguration = new BuildXConfiguration.Builder()
+                .dockerStateDir(temporaryFolder.getAbsolutePath())
+                .platforms(Arrays.asList(NATIVE))
+                .build();
+        final BuildImageConfiguration buildImageConfig = new BuildImageConfiguration.Builder()
+                .buildx(buildXConfiguration)
+                .noCache(true)
+                .build();
+        imageConfig = new ImageConfiguration.Builder()
+                .name("build-image")
+                .buildConfig(buildImageConfig)
+                .build();
+    }
+
+    @Test
     void testBuildForeignPlatforms() throws Exception {
         givenAnImageConfiguration(FOREIGN1, FOREIGN2);
         buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
@@ -197,5 +226,13 @@ class BuildXServiceTest {
         final List<String> expect = Arrays.asList(platforms);
         Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                                       Mockito.argThat(l -> expect.equals(l)), Mockito.any(), Mockito.any());
+    }
+
+    private void verifyBuildXArgumentPresentInExec(String... args) throws Exception{
+        ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
+        Mockito.verify(exec).process(buildXArgCaptor.capture());
+        for (String arg: args) {
+            assertTrue(buildXArgCaptor.getValue().stream().anyMatch(passedArgument -> passedArgument.equalsIgnoreCase(arg)));
+        }
     }
 }
