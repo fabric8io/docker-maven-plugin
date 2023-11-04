@@ -170,6 +170,9 @@ public class BuildXService {
                 cmdLine.add(key + '=' + value);
             });
         }
+        if (checkForNocache(imageConfig)) {
+            cmdLine.add("--no-cache");
+        }
 
         AttestationConfiguration attestations = buildConfiguration.getBuildX().getAttestations();
         if (attestations != null) {
@@ -241,6 +244,18 @@ public class BuildXService {
             Files.createDirectories(cachePath);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create " + cachePath);
+        }
+    }
+    private boolean checkForNocache(ImageConfiguration imageConfig) {
+        String noCache = System.getProperty("docker.noCache");
+        if (noCache == null) {
+            noCache = System.getProperty("docker.nocache");
+        }
+        if (noCache != null) {
+            return noCache.length() == 0 || Boolean.valueOf(noCache);
+        } else {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.noCache();
         }
     }
 
