@@ -27,6 +27,7 @@
     <module>buildx-dockerfile</module>
     <module>buildx-push</module>
     <module>docker-compose</module>
+    <module>docker-compose-dependon</module>
     <module>dockerfile</module>
     <module>dockerignore</module>
     <module>healthcheck</module>

@@ -1,0 +1,27 @@
+version: "2.4"
+services:
+  init:
+    image: alpine:latest
+    command:
+      - echo
+      - "Hello world!"
+  db:
+    image: localpg
+    build:
+      context: .
+      dockerfile: Postgres.Dockerfile
+    environment:
+      POSTGRES_PASSWORD: supersecret
+    tmpfs:
+      - /var/lib/postgresql/data
+    depends_on:
+      init:
+        condition: service_completed_successfully
+  web:
+    image: alpine:latest
+    command:
+      - echo
+      - "Hello foobar (after hello world)!"
+    depends_on:
+      db:
+        condition: service_healthy
