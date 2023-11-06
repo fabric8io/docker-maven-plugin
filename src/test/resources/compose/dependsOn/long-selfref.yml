@@ -1,0 +1,11 @@
+version: '2.1'
+services:
+  service1:
+    image: image
+    depends_on:
+      service2:
+        condition: service_completed_successfully
+      service3:
+        condition: service_started
+  service2:
+    image: image

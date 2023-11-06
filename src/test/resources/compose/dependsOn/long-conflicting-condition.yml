@@ -1,0 +1,14 @@
+version: '2.1'
+services:
+  service1:
+    image: image
+    depends_on:
+      service3:
+        condition: service_healthy
+  service2:
+    image: image
+    depends_on:
+      service3:
+        condition: service_completed_successfully
+  service3:
+    image: image

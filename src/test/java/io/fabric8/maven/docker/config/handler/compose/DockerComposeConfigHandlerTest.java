@@ -6,6 +6,7 @@ import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
+import net.jodah.failsafe.internal.util.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
@@ -95,11 +96,53 @@ class DockerComposeConfigHandlerTest {
     
     @Test
     void longDependsOn() throws IOException, MavenFilteringException {
-        setupComposeExpectations("docker-compose-long-depends-on.yml");
+        setupComposeExpectations("dependsOn/long-valid.yml");
         List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
         Assertions.assertEquals(5, configs.size());
         Assertions.assertEquals(Arrays.asList("service2", "service3"), configs.get(0).getRunConfiguration().getDependsOn());
         Assertions.assertEquals(Arrays.asList("service3", "service4", "service5"), configs.get(1).getRunConfiguration().getDependsOn());
+    }
+    
+    @Test
+    void dependsOnUndefServiceRef() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-undef-ref.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+        
+        setupComposeExpectations("dependsOn/short-undef-ref.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+    }
+    
+    @Test
+    void dependsOnServiceSelfRef() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-selfref.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+        
+        setupComposeExpectations("dependsOn/short-selfref.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+    }
+    
+    @Test
+    void dependsOnServiceButNoConfig() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-map-keys-only.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+    }
+    
+    @Test
+    void dependsOnServiceButMissingCondition() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-no-condition.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+    }
+    
+    @Test
+    void dependsOnServiceButInvalidCondition() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-invalid-condition.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
+    }
+    
+    @Test
+    void dependsOnServiceButConflictingConditions() throws IOException, MavenFilteringException {
+        setupComposeExpectations("dependsOn/long-conflicting-condition.yml");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
 
     @Test
