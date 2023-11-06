@@ -8,6 +8,7 @@ import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AttestationConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
+import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
@@ -170,7 +171,7 @@ public class BuildXService {
                 cmdLine.add(key + '=' + value);
             });
         }
-        if (checkForNocache(imageConfig)) {
+        if (ConfigHelper.isNoCache(imageConfig)) {
             cmdLine.add("--no-cache");
         }
 
@@ -244,18 +245,6 @@ public class BuildXService {
             Files.createDirectories(cachePath);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create " + cachePath);
-        }
-    }
-    private boolean checkForNocache(ImageConfiguration imageConfig) {
-        String noCache = System.getProperty("docker.noCache");
-        if (noCache == null) {
-            noCache = System.getProperty("docker.nocache");
-        }
-        if (noCache != null) {
-            return noCache.length() == 0 || Boolean.valueOf(noCache);
-        } else {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.noCache();
         }
     }
 

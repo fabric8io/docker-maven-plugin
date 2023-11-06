@@ -10,6 +10,7 @@ import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
+import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.model.ImageArchiveManifest;
 import io.fabric8.maven.docker.model.ImageArchiveManifestEntry;
@@ -68,7 +69,7 @@ public class BuildService {
             autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
         }
 
-        buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), checkForSquash(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
+        buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
     }
 
     /**
@@ -478,18 +479,6 @@ public class BuildService {
         }
     }
 
-    private boolean checkForNocache(ImageConfiguration imageConfig) {
-        String noCache = System.getProperty("docker.noCache");
-        if (noCache == null) {
-            noCache = System.getProperty("docker.nocache");
-        }
-        if (noCache != null) {
-            return noCache.length() == 0 || Boolean.valueOf(noCache);
-        } else {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.noCache();
-        }
-    }
 
     private boolean checkForSquash(ImageConfiguration imageConfig) {
         String squash = System.getProperty("docker.squash");
