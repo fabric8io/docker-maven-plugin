@@ -55,6 +55,7 @@ In addition to the `docker-compose.yml` you can add all known options for <<buil
 
 The following Docker Compose file keywords are not yet supported:
 
-* `cgroup_parent`, `devices`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_quota`, `ipc`, `mac_address`, `read_only` are not yet supported (but might be in a future version).
+* `cgroup_parent`, `devices`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_quota`, `ipc`, `mac_address`, `read_only`, `healthcheck` are not yet supported (but might be in a future version).
 * `extend` for including other Docker Compose files is not yet implemented.
 * Only **services** are currently evaluated, there is no supported yet for **volumes** and **networks**.
+* When using https://docs.docker.com/compose/compose-file/compose-file-v2/#depends_on[`depends_on` with long syntax] in a Docker Compose file, be advised the plugin cannot apply all usage constellations expressible in it. The root cause is this plugin uses the concept of pausing execution based on <<start-wait,wait conditions>> attached to dependent containers, while Docker Compose applies checks when starting the depending container. Keep in mind that execution of a container is continued as soon as any wait condition is fulfilled.
