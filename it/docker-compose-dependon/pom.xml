@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Integration test demo with wait configurations mapped from Docker compose depends_on long syntax
+  
+    Call it with: 'mvn verify'
+  
+    The test does the following:
+  
+    * Builds a custom postgres image with a healtcheck (because we do not support adding healthchecks from compose yet)
+    * Start an init container printing a message
+    * When successfully exited, database container starts
+    * Once Postgres enters state healthy, another simple container printing a message is started
+    * Stops and removes the containers.
+  
+    -->
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.44-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-docker-compose-dependon</artifactId>
+  <version>0.44-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <alias>web</alias>
+              <name>alpine:latest</name>
+              <external>
+                <type>compose</type>
+                <basedir>${project.basedir}</basedir>
+              </external>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>build</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+          <execution>
+            <id>start</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <showLogs>true</showLogs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
