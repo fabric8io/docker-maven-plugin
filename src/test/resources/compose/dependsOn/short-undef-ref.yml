@@ -1,0 +1,9 @@
+version: '2.1'
+services:
+  service1:
+    image: image
+    depends_on:
+      - service2
+      - service3
+  service2:
+    image: image
