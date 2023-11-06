@@ -173,6 +173,19 @@ public class ConfigHelper {
         }
     }
 
+    public static boolean isNoCache(ImageConfiguration imageConfig) {
+        String noCache = System.getProperty("docker.noCache");
+        if (noCache == null) {
+            noCache = System.getProperty("docker.nocache");
+        }
+        if (noCache != null) {
+            return noCache.length() == 0 || Boolean.valueOf(noCache);
+        } else {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.noCache();
+        }
+    }
+
 
     // =========================================================================
 
