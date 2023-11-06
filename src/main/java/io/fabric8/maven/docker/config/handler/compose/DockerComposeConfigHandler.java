@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.config.handler.compose;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
@@ -39,11 +40,11 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     @Override
     @SuppressWarnings("unchecked")
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project, MavenSession session) {
-        List<ImageConfiguration> resolved = new ArrayList<>();
-
         DockerComposeConfiguration handlerConfig = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
         File composeFile = resolveComposeFileAbsolutely(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
+        Map<String, DockerComposeServiceWrapper> allServices = new LinkedHashMap<>();
 
+        // First retrieve all services from the compose file
         for (Object composeO : getComposeConfigurations(composeFile, project, session)) {
             Map<String, Object> compose = (Map<String, Object>) composeO;
             validateVersion(compose, composeFile);
@@ -52,12 +53,35 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 String serviceName = entry.getKey();
                 Map<String, Object> serviceDefinition = (Map<String, Object>) entry.getValue();
 
-                DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig, resolveAbsolutely(handlerConfig.getBasedir(), project));
-                resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig, handlerConfig));
+                allServices.put(serviceName, new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition,
+                    unresolvedConfig, resolveAbsolutely(handlerConfig.getBasedir(), project)));
             }
         }
-
-        return resolved;
+        
+        // Loop over all known services and add wait configurations where necessary
+        for (DockerComposeServiceWrapper service : allServices.values()) {
+            for (String dependentServiceName : service.getDependsOn()) {
+                DockerComposeServiceWrapper dependentService = allServices.get(dependentServiceName);
+                
+                if (dependentService != null) {
+                    if (service.equals(dependentService)) {
+                        service.throwIllegalArgumentException("Invalid self-reference in dependent services");
+                    }
+                    
+                    // Note: for short syntax, we don't need to do anything else
+                    if (service.usesLongSyntaxDependsOn()) {
+                        dependentService.enableWaitCondition(service.getWaitCondition(dependentServiceName));
+                    }
+                } else {
+                    service.throwIllegalArgumentException("Undefined dependent service \"" + dependentServiceName + "\"");
+                }
+            }
+        }
+        
+        // Now that we cross-correlated all dependencies from all services, let's build & return image configurations
+        return allServices.values().stream()
+            .map(svc -> buildImageConfiguration(svc, composeFile.getParentFile(), unresolvedConfig, handlerConfig))
+            .collect(Collectors.toList());
     }
 
     private void validateVersion(Map<String, Object> compose, File file) {
@@ -174,6 +198,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // container_name is taken as an alias and ignored here for run config
                 // devices not supported
                 .dependsOn(wrapper.getDependsOn()) // depends_on relies that no container_name is set
+                .wait(wrapper.getWaitConfiguration())
                 .dns(wrapper.getDns())
                 .dnsSearch(wrapper.getDnsSearch())
                 .tmpfs(wrapper.getTmpfs())
