@@ -339,24 +339,6 @@ public class EnvUtil {
     }
 
     /**
-     * Fix path on Windows machines, i.e. convert 'c:\...\' to '/c/..../'
-     *
-     * @param path path to fix
-     * @return the fixed path
-     */
-    public static String fixupPath(String path) {
-        // Hack-fix for mounting on Windows where the ${projectDir} variable and other
-        // contain backslashes and what not. Related to #188
-        Pattern pattern = Pattern.compile("^(?i)([A-Z]):(.*)$");
-        Matcher matcher = pattern.matcher(path);
-        if (matcher.matches()) {
-            String result = "/" + matcher.group(1).toLowerCase() + matcher.group(2);
-            return result.replace("\\","/");
-        }
-        return path;
-    }
-
-    /**
      * Calculate the duration between now and the given time
      *
      * Taken mostly from http://stackoverflow.com/a/5062810/207604 . Kudos to @dblevins

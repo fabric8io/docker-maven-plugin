@@ -74,8 +74,8 @@ class ContainerHostConfigTest {
     @Test
     void testBinds() throws Exception {
         String[] data = {
-            "c:\\Users\\roland\\sample:/sample", "/c/Users/roland/sample:/sample",
-            "M:\\Users\\roland\\sample:/sample:ro", "/m/Users/roland/sample:/sample:ro"
+            "c:\\Users\\roland\\sample:/sample", "c:\\Users\\roland\\sample:/sample",
+            "M:\\Users\\roland\\sample:/sample:ro", "M:\\Users\\roland\\sample:/sample:ro"
         };
         for (int i = 0; i < data.length; i+=2) {
             ContainerHostConfig hc = new ContainerHostConfig();

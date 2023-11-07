@@ -11,7 +11,6 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerHostConfig {
@@ -26,8 +25,6 @@ public class ContainerHostConfig {
             JsonArray binds = new JsonArray();
 
             for (String volume : bind) {
-                volume = EnvUtil.fixupPath(volume);
-
                 if (volume.contains(":")) {
                     binds.add(volume);
                 }
