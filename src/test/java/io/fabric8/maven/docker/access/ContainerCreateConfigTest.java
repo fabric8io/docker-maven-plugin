@@ -71,7 +71,10 @@ class ContainerCreateConfigTest {
         String[] testData = new String[] {
             "c:\\this\\is\\my\\path:/data", "/data",
             "/home/user:/user", "/user",
-            "c:\\this\\too:/data:ro", "/data"};
+            "c:\\this\\too:/data:ro", "/data",
+            // Tests #1713
+            "c:\\this\\is\\my\\path:c:\\data", "c:\\data"
+        };
         for (int i = 0; i < testData.length; i += 2) {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
             cc.binds(Collections.singletonList(testData[i]));

@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerCreateConfig {
@@ -166,14 +165,14 @@ public class ContainerCreateConfig {
     }
 
     private String extractContainerPath(String volume) {
-        String path  = EnvUtil.fixupPath(volume);
-        if (path.contains(":")) {
-            String[] parts = path.split(":");
+        if (volume.contains(":")) {
+            // only split when : is not followed by \ (Windows)
+            String[] parts = volume.split(":(?!\\\\)");
             if (parts.length > 1) {
                 return parts[1];
             }
         }
-        return path;
+        return volume;
     }
 
     private void addEnvironment(Properties envProps) {

@@ -190,20 +190,6 @@ class EnvUtilTest {
         );
     }
 
-    @Test
-    void fixupPath() {
-        String[] data = new String[] {
-            "my/regular/path", "my/regular/path",
-            "c:\\windows\\path", "/c/windows/path",
-            "Z:\\yet another\\path", "/z/yet another/path"
-        };
-
-        for (int i = 0; i < data.length; i += 2) {
-            Assertions.assertEquals(data[i + 1], EnvUtil.fixupPath(data[i]));
-        }
-
-    }
-
     private Properties getTestProperties(String... vals) {
         Properties ret = new Properties();
         for (int i = 0; i < vals.length; i += 2) {
