@@ -204,8 +204,8 @@ public class BuildXService {
         File contextDir = buildConfiguration.getContextDir();
         if (contextDir != null) {
             Path destinationPath = getContextPath(buildArchive);
-            Path dockerFileRelativePath = contextDir.toPath().relativize(buildConfiguration.getDockerFile().toPath());
-            append(cmdLine, "--file=" + destinationPath.resolve(dockerFileRelativePath), destinationPath.toString());
+            String dockerFileName = buildConfiguration.getDockerFile().getName();
+            append(cmdLine, "--file=" + destinationPath.resolve(dockerFileName), destinationPath.toString());
         } else {
             cmdLine.add(buildDirs.getOutputDirectory().getAbsolutePath());
         }
