@@ -25,7 +25,8 @@ public class ContainerHostConfig {
             JsonArray binds = new JsonArray();
 
             for (String volume : bind) {
-                if (volume.contains(":")) {
+                // only add binding if : is not followed by \ (Windows)
+                if (volume.matches(".*:(?!\\\\).*")) {
                     binds.add(volume);
                 }
             }
