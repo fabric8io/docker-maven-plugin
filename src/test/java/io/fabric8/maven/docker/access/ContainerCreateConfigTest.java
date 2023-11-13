@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.util.JsonFactory;
-
 
 /*
  *
@@ -66,23 +67,23 @@ class ContainerCreateConfigTest {
         Assertions.assertEquals(5, env.size());
     }
 
-    @Test
-    void testBind() {
-        String[] testData = new String[] {
-            "c:\\this\\is\\my\\path:/data", "/data",
-            "/home/user:/user", "/user",
-            "c:\\this\\too:/data:ro", "/data",
-            // Tests #1713
-            "c:\\this\\is\\my\\path:c:\\data", "c:\\data"
-        };
-        for (int i = 0; i < testData.length; i += 2) {
-            ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
-            cc.binds(Collections.singletonList(testData[i]));
+    @ParameterizedTest
+    @CsvSource({
+        "C:\\this\\is\\my\\path:/data,    /data",
+        "/home/user:/user,                /user",
+        "C:\\this\\too:/data:ro,          /data",
+        "C:\\this\\is\\my\\path:C:\\data, C:\\data", // Tests #1713
+        // without host binding
+        "/data,                           /data",
+        "C:\\data,                        C:\\data"
+    })
+    void testBind(String binding, String expectedContainerPath) {
+        ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
+        cc.binds(Collections.singletonList(binding));
 
-            JsonObject volumes = (JsonObject) JsonFactory.newJsonObject(cc.toJson()).get("Volumes");
-            Assertions.assertEquals(1, volumes.size());
-            Assertions.assertTrue(volumes.has(testData[i+1]));
-        }
+        JsonObject volumes = (JsonObject) JsonFactory.newJsonObject(cc.toJson()).get("Volumes");
+        Assertions.assertEquals(1, volumes.size());
+        Assertions.assertTrue(volumes.has(expectedContainerPath));
     }
 
 

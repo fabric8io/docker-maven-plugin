@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,44 +49,56 @@ class ContainerHostConfigTest {
         Assertions.assertEquals("{\"ExtraHosts\":[\"host.docker.internal:host-gateway\"]}", hc.toJson());
     }
 
-    @Test
-    void testUlimits() {
-        Object data[] = {
-            "{Ulimits: [{Name:bla, Hard:2048, Soft: 1024}]}", "bla", 2048, 1024,
-            "{Ulimits: [{Name:bla, Soft: 1024}]}", "bla", null, 1024,
-            "{Ulimits: [{Name:bla, Hard: 2048}]}", "bla", 2048, null,
-            "{Ulimits: [{Name:bla, Hard: 2048}]}", "bla=2048", null, null,
-            "{Ulimits: [{Name:bla, Soft: 1024}]}", "bla=:1024", null, null,
-            "{Ulimits: [{Name:bla, Hard: 2048, Soft: 1024}]}", "bla=2048:1024", null, null,
-            "{Ulimits: [{Name:bla, Hard: 2048}]}", "bla=2048:", null, null
-        };
-
-        for (int i = 0; i < data.length; i += 4) {
-            ContainerHostConfig hc = new ContainerHostConfig();
-            hc.ulimits(Collections.singletonList(
-                data[1].toString().contains("=") ?
-                    new UlimitConfig((String) data[1]) :
-                    new UlimitConfig((String) data[1], (Integer) data[2], (Integer) data[3])));
-            Assertions.assertEquals(JsonFactory.newJsonObject((String) data[0]),
-                         hc.toJsonObject());
-        }
+    @ParameterizedTest
+    @CsvSource(value = {
+        "{Ulimits: [{Name:bla, Hard:2048, Soft: 1024}]}; bla; 2048; 1024",
+        "{Ulimits: [{Name:bla, Soft: 1024}]}; bla; null; 1024",
+        "{Ulimits: [{Name:bla, Hard: 2048}]}; bla; 2048; null",
+        "{Ulimits: [{Name:bla, Hard: 2048}]}; bla=2048; null; null",
+        "{Ulimits: [{Name:bla, Soft: 1024}]}; bla=:1024; null; null",
+        "{Ulimits: [{Name:bla, Hard: 2048, Soft: 1024}]}; bla=2048:1024; null; null",
+        "{Ulimits: [{Name:bla, Hard: 2048}]}; bla=2048:; null; null"
+    }, nullValues = {"null"}, delimiter = ';')
+    void testUlimits(String expected, String uLimit, Integer hard, Integer soft) {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        hc.ulimits(Collections.singletonList(
+            uLimit.contains("=") ?
+                new UlimitConfig(uLimit) :
+                new UlimitConfig(uLimit, hard, soft)));
+        Assertions.assertEquals(JsonFactory.newJsonObject(expected),
+                     hc.toJsonObject());
     }
 
-    @Test
-    void testBinds() throws Exception {
-        String[] data = {
-            "c:\\Users\\roland\\sample:/sample", "c:\\Users\\roland\\sample:/sample",
-            "M:\\Users\\roland\\sample:/sample:ro", "M:\\Users\\roland\\sample:/sample:ro"
-        };
-        for (int i = 0; i < data.length; i+=2) {
-            ContainerHostConfig hc = new ContainerHostConfig();
-            JsonObject result = hc.binds(Collections.singletonList(data[i])).toJsonObject();
-            JsonObject expected = new JsonObject();
-            JsonArray binds = new JsonArray();
-            binds.add(data[i+1]);
-            expected.add("Binds",binds);
-            Assertions.assertEquals(expected, result);
-        }
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/sample:/sample",
+        "c:\\Users\\roland\\sample:/sample",
+        "M:\\Users\\roland\\sample:/sample:ro"
+    })
+    void testBindsWithHostPath(String binding) throws Exception {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        JsonObject result = hc.binds(Collections.singletonList(binding)).toJsonObject();
+        JsonObject expected = new JsonObject();
+        JsonArray binds = new JsonArray();
+        binds.add(binding);
+        expected.add("Binds",binds);
+        Assertions.assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/sample",
+        "c:\\Users\\roland\\sample"
+    })
+    void testBindsWithoutHostPath(String binding) throws Exception {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        JsonObject result = hc.binds(Collections.singletonList(binding)).toJsonObject();
+
+        JsonObject expected = new JsonObject();
+        // empty Binds
+        expected.add("Binds",new JsonArray());
+
+        Assertions.assertEquals(expected, result);
     }
 
     @Test
