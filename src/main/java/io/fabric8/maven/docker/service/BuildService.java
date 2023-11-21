@@ -58,15 +58,16 @@ public class BuildService {
      *
      * @param imageConfig  the image configuration
      * @param buildContext the build context
+     * @param pullRetries the number of times to retry if pulling an image fails
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, File buildArchiveFile)
+    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, File buildArchiveFile, int pullRetries)
             throws DockerAccessException, MojoExecutionException {
 
         if (imagePullManager != null) {
-            autoPullBaseImage(imageConfig, imagePullManager, buildContext);
-            autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext, pullRetries);
+            autoPullCacheFromImage(imageConfig, imagePullManager, buildContext, pullRetries);
         }
 
         buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
@@ -357,7 +358,7 @@ public class BuildService {
         return buildArgs;
     }
 
-    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
+    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, int pullRetries)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         CleanupMode cleanupMode = buildConfig.cleanupMode();
@@ -384,7 +385,7 @@ public class BuildService {
                     oldImageId = queryService.getImageId(fromImage);
                 }
 
-                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig);
+                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig, pullRetries);
 
                 String newImageId = queryService.getImageId(fromImage);
 
@@ -393,7 +394,7 @@ public class BuildService {
         }
     }
 
-    private void autoPullCacheFromImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
+    private void autoPullCacheFromImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, int pullRetries) throws DockerAccessException, MojoExecutionException {
         if (imageConfig.getBuildConfiguration().getCacheFrom() == null) {
             return;
         }
@@ -408,7 +409,7 @@ public class BuildService {
             }
 
             try {
-                registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig);
+                registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig, pullRetries);
             } catch (DockerAccessException e) {
                 log.warn("Could not pull cacheFrom image: '%s'. Reason: %s", cacheFromImage, e.getMessage());
             }

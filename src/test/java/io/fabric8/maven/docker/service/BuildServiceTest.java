@@ -141,7 +141,7 @@ class BuildServiceTest {
         mockMavenProject();
 
         File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
-        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive, 0);
 
         //verify that tries to pull both images
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s2i-java");
@@ -151,7 +151,7 @@ class BuildServiceTest {
     private void verifyImagePull(BuildImageConfiguration buildConfig, ImagePullManager pullManager, BuildService.BuildContext buildContext, String image)
         throws DockerAccessException, MojoExecutionException {
         Mockito.verify(registryService).
-            pullImageWithPolicy(image, pullManager, buildContext.getRegistryConfig(), buildConfig);
+            pullImageWithPolicy(image, pullManager, buildContext.getRegistryConfig(), buildConfig, 0);
     }
 
     private void mockMavenProject() {
@@ -184,7 +184,7 @@ class BuildServiceTest {
         mockMavenProject();
 
         File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
-        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive, 0);
 
         //verify that tries to pull both images
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s2i-java");
@@ -211,7 +211,7 @@ class BuildServiceTest {
         mockMavenProject();
 
         File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
-        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive, 0);
 
         verifyImagePull(buildConfig, pullManager, buildContext, DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
     }
@@ -324,7 +324,7 @@ class BuildServiceTest {
                 .build();
 
         File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
-        buildService.buildImage(imageConfig, null, buildContext, buildArchive);
+        buildService.buildImage(imageConfig, null, buildContext, buildArchive, 0);
         Mockito.verify(docker).buildImage(Mockito.any(), Mockito.any(),
                 Mockito.argThat((BuildOptions options) -> options.getOptions().get("buildargs").equals("{\"http_proxy\":\"http://system-props.com\"}")));
     }

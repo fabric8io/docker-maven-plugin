@@ -49,6 +49,22 @@ below how this can be specified.
 | *watchPostGoal*
 | A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by `<postGoal>` in a `<watch>` configuration.
 |
+
+| *keepRunning*
+| If set to `true` all container will be kept running after `{plugin}:watch` has been stopped. By default this is set to `false`.
+| `docker.keepRunning`
+
+| *keepContainer*
+| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `false`.
+| `docker.keepContainer`
+
+| *removeVolumes*
+| if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
+| `docker.removeVolumes`
+
+| *pullRetries*
+| If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
+| `docker.pull.retries`
 |===
 
 Image specific watch configuration goes into an extra image-level `<watch>` section (i.e. `+<image><watch>...</watch></image>+`). The following parameters are recognized:

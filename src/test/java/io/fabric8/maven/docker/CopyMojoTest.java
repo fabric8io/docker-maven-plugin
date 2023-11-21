@@ -611,7 +611,7 @@ class CopyMojoTest extends MojoTestBase {
         ArgumentCaptor<String> pulledImage = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<RegistryConfig> registryCapture = ArgumentCaptor.forClass(RegistryConfig.class);
         Mockito.verify(registryService)
-            .pullImageWithPolicy(pulledImage.capture(), Mockito.any(ImagePullManager.class), registryCapture.capture(), Mockito.eq(image.getBuildConfiguration()));
+            .pullImageWithPolicy(pulledImage.capture(), Mockito.any(ImagePullManager.class), registryCapture.capture(), Mockito.eq(image.getBuildConfiguration()), Mockito.anyInt());
 
         Assertions.assertEquals(image.getName(), pulledImage.getValue());
         RegistryConfig registryConfig = registryCapture.getValue();

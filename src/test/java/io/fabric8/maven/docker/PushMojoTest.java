@@ -12,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ExtendWith(MockitoExtension.class)
 class PushMojoTest extends MojoTestBase {
   @InjectMocks
@@ -69,6 +71,29 @@ class PushMojoTest extends MojoTestBase {
     whenMojoExecutes();
 
     thenImagePushed();
+  }
+
+  @Test
+  void getPushRetries_whenPushRetriesConfigured_thenUsePushRetries() {
+    givenMavenProject(pushMojo);
+    pushMojo.pushRetries = 2;
+
+    assertEquals(2, pushMojo.getPushRetries());
+  }
+
+  @Test
+  void getPushRetries_whenRetriesConfigured_thenUseRetries() {
+    givenMavenProject(pushMojo);
+    pushMojo.retries = 2;
+
+    assertEquals(2, pushMojo.getPushRetries());
+  }
+
+  @Test
+  void getPushRetries_whenNothingConfigured_thenReturnDefaultValue() {
+    givenMavenProject(pushMojo);
+
+    assertEquals(0, pushMojo.getPushRetries());
   }
 
   private void thenImagePushed() throws MojoExecutionException, DockerAccessException {

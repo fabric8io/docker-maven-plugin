@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
     private static final String NON_NATIVE_PLATFORM = "linux/amd64";
@@ -255,6 +257,29 @@ class BuildMojoTest extends MojoTestBase {
         thenAuthContainsRegistry("custom-registry.org");
     }
 
+    @Test
+    void getPullRetries_whenPullRetriesConfigured_thenUsePullRetries() {
+        givenMavenProject(buildMojo);
+        buildMojo.pullRetries = 2;
+
+        assertEquals(2, buildMojo.getPullRetries());
+    }
+
+    @Test
+    void getPullRetries_whenRetriesConfigured_thenUseRetries() {
+        givenMavenProject(buildMojo);
+        buildMojo.retries = 2;
+
+        assertEquals(2, buildMojo.getPullRetries());
+    }
+
+    @Test
+    void getPullRetries_whenNothingConfigured_thenReturnDefaultValue() {
+        givenMavenProject(buildMojo);
+
+        assertEquals(0, buildMojo.getPullRetries());
+    }
+
     private void givenBuildXService() {
         BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
@@ -299,7 +324,7 @@ class BuildMojoTest extends MojoTestBase {
 
     private void verifyBuild(int wantedNumberOfInvocations) throws DockerAccessException, MojoExecutionException {
         Mockito.verify(buildService, Mockito.times(wantedNumberOfInvocations))
-            .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any());
+            .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any(), Mockito.anyInt());
     }
 
     private void thenBuildxRun(String relativeConfigFile, String contextDir,

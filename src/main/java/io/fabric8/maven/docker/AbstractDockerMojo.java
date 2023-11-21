@@ -121,6 +121,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.removeVolumes", defaultValue = "false")
     protected boolean removeVolumes;
 
+    @Parameter(property = "docker.retries", defaultValue = "0")
+    protected int retries;
+
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    protected int pullRetries;
+
+    @Parameter(property = "docker.push.retries", defaultValue = "0")
+    protected int pushRetries;
+
     @Parameter(property = "docker.apiVersion")
     private String apiVersion;
 
@@ -577,7 +586,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         RunImageConfiguration runConfiguration = imageConfig.getRunConfiguration();
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfiguration), autoPull);
         RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration());
+        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration(), getPullRetries());
     }
 
     protected boolean shouldSkipPom() {
@@ -601,11 +610,25 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
-    private String determinePullPolicy(RunImageConfiguration runConfig) {
+    protected String determinePullPolicy(RunImageConfiguration runConfig) {
         return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
     }
 
     protected ProjectPaths createProjectPaths() {
         return new ProjectPaths(project.getBasedir(), outputDirectory);
+    }
+
+    protected int getPullRetries() {
+        if (pullRetries > 0) {
+            return pullRetries;
+        }
+        return retries;
+    }
+
+    protected int getPushRetries() {
+        if (pushRetries > 0) {
+            return pushRetries;
+        }
+        return retries;
     }
 }

@@ -80,7 +80,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         BuildService.BuildContext buildContext = getBuildContext();
         WatchService.WatchContext watchContext = getWatchContext(hub);
 
-        hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
+        hub.getWatchService().watch(watchContext, buildContext, getResolvedImages(), getPullRetries());
     }
 
     protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws IOException {

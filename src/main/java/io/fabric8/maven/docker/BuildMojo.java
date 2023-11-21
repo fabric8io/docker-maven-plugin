@@ -112,7 +112,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             if (imageConfig.isBuildX()) {
                 hub.getBuildXService().build(createProjectPaths(), imageConfig, null, getAuthConfig(imageConfig), buildArchiveFile);
             } else {
-                buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
+                buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile, getPullRetries());
                 if (!skipTag) {
                     buildService.tagImage(imageConfig);
                 }

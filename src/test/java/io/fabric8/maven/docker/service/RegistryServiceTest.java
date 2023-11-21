@@ -245,7 +245,7 @@ class RegistryServiceTest {
 
         ArgumentCaptor<String> pulledImage = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<CreateImageOptions> imageCapture = ArgumentCaptor.forClass(CreateImageOptions.class);
-        Mockito.verify(docker).pullImage(pulledImage.capture(), Mockito.any(), Mockito.anyString(), imageCapture.capture());
+        Mockito.verify(docker).pullImage(pulledImage.capture(), Mockito.any(), Mockito.anyString(), imageCapture.capture(), Mockito.anyInt());
 
         Assertions.assertEquals("myregistry.com/user/test:1.0.1", pulledImage.getValue());
         CreateImageOptions createImageOptions = imageCapture.getValue();
@@ -445,7 +445,7 @@ class RegistryServiceTest {
     }
 
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
-        Mockito.verify(docker, Mockito.never()).pullImage(Mockito.anyString(), Mockito.any(AuthConfig.class), Mockito.anyString(), Mockito.any(CreateImageOptions.class));
+        Mockito.verify(docker, Mockito.never()).pullImage(Mockito.anyString(), Mockito.any(AuthConfig.class), Mockito.anyString(), Mockito.any(CreateImageOptions.class), Mockito.anyInt());
     }
 
     private void thenImageHasNotBeenPushed() throws DockerAccessException {
@@ -505,7 +505,7 @@ class RegistryServiceTest {
     }
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
-        Mockito.verify(docker).pullImage(Mockito.eq(imageName), Mockito.any(), Mockito.eq(registry), Mockito.any(CreateImageOptions.class));
+        Mockito.verify(docker).pullImage(Mockito.eq(imageName), Mockito.any(), Mockito.eq(registry), Mockito.any(CreateImageOptions.class), Mockito.anyInt());
         Assertions.assertNotNull(cacheStore.get(imageName));
     }
 
@@ -522,7 +522,7 @@ class RegistryServiceTest {
             if (registry != null) {
                 registryConfigBuilder.registry(registry);
             }
-            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), imageConfiguration.getBuildConfiguration());
+            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), imageConfiguration.getBuildConfiguration(), 0);
 
         } catch (Exception e) {
             this.actualException = e;
