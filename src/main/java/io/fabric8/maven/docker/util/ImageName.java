@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker.util;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,18 +31,35 @@ import java.util.regex.Pattern;
 public class ImageName {
 
     // The repository part of the full image
+
+    /**
+     * @Getter is used to generate the default getter implementation for fields
+     *
+     */
+    @Getter
     private String repository;
 
     // Registry
+    @Getter
     private String registry;
 
     // Tag name
+    @Getter
     private String tag;
 
     // Digest
+    @Getter
     private String digest;
 
+    /**
+     * -- GETTER --
+     *  Get the user (or "project") part of the image name. This is the part after the registry and before
+     *  the image name
+     *
+     * @return user part or <code>null</code> if no user is present in the name
+     */
     // User name
+    @Getter
     private String user;
 
     /**
@@ -96,22 +115,6 @@ public class ImageName {
         }
 
         doValidate();
-    }
-
-    public String getRepository() {
-        return repository;
-    }
-
-    public String getRegistry() {
-        return registry;
-    }
-
-    public String getTag() {
-        return tag;
-    }
-
-    public String getDigest() {
-        return digest;
     }
 
     public boolean hasRegistry() {
@@ -190,16 +193,6 @@ public class ImageName {
             fullName = fullName + "@" + digest;
         }
         return fullName;
-    }
-
-    /**
-     * Get the user (or "project") part of the image name. This is the part after the registry and before
-     * the image name
-     *
-     * @return user part or <code>null</code> if no user is present in the name
-     */
-    public String getUser() {
-        return user;
     }
 
     /**

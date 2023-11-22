@@ -25,6 +25,7 @@ package io.fabric8.maven.docker.util;
  */
 public class GavLabel {
 
+
     private String mavenCoordinates;
 
     /**
