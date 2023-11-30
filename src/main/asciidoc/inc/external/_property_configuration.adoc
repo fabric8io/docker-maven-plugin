@@ -88,6 +88,12 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.buildx.platform*
 | Platform for multi-architecture image
 
+| *docker.buildx.cacheFrom*
+| Cache source for buildx builder
+
+| *docker.buildx.cacheTo*
+| Cache destination for buildx builder
+
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container. See <<list-properties>>.
 

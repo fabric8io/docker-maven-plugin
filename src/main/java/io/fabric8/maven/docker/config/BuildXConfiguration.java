@@ -42,6 +42,18 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private String nodeName;
 
+    /**
+     * Value to be passed to {@code --cache-from} option of BuildX build.
+     */
+    @Parameter
+    private String cacheFrom;
+
+    /**
+     * Value to be passed to {@code --cache-to} option of BuildX build.
+     */
+    @Parameter
+    private String cacheTo;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -56,6 +68,14 @@ public class BuildXConfiguration implements Serializable {
 
     public String getNodeName() {
         return nodeName;
+    }
+
+    public String getCacheFrom() {
+        return cacheFrom;
+    }
+
+    public String getCacheTo() {
+        return cacheTo;
     }
 
     public boolean isBuildX() {
@@ -123,6 +143,22 @@ public class BuildXConfiguration implements Serializable {
         public Builder attestations(AttestationConfiguration attestations) {
             config.attestations = attestations;
             if (attestations != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder cacheFrom(String cacheFrom) {
+            config.cacheFrom = cacheFrom;
+            if (cacheFrom != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder cacheTo(String cacheTo) {
+            config.cacheTo = cacheTo;
+            if (cacheTo != null) {
                 isEmpty = false;
             }
             return this;
