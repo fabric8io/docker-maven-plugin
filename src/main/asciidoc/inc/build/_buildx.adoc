@@ -53,6 +53,10 @@ elements are ignored.  If no platform architecture is specified, buildx is *not*
 | The configuration of attestation modes.  The `<provenance>` element may be set to `min`,
 `max`, or `false`. The `<sbom>` element may be set to `true` or `false`. The `<provenance>`
 element defaults to `min` and the `<sbom>` element defaults to `false`.
+| *cacheFrom*
+| A value to be passed through to the `--cache-from` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-from[docker buildx reference docs].
+| *cacheTo*
+| A value to be passed through to the `--cache-to` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to[docker buildx reference docs].
 |===
 
 .Examples

@@ -339,6 +339,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .dockerStateDir(valueProvider.getString(BUILDX_DOCKERSTATEDIR, config.getDockerStateDir()))
             .platforms(valueProvider.getList(BUILDX_PLATFORMS, config.getPlatforms()))
             .attestations(extractAttestations(config.getAttestations(), valueProvider))
+            .cacheFrom(valueProvider.getString(BUILDX_CACHE_FROM, config.getCacheFrom()))
+            .cacheTo(valueProvider.getString(BUILDX_CACHE_TO, config.getCacheTo()))
             .build();
     }
 

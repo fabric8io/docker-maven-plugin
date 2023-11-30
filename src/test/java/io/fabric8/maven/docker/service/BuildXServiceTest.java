@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.DockerFileUtil;
+import java.util.function.BiConsumer;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,7 +123,7 @@ class BuildXServiceTest {
     void testNoCacheIsPropagatedToBuildx(@TempDir File temporaryFolder) throws Exception {
 
         //Given
-        buildNoCacheConfigUsingBuildx(temporaryFolder);
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.noCache(true));
 
         // When
         buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
@@ -131,14 +132,67 @@ class BuildXServiceTest {
         verifyBuildXArgumentPresentInExec("--no-cache");
     }
 
-    private void buildNoCacheConfigUsingBuildx(File temporaryFolder) {
-        BuildXConfiguration buildXConfiguration = new BuildXConfiguration.Builder()
+    @Test
+    void testBuildXCacheFromIsNotPresentIfNotProvided(@TempDir File temporaryFolder) throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheFrom(null));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentNotPresentInExec("--cache-from");
+    }
+
+    @Test
+    void testBuildXCacheFromIsPresentIfProvided(@TempDir File temporaryFolder) throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheFrom("cacheFromSpec"));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentPresentInExec("--cache-from=cacheFromSpec");
+    }
+
+    @Test
+    void testBuildXCacheToIsNotPresentIfNotProvided(@TempDir File temporaryFolder) throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo(null));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentNotPresentInExec("--cache-to");
+    }
+
+    @Test
+    void testBuildXCacheToIsPresentIfProvided(@TempDir File temporaryFolder) throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo("cacheToSpec"));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentPresentInExec("--cache-to=cacheToSpec");
+    }
+
+    private void buildConfigUsingBuildx(File temporaryFolder, BiConsumer<BuildXConfiguration.Builder, BuildImageConfiguration.Builder> spec) {
+        final BuildXConfiguration.Builder buildXConfigurationBuilder = new BuildXConfiguration.Builder()
                 .dockerStateDir(temporaryFolder.getAbsolutePath())
-                .platforms(Arrays.asList(NATIVE))
-                .build();
-        final BuildImageConfiguration buildImageConfig = new BuildImageConfiguration.Builder()
-                .buildx(buildXConfiguration)
-                .noCache(true)
+                .platforms(Arrays.asList(NATIVE));
+        final BuildImageConfiguration.Builder buildImageConfigBuilder = new BuildImageConfiguration.Builder();
+        spec.accept(buildXConfigurationBuilder, buildImageConfigBuilder);
+        final BuildXConfiguration buildxConfig = buildXConfigurationBuilder.build();
+        final BuildImageConfiguration buildImageConfig = buildImageConfigBuilder
+                .buildx(buildxConfig)
                 .build();
         imageConfig = new ImageConfiguration.Builder()
                 .name("build-image")
@@ -233,6 +287,15 @@ class BuildXServiceTest {
         Mockito.verify(exec).process(buildXArgCaptor.capture());
         for (String arg: args) {
             assertTrue(buildXArgCaptor.getValue().stream().anyMatch(passedArgument -> passedArgument.equalsIgnoreCase(arg)));
+        }
+    }
+
+    private void verifyBuildXArgumentNotPresentInExec(String... args) throws Exception{
+        ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
+        Mockito.verify(exec).process(buildXArgCaptor.capture());
+        for (String arg: args) {
+            assertTrue(buildXArgCaptor.getValue().stream().noneMatch(passedArgument ->
+                    passedArgument.toLowerCase().contains(arg.toLowerCase())));
         }
     }
 }

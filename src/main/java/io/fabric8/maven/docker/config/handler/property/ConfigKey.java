@@ -48,6 +48,8 @@ public enum ConfigKey {
     BUILDX_DOCKERSTATEDIR("buildx.dockerStateDir"),
     BUILDX_ATTESTATION_PROVENANCE("buildx.attestations.provenance"),
     BUILDX_ATTESTATION_SBOM("buildx.attestations.sbom"),
+    BUILDX_CACHE_FROM("buildx.cacheFrom"),
+    BUILDX_CACHE_TO("buildx.cacheTo"),
     CAP_ADD,
     CAP_DROP,
     SYSCTLS,

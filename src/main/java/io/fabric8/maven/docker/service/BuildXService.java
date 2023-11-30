@@ -175,7 +175,8 @@ public class BuildXService {
             cmdLine.add("--no-cache");
         }
 
-        AttestationConfiguration attestations = buildConfiguration.getBuildX().getAttestations();
+        BuildXConfiguration buildXConfiguration = buildConfiguration.getBuildX();
+        AttestationConfiguration attestations = buildXConfiguration.getAttestations();
         if (attestations != null) {
             if (Boolean.TRUE.equals(attestations.getSbom())) {
                 cmdLine.add("--sbom=true");
@@ -195,6 +196,14 @@ public class BuildXService {
                         logger.error("Unsupported provenance mode %s", provenance);
                 }
             }
+        }
+
+        if (buildXConfiguration.getCacheFrom() != null) {
+            cmdLine.add("--cache-from=" + buildXConfiguration.getCacheFrom());
+        }
+
+        if (buildXConfiguration.getCacheTo() != null) {
+            cmdLine.add("--cache-to=" + buildXConfiguration.getCacheTo());
         }
 
         if (buildConfiguration.squash()) {
