@@ -30,6 +30,7 @@
     <module>docker-compose</module>
     <module>docker-compose-dependon</module>
     <module>dockerfile</module>
+    <module>dockerfile-base-as-arg</module>
     <module>dockerignore</module>
     <module>healthcheck</module>
     <module>helloworld</module>
