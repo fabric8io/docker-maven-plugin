@@ -64,12 +64,13 @@ public class BuildService {
     public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, File buildArchiveFile)
             throws DockerAccessException, MojoExecutionException {
 
+        Map<String, String> buildArgs = addBuildArgs(buildContext);
         if (imagePullManager != null) {
-            autoPullBaseImage(imageConfig, imagePullManager, buildContext);
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext, buildArgs);
             autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
         }
 
-        buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
+        buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), buildArgs, buildArchiveFile);
     }
 
     /**
@@ -357,7 +358,7 @@ public class BuildService {
         return buildArgs;
     }
 
-    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
+    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, Map<String, String> buildArgs)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         CleanupMode cleanupMode = buildConfig.cleanupMode();
@@ -369,12 +370,12 @@ public class BuildService {
 
         List<String> fromImages;
         if (buildConfig.isDockerFileMode()) {
-            fromImages = extractBaseFromDockerfile(buildConfig, buildContext);
+            fromImages = extractBaseFromDockerfile(buildConfig, buildContext, buildArgs);
         } else {
             fromImages = new LinkedList<>();
             String baseImage = extractBaseFromConfiguration(buildConfig);
             if (baseImage != null) {
-                fromImages.add(extractBaseFromConfiguration(buildConfig));
+                fromImages.add(baseImage);
             }
         }
         for (String fromImage : fromImages) {
@@ -431,14 +432,14 @@ public class BuildService {
         return fromImage;
     }
 
-    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext) {
+    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext, Map<String, String> buildArgs) {
         List<String> fromImage;
         try {
             File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
             fromImage = DockerFileUtil.extractBaseImages(
                     fullDockerFilePath,
                     DockerFileUtil.createInterpolator(buildContext.getMojoParameters(), buildConfig.getFilter()),
-                    buildConfig.getArgs());
+                    buildArgs);
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
             // building the image, so we are passive here.
