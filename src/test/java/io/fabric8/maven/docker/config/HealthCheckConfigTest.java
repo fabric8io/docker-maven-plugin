@@ -1,9 +1,15 @@
 package io.fabric8.maven.docker.config;
 
+import io.fabric8.maven.docker.config.HealthCheckConfiguration.DurationParser;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.time.Duration;
 import java.util.stream.Stream;
 
 /**
@@ -59,6 +65,45 @@ class HealthCheckConfigTest {
     void badHealthCheck(HealthCheckConfiguration sut) {
         Assertions.assertThrows(IllegalArgumentException.class, sut::validate);
     }
+    
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class DurationParserTest {
+    
+        Stream<org.junit.jupiter.params.provider.Arguments> goodExamples() {
+            return Stream.of(
+                org.junit.jupiter.params.provider.Arguments.of("1h30m1s", Duration.ofHours(1).plusMinutes(30).plusSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("1h1s", Duration.ofHours(1).plusSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("30m1s", Duration.ofMinutes(30).plusSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("1s", Duration.ofSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("10ms", Duration.ofMillis(10)),
+                org.junit.jupiter.params.provider.Arguments.of("30m30ms", Duration.ofMinutes(30).plusMillis(30)),
+                org.junit.jupiter.params.provider.Arguments.of("30m1us", Duration.ofMinutes(30).plusNanos(1000)),
+                org.junit.jupiter.params.provider.Arguments.of("1h30m1.2s", Duration.ofHours(1).plusMinutes(30).plusSeconds(1).plusMillis(200)),
+                org.junit.jupiter.params.provider.Arguments.of("1.234s", Duration.ofSeconds(1).plusMillis(234))
+            );
+        }
+        
+        @ParameterizedTest
+        @MethodSource("goodExamples")
+        void success(String sut, Duration expected) {
+            Assertions.assertTrue(DurationParser.matchesDuration(sut));
+            Assertions.assertEquals(expected, DurationParser.parseDuration(sut));
+        }
+        
+        @Test
+        void nullSafe() {
+            Assertions.assertFalse(DurationParser.matchesDuration(null));
+            Assertions.assertNull(DurationParser.parseDuration(null));
+        }
+        
+        @ParameterizedTest
+        @ValueSource(strings = {"", "   ", "test", "1d1m", "1s1m", "1.2h", "24h1m", "1h60m", "3m100s", "3m1s2000ms", "1ns"})
+        void failure(String sut) {
+            Assertions.assertFalse(DurationParser.matchesDuration(sut));
+            Assertions.assertNull(DurationParser.parseDuration(sut));
+        }
+    
     }
 
 }
