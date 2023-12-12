@@ -59,23 +59,36 @@ public class HealthCheckConfiguration implements Serializable {
         }
 
         switch(mode) {
-        case none:
-            if (interval != null || timeout != null || startPeriod != null || retries != null || cmd != null) {
-                throw new IllegalArgumentException("HealthCheck: no parameters are allowed when the health check mode is set to 'none'");
-            }
-            break;
-        case cmd:
-            if (cmd == null) {
-                throw new IllegalArgumentException("HealthCheck: the parameter 'cmd' is mandatory when the health check mode is set to 'cmd' (default)");
-            }
+            case none:
+                if (interval != null || timeout != null || startPeriod != null || retries != null || cmd != null) {
+                    throw new IllegalArgumentException("HealthCheck: no parameters are allowed when the health check mode is set to 'none'");
+                }
+                break;
+            case cmd:
+                if (cmd == null) {
+                    throw new IllegalArgumentException("HealthCheck: the parameter 'cmd' is mandatory when the health check mode is set to 'cmd' (default) or 'shell'");
+                }
+                break;
         }
     }
-
+    
+    @Override
+    public String toString() {
+        return "HealthCheckConfiguration{" +
+            "mode=" + mode +
+            ", interval='" + interval + '\'' +
+            ", timeout='" + timeout + '\'' +
+            ", startPeriod='" + startPeriod + '\'' +
+            ", retries=" + retries +
+            ", cmd=" + cmd +
+            '}';
+    }
+    
     // ===========================================
 
     public static class Builder {
 
-        private HealthCheckConfiguration config = new HealthCheckConfiguration();
+        private final HealthCheckConfiguration config;
 
         public Builder() {
             this.config = new HealthCheckConfiguration();
@@ -109,7 +122,7 @@ public class HealthCheckConfiguration implements Serializable {
         }
 
         public Builder mode(String mode) {
-            return this.mode(mode != null ? HealthCheckMode.valueOf(mode) : (HealthCheckMode) null);
+            return this.mode(mode != null ? HealthCheckMode.valueOf(mode) : null);
         }
 
         public Builder mode(HealthCheckMode mode) {
