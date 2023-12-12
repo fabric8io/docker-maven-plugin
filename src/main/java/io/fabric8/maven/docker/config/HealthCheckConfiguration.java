@@ -74,6 +74,18 @@ public class HealthCheckConfiguration implements Serializable {
                 if (cmd == null) {
                     throw new IllegalArgumentException("HealthCheck: the parameter 'cmd' is mandatory when the health check mode is set to 'cmd' (default) or 'shell'");
                 }
+                if (retries != null && retries < 0) {
+                    throw new IllegalArgumentException("HealthCheck: the parameter 'retries' may not be negative");
+                }
+                if (interval != null && ! DurationParser.matchesDuration(interval)) {
+                    throw new IllegalArgumentException("HealthCheck: illegal duration specified for interval");
+                }
+                if (timeout != null && ! DurationParser.matchesDuration(timeout)) {
+                    throw new IllegalArgumentException("HealthCheck: illegal duration specified for timeout");
+                }
+                if (startPeriod != null && ! DurationParser.matchesDuration(startPeriod)) {
+                    throw new IllegalArgumentException("HealthCheck: illegal duration specified for start period");
+                }
                 break;
         }
     }
