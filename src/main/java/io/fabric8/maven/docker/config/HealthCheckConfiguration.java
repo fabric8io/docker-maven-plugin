@@ -70,6 +70,7 @@ public class HealthCheckConfiguration implements Serializable {
                 }
                 break;
             case cmd:
+            case shell:
                 if (cmd == null) {
                     throw new IllegalArgumentException("HealthCheck: the parameter 'cmd' is mandatory when the health check mode is set to 'cmd' (default) or 'shell'");
                 }

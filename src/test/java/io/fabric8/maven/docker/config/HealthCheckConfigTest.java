@@ -24,7 +24,9 @@ class HealthCheckConfigTest {
             new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).build(),
             new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).interval("2s").build(),
             new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").build(),
-            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").startPeriod("30s").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").startPeriod("4s").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).build()
         );
     }
     
@@ -46,17 +48,21 @@ class HealthCheckConfigTest {
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).startPeriod("30s").cmd(new Arguments("echo a")).build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).cmd(new Arguments("echo a")).build(),
             
-            
             // No empty command when cmd or shell mode
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).build(),
             
             // No invalid durations
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).interval("1m2h").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).timeout("1m2h").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).startPeriod("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).interval("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).timeout("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).startPeriod("1m2h").build(),
             
             // No invalid retries
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).retries(-1).build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).retries(-1).build()
         );
     }
     
