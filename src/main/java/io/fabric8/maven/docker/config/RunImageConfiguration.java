@@ -228,6 +228,11 @@ public class RunImageConfiguration implements Serializable {
         if (cmd != null) {
             cmd.validate();
         }
+        if (healthCheck != null) {
+            healthCheck.validate();
+        }
+        
+        String minimalApiVersion = null;
 
         // Custom networks are available since API 1.21 (Docker 1.9)
         NetworkConfig config = getNetworkingConfig();
