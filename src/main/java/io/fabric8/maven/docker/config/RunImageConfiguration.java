@@ -237,10 +237,15 @@ public class RunImageConfiguration implements Serializable {
         // Custom networks are available since API 1.21 (Docker 1.9)
         NetworkConfig config = getNetworkingConfig();
         if (config != null && config.isCustomNetwork()) {
-            return "1.21";
+            minimalApiVersion = "1.21";
+        }
+        
+        // Runtime provided healthchecks are available since API 1.24 (Docker 1.12)
+        if (healthCheck != null) {
+            minimalApiVersion = "1.24";
         }
 
-        return null;
+        return minimalApiVersion;
     }
 
     public Map<String, String> getEnv() {
