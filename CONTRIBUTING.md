@@ -1,8 +1,8 @@
 ## Contributing 
 
-You want to contribute ? Awesome ! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
+Do you want to contribute? Awesome! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
 
-Here some things to check out when doing a PR:
+Here are some things to check out when doing a PR:
 
 * Please sign-off your commits as described below.
 * If adding a new feature please [update the documentation](https://github.com/fabric8io/docker-maven-plugin/blob/master/src/main/asciidoc/), too.
@@ -14,10 +14,10 @@ However, if you can't do some of the points above, please still consider contrib
 ### Signing off your commits
 
 Pull requests are highly appreciated and most of them get applied. However, you
-must sign-off your code so that you certify that your  contributions is compatible with the
+must sign-off your code so that you certify that your  contributions are compatible with the
 license of this project (which is the [Apache Public License 2](../LICENSE)). The sign-off also certifies
 that you wrote it or otherwise have the right to
-pass it on as an open-source patch under the APL 2.  The rules are simple: if you
+pass it on as an open-source patch under APL 2.  The rules are simple: if you
 can certify the below (from
 [developercertificate.org](http://developercertificate.org/)):
 
@@ -37,19 +37,19 @@ Developer's Certificate of Origin 1.1
 By making a contribution to this project, I certify that:
 
 (a) The contribution was created in whole or in part by me and I
-    have the right to submit it under the open source license
+    have the right to submit it under the open-source license
     indicated in the file; or
 
 (b) The contribution is based upon previous work that, to the best
-    of my knowledge, is covered under an appropriate open source
+    of my knowledge, is covered under an appropriate open-source
     license and I have the right under that license to submit that
     work with modifications, whether created in whole or in part
-    by me, under the same open source license (unless I am
+    by me, under the same open-source license (unless I am
     permitted to submit under a different license), as indicated
     in the file; or
 
 (c) The contribution was provided directly to me by some other
-    person who certified (a), (b) or (c) and I have not modified
+    the person who certified (a), (b) or (c) and I have not modified
     it.
 
 (d) I understand and agree that this project and the contribution
