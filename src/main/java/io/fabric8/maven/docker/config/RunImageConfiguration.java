@@ -208,6 +208,12 @@ public class RunImageConfiguration implements Serializable {
     // How to stop a container
     @Parameter
     private StopMode stopMode;
+    
+    /**
+     * Add new or override build time provided healthcheck
+     */
+    @Parameter
+    private HealthCheckConfiguration healthCheck;
 
     public RunImageConfiguration() {
     }
@@ -446,6 +452,10 @@ public class RunImageConfiguration implements Serializable {
             return StopMode.graceful;
         }
         return stopMode;
+    }
+    
+    public HealthCheckConfiguration getHealthCheck() {
+        return this.healthCheck;
     }
 
     /**
@@ -723,6 +733,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder autoRemove(Boolean autoRemove) {
             config.autoRemove = autoRemove;
+            return this;
+        }
+        
+        public Builder healthCheck(HealthCheckConfiguration configuration) {
+            config.healthCheck = configuration;
             return this;
         }
 
