@@ -146,8 +146,10 @@ public class DockerFileBuilder {
             case none:
                 DockerFileKeyword.NONE.addTo(healthString, false);
                 break;
+            case shell:
+                throw new IllegalArgumentException("Runtime-only mode 'shell' is not supported during builds, please use 'cmd' instead");
             default:
-                throw new IllegalArgumentException("Unsupported health check mode: " + healthCheck.getMode());
+                throw new IllegalArgumentException("Unsupported build time health check mode: " + healthCheck.getMode());
             }
 
             DockerFileKeyword.HEALTHCHECK.addTo(b, healthString.toString());
