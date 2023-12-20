@@ -49,7 +49,7 @@ By making a contribution to this project, I certify that:
     in the file; or
 
 (c) The contribution was provided directly to me by some other
-    the person who certified (a), (b) or (c) and I have not modified
+    person who certified (a), (b) or (c) and I have not modified
     it.
 
 (d) I understand and agree that this project and the contribution
