@@ -1,8 +1,8 @@
 ## Contributing 
 
-You want to contribute ? Awesome ! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
+Do you want to contribute? Awesome! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
 
-Here some things to check out when doing a PR:
+Here are some things to check out when doing a PR:
 
 * Please sign-off your commits as described below.
 * If adding a new feature please [update the documentation](https://github.com/fabric8io/docker-maven-plugin/blob/master/src/main/asciidoc/), too.
@@ -14,10 +14,10 @@ However, if you can't do some of the points above, please still consider contrib
 ### Signing off your commits
 
 Pull requests are highly appreciated and most of them get applied. However, you
-must sign-off your code so that you certify that your  contributions is compatible with the
+must sign-off your code so that you certify that your  contributions are compatible with the
 license of this project (which is the [Apache Public License 2](../LICENSE)). The sign-off also certifies
 that you wrote it or otherwise have the right to
-pass it on as an open-source patch under the APL 2.  The rules are simple: if you
+pass it on as an open-source patch under APL 2.  The rules are simple: if you
 can certify the below (from
 [developercertificate.org](http://developercertificate.org/)):
 
