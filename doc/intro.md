@@ -6,7 +6,7 @@ It focuses on two major aspects:
 * **Starting** and **stopping** Docker containers for integration
   testing and development 
 
-Docker *images* are the central entity which can be configured. 
+Docker *images* are the central entity that can be configured. 
 Containers, on the other hand, are more or less volatile. They are
 created and destroyed on the fly from the configured images and are
 completely managed internally.
@@ -26,7 +26,7 @@ to public or private Docker registries with `docker:push`.
 
 ### Running containers
 
-With this plugin it is possible to run completely isolated integration
+With this plugin, it is possible to run completely isolated integration
 tests so you don't need to take care of shared resources. Ports can be
 mapped dynamically and made available as Maven properties to your
 integration test code. 
@@ -35,7 +35,7 @@ Multiple containers can be managed at once, which can be linked
 together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
 `docker:stop` goal. For integration tests, both goals are typically
-bound to the `pre-integration-test` and `post-integration-test` phase,
+bound to the `pre-integration-test` and `post-integration-test` phases,
 respectively. It is recommended to use the 
 [`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) 
 for integration testing in order to stop the docker container even when
@@ -122,7 +122,7 @@ until the given text pattern is matched in the log output. Next is a
 "*service*" image, which is specified in the `<build>` section. It
 creates an image which has artifacts and dependencies in the
 `/maven` directory (and which are specified with an assembly
-descriptor). Additionally it specifies the startup command for the
+descriptor). Additionally, it specifies the startup command for the
 container, which in this example fires up a microservice from a jar
 file copied over via the assembly descriptor. It also exposes
 port 8080. In the `<run>` section this port is dynamically mapped to a
@@ -143,22 +143,22 @@ dependencies).
 Some other highlights in random order (and not complete):
 
 * Auto pulling of images (with a progress indicator)
-* Waiting for a container to startup based on time, the reachability
+* Waiting for a container to start based on time, the reachability
   of an URL, or a pattern in the log output
 * Support for SSL authentication (since Docker 1.3)
 * Specification of encrypted registry passwords for push and pull in
   `~/.m2/settings.xml` (i.e., outside the `pom.xml`)
 * Color output ;-)
 
-### Why another Maven Plugin ?
+### Why another Maven Plugin?
 
 If you search on GitHub you will find a whole cosmos of Maven Docker
 plugins (As of November 2014: 12 (!) plugins which 4 actively maintained).
 On the one hand, variety is a good thing, but on the other hand for
-users it is hard to decide which one to choose. So, you might wonder
+users, it is hard to decide which one to choose. So, you might wonder
 why you should choose this one.
 
-There s a dedicated [shootout project](https://github.com/fabric8io/shootout-docker-maven)
+There's a dedicated [shootout project](https://github.com/fabric8io/shootout-docker-maven)
 which compares the four most active plugins. It contains a simple demo
 project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
@@ -180,13 +180,13 @@ The high-level design goals and initial motivation for this plugin are:
 
 * The configuration of the plugin should be **simple**, since developers
   don't want to be forced to dive into specific Docker details only to
-  start a container. So, only a handful options should be exposed,
-  which needs not necessarily map directly to docker config setup.
+  start a container. So, only a handful of options should be exposed,
+  which does not necessarily map directly to the docker config setup.
 
 * There should be as **few dependencies** as possible for this plugin. So it
   does *not* use the Java Docker API
   [docker-java](https://github.com/docker-java/docker-java) which is
-  external to docker and has a different lifecycle than Docker's
+  external to Docker and has a different lifecycle than Docker's
   [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/).
   Since this plugin needs only a small subset of the whole API,
   it is OK to do the REST calls directly. That way the plugin has
