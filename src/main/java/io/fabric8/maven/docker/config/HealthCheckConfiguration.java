@@ -85,8 +85,14 @@ public class HealthCheckConfiguration implements Serializable {
             case cmd:
             case shell:
                 if (cmd == null) {
-                    throw new IllegalArgumentException("HealthCheck: the parameter 'cmd' is mandatory when the health check mode is set to 'cmd' (default) or 'shell'");
+                    throw new IllegalArgumentException("HealthCheck: parameter 'cmd' is mandatory for mode set to 'cmd' (default for builds) or 'shell'");
                 }
+                // cmd.getExec() == null can be ignored here - we will simply parse the string into arguments
+                if (mode == HealthCheckMode.shell && cmd.getShell() == null) {
+                    throw new IllegalArgumentException("HealthCheck: parameter 'cmd' for mode 'shell' must be given as one string, not arguments");
+                }
+                // Now fallthrough to mode inherit (which has needs the same validations for options, but not the test)
+            case inherit:
                 if (retries != null && retries < 0) {
                     throw new IllegalArgumentException("HealthCheck: the parameter 'retries' may not be negative");
                 }
@@ -98,6 +104,10 @@ public class HealthCheckConfiguration implements Serializable {
                 }
                 if (startPeriod != null && ! DurationParser.matchesDuration(startPeriod)) {
                     throw new IllegalArgumentException("HealthCheck: illegal duration specified for start period");
+                }
+                // Must limit check to inherit *again* because shell and cmd fall through to this case!
+                if (mode == HealthCheckMode.inherit && cmd != null) {
+                    throw new IllegalArgumentException("HealthCheck: parameter 'cmd' not allowed for mode set to 'inherit'");
                 }
                 break;
         }
