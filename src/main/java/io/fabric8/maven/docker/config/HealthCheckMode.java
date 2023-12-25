@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.config;
 
 
+@SuppressWarnings("java:S115")
 public enum HealthCheckMode {
 
     /**

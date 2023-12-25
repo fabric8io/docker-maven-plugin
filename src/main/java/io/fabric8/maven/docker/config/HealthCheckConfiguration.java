@@ -25,7 +25,7 @@ public class HealthCheckConfiguration implements Serializable {
 
     private Arguments cmd;
 
-    public HealthCheckConfiguration() {}
+    private HealthCheckConfiguration() {}
 
     public String getInterval() {
         return prepareTimeValue(interval);
@@ -181,8 +181,9 @@ public class HealthCheckConfiguration implements Serializable {
          *           A conversion is easily done using {@link Duration#toNanos()}.
          *           Examples of allowed values: 23h17m1s, 10ms, 1s, 0h10ms, 1h2m1.3432s
          */
-        private static final String durationRegex = "^((?<hours>0[1-9]|1[1-9]|2[1-3]|[0-9])h)?((?<mins>[0-5]?[0-9])m)?(((?<secs>[0-5]?[0-9])s)?((?<msecs>\\d{1,3})ms)?((?<usecs>\\d{1,3})us)?|(?<fsecs>[0-5]?[0-9])\\.(?<fraction>\\d{1,9})s)$";
-        private static final Matcher durationMatcher = Pattern.compile(durationRegex).matcher("");
+        @SuppressWarnings("java:S5843")
+        private static final String DURATION_REGEX = "^((?<hours>0[1-9]|1[1-9]|2[1-3]|\\d)h)?((?<mins>[0-5]?\\d)m)?(((?<secs>[0-5]?}\\d)s)?((?<msecs>\\d{1,3})ms)?((?<usecs>\\d{1,3})us)?|(?<fsecs>[0-5]?\\d)\\.(?<fraction>\\d{1,9})s)$";
+        private static final Matcher durationMatcher = Pattern.compile(DURATION_REGEX).matcher("");
         
         public static boolean matchesDuration(String durationString) {
             if (durationString == null || durationString.isEmpty()) {
@@ -206,12 +207,12 @@ public class HealthCheckConfiguration implements Serializable {
                 if (durationMatcher.group("mins") != null) {
                     duration = duration.plusMinutes(Long.parseLong(durationMatcher.group("mins")));
                 }
-                // When seconds are given with an optional fracture
+                // When seconds are given as an (optional) fraction
                 if (durationMatcher.group("fsecs") != null) {
                     duration = duration.plusSeconds(Long.parseLong(durationMatcher.group("fsecs")));
                     
                     String fraction = durationMatcher.group("fraction");
-                    // Append enough zeros to make it a nanosecond precision, then tune the duration
+                    // Append enough zeros to make it nanosecond precision, then tune the duration
                     fraction += StringUtils.repeat("0", 9 - fraction.length());
                     duration = duration.plusNanos(Long.parseLong(fraction));
                 } else {
