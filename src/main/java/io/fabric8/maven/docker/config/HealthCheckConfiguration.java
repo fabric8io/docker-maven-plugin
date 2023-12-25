@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
  */
 public class HealthCheckConfiguration implements Serializable {
 
-    private HealthCheckMode mode = HealthCheckMode.cmd;
+    // Default values are applied differently in build or runtime context, no default here
+    private HealthCheckMode mode;
 
     private String interval;
 
@@ -53,7 +54,19 @@ public class HealthCheckConfiguration implements Serializable {
     public HealthCheckMode getMode() {
         return mode;
     }
-
+    
+    /**
+     * Use this method to apply a default mode depending on context (build or runtime)
+     * @param mode The default mode to set
+     * @return The configuration, making the call chainable
+     */
+    public HealthCheckConfiguration setModeIfNotPresent(HealthCheckMode mode) {
+        if (this.mode == null) {
+            this.mode = mode;
+        }
+        return this;
+    }
+    
     public Integer getRetries() {
         return retries;
     }

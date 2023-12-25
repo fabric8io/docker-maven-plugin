@@ -229,6 +229,9 @@ public class RunImageConfiguration implements Serializable {
             cmd.validate();
         }
         if (healthCheck != null) {
+            // Context is running an image, thus default to inheriting a check defined at build time or parent image(s)
+            // (Which still allows to change any option while keeping the test itself!)
+            healthCheck.setModeIfNotPresent(HealthCheckMode.inherit);
             healthCheck.validate();
         }
         

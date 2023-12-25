@@ -19,13 +19,13 @@ class HealthCheckConfigTest {
     
     static Stream<Object> goodExamples() {
         return Stream.of(
-            // Defaulting to cmd mode
-            new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).build(),
-            new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).build(),
-            new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).interval("2s").build(),
-            new HealthCheckConfiguration.Builder().cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("exit 0")).build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("exit 0")).retries(1).build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("exit 0")).retries(1).interval("2s").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").startPeriod("30s").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("exit 0")).retries(1).interval("2s").timeout("3s").startPeriod("4s").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.inherit).retries(1).interval("2s").timeout("3s").startPeriod("4s").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).build()
         );
     }
@@ -41,6 +41,9 @@ class HealthCheckConfigTest {
             // No completely empty config is valid
             new HealthCheckConfiguration.Builder().build(),
             
+            // No mode given is invalid
+            new HealthCheckConfiguration.Builder().interval("2s").build(),
+            
             // When mode is "none" there should be no options nor commands
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).interval("2s").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).retries(1).build(),
@@ -52,6 +55,9 @@ class HealthCheckConfigTest {
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).build(),
             
+            // No command when inherit mode
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.inherit).cmd(new Arguments("echo a")).build(),
+            
             // No invalid durations
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).interval("1m2h").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).timeout("1m2h").build(),
@@ -59,6 +65,9 @@ class HealthCheckConfigTest {
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).interval("1m2h").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).timeout("1m2h").build(),
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).cmd(new Arguments("echo a")).startPeriod("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.inherit).interval("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.inherit).timeout("1m2h").build(),
+            new HealthCheckConfiguration.Builder().mode(HealthCheckMode.inherit).startPeriod("1m2h").build(),
             
             // No invalid retries
             new HealthCheckConfiguration.Builder().mode(HealthCheckMode.cmd).cmd(new Arguments("echo a")).retries(-1).build(),

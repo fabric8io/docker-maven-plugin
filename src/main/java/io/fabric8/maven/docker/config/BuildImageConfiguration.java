@@ -762,6 +762,8 @@ public class BuildImageConfiguration implements Serializable {
             cmd.validate();
         }
         if (healthCheck != null) {
+            // Context is image building, thus default to Dockerfile CMD mode (unequal to runtime version!)
+            healthCheck.setModeIfNotPresent(HealthCheckMode.cmd);
             healthCheck.validate();
         }
 
