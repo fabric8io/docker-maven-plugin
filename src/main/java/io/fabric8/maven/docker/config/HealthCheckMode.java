@@ -19,6 +19,11 @@ public enum HealthCheckMode {
      * A shell-wrapped command-based health check.
      * This mode is supported at runtime only.
      */
-    shell
+    shell,
+    
+    /**
+     * Runtime-only mode, used to change options, but not the test itself
+     */
+    inherit
 
 }

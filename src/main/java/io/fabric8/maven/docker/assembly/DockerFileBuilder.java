@@ -136,20 +136,18 @@ public class DockerFileBuilder {
             StringBuilder healthString = new StringBuilder();
 
             switch (healthCheck.getMode()) {
-            case cmd:
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
-                buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
-                break;
-            case none:
-                DockerFileKeyword.NONE.addTo(healthString, false);
-                break;
-            case shell:
-                throw new IllegalArgumentException("Runtime-only mode 'shell' is not supported during builds, please use 'cmd' instead");
-            default:
-                throw new IllegalArgumentException("Unsupported build time health check mode: " + healthCheck.getMode());
+                case cmd:
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
+                    buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
+                    break;
+                case none:
+                    DockerFileKeyword.NONE.addTo(healthString, false);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported build time health check mode: " + healthCheck.getMode() + " - use 'cmd' or 'none'");
             }
 
             DockerFileKeyword.HEALTHCHECK.addTo(b, healthString.toString());

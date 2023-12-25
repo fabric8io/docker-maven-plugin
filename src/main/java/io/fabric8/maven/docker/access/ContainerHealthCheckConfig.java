@@ -25,6 +25,8 @@ public class ContainerHealthCheckConfig {
                 test.add("CMD-SHELL");
                 test.add(configuration.getCmd().getShell());
                 break;
+            case inherit:
+                // case inherit can be ignored here - equivalent to an empty JSON array
         }
         this.healthcheck.add("Test", test);
         
