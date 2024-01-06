@@ -269,10 +269,8 @@ public class BuildXService {
                 append(cmds, "--node", nodeName);
             }
 
-            if (buildXConfiguration.getDriverOpts() != null) {
-                buildXConfiguration.getDriverOpts().forEach((key, value) -> {
-                    append(cmds, "--driver-opt", key + '=' + value);
-                });
+            if (buildXConfiguration.getDriverOpts() != null && !buildXConfiguration.getDriverOpts().isEmpty()) {
+                buildXConfiguration.getDriverOpts().forEach((key, value) -> append(cmds, "--driver-opt", key + '=' + value));
             }
 
             String buildConfig = buildXConfiguration.getConfigFile();
