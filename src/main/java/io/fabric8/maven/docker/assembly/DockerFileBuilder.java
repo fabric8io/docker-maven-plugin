@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 
 import org.codehaus.plexus.util.FileUtils;
@@ -134,7 +135,11 @@ public class DockerFileBuilder {
     private void addHealthCheck(StringBuilder b) {
         if (healthCheck != null) {
             StringBuilder healthString = new StringBuilder();
-
+            
+            // Context is image building, thus default to Dockerfile CMD mode (unequal to runtime version!)
+            // Note: usually done via BuildImageConfiguration.initAndValidate(), but not with low-level unit tests.
+            healthCheck.setModeIfNotPresent(BuildImageConfiguration.HC_BUILDTIME_DEFAULT);
+            
             switch (healthCheck.getMode()) {
                 case cmd:
                     buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
