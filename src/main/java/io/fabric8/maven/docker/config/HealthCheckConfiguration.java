@@ -192,19 +192,23 @@ public class HealthCheckConfiguration implements Serializable {
          *           Examples of allowed values: 23h17m1s, 10ms, 1s, 0h10ms, 1h2m1.3432s
          */
         @SuppressWarnings("java:S5843")
-        private static final String DURATION_REGEX = "^((?<hours>0[1-9]|1[1-9]|2[1-3]|\\d)h)?((?<mins>[0-5]?\\d)m)?(((?<secs>[0-5]?}\\d)s)?((?<msecs>\\d{1,3})ms)?((?<usecs>\\d{1,3})us)?|(?<fsecs>[0-5]?\\d)\\.(?<fraction>\\d{1,9})s)$";
+        private static final String DURATION_REGEX = "^((?<hours>0\\d|1\\d|2[0-3]|\\d)h)?((?<mins>[0-5]?\\d)m)?(((?<secs>[0-5]?\\d)s)?((?<msecs>\\d{1,3})ms)?((?<usecs>\\d{1,3})us)?|(?<fsecs>[0-5]?\\d)\\.(?<fraction>\\d{1,9})s)$";
         private static final Matcher durationMatcher = Pattern.compile(DURATION_REGEX).matcher("");
         
         public static boolean matchesDuration(String durationString) {
             if (durationString == null || durationString.isEmpty()) {
                 return false;
             }
-            return durationMatcher.reset(durationString).matches();
+            return durationMatcher.reset(durationString).matches() || durationString.equals("0");
         }
         
         public static Duration parseDuration(String durationString) {
             if (durationString == null || durationString.isEmpty()) {
                 return null;
+            }
+            
+            if (durationString.equals("0")) {
+                return Duration.ZERO;
             }
             
             if (durationMatcher.reset(durationString).matches()) {

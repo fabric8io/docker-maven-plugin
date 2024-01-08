@@ -87,8 +87,14 @@ class HealthCheckConfigTest {
     
         Stream<org.junit.jupiter.params.provider.Arguments> goodExamples() {
             return Stream.of(
+                org.junit.jupiter.params.provider.Arguments.of("0", Duration.ZERO),
+                org.junit.jupiter.params.provider.Arguments.of("0h30m1s", Duration.ofMinutes(30).plusSeconds(1)),
                 org.junit.jupiter.params.provider.Arguments.of("1h30m1s", Duration.ofHours(1).plusMinutes(30).plusSeconds(1)),
                 org.junit.jupiter.params.provider.Arguments.of("1h1s", Duration.ofHours(1).plusSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("01h01s", Duration.ofHours(1).plusSeconds(1)),
+                org.junit.jupiter.params.provider.Arguments.of("10h30m", Duration.ofHours(10).plusMinutes(30)),
+                org.junit.jupiter.params.provider.Arguments.of("20h30m", Duration.ofHours(20).plusMinutes(30)),
+                org.junit.jupiter.params.provider.Arguments.of("23h30m", Duration.ofHours(23).plusMinutes(30)),
                 org.junit.jupiter.params.provider.Arguments.of("30m1s", Duration.ofMinutes(30).plusSeconds(1)),
                 org.junit.jupiter.params.provider.Arguments.of("1s", Duration.ofSeconds(1)),
                 org.junit.jupiter.params.provider.Arguments.of("10ms", Duration.ofMillis(10)),
