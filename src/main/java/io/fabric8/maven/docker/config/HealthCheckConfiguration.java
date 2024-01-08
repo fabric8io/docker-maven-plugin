@@ -25,7 +25,8 @@ public class HealthCheckConfiguration implements Serializable {
 
     private Arguments cmd;
 
-    private HealthCheckConfiguration() {}
+    // This constructor must remain "public" as this class is deserialized from XML config
+    public HealthCheckConfiguration() {}
 
     public String getInterval() {
         return prepareTimeValue(interval);
