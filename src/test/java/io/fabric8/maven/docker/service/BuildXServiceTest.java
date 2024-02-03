@@ -1,14 +1,17 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.io.File;
 import java.nio.file.Paths;
 
 import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.util.DockerFileUtil;
 import java.util.function.BiConsumer;
+
+import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +46,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.WARN)
@@ -68,31 +73,32 @@ class BuildXServiceTest {
     @Spy
     private BuildXService buildx;
 
+    @TempDir
+    private File temporaryFolder;
+
     private ImageConfiguration imageConfig;
 
-    private final ProjectPaths projectPaths = new ProjectPaths(new File("project-base-dir"), "output-dir");
+    private ProjectPaths projectPaths;
     private final String configuredRegistry = "configured-registry";
     private final File buildArchive = new File("build-archive");
     private AuthConfigList authConfigList;
-    private MockedConstruction<BuildXService.DockerVersionExternalCommand> dockerVersionExternalCommandMockedConstruction;
 
     @BeforeEach
     void setup() throws Exception {
 
-        Mockito.when(dockerAccess.getNativePlatform()).thenReturn(NATIVE);
+        when(dockerAccess.getNativePlatform()).thenReturn(NATIVE);
 
         Mockito.doNothing().when(buildx).createConfigJson(Mockito.any(), Mockito.any());
         Mockito.doNothing().when(buildx).removeConfigJson(Mockito.any());
 
-        Mockito.doReturn(Paths.get("docker-state-dir")).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
+        Mockito.doReturn(Paths.get(temporaryFolder.getPath(), "docker-state-dir")).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
         Mockito.doReturn("maven").when(buildx).createBuilder(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         authConfigList = null;
-        dockerVersionExternalCommandMockedConstruction = mockConstruction(BuildXService.DockerVersionExternalCommand.class);
+        projectPaths = new ProjectPaths(new File(temporaryFolder, "project-base-dir"), "output-dir");
     }
 
     @AfterEach
     void tearDown() {
-        dockerVersionExternalCommandMockedConstruction.close();
     }
 
     @Test
@@ -120,7 +126,7 @@ class BuildXServiceTest {
     }
 
     @Test
-    void testNoCacheIsPropagatedToBuildx(@TempDir File temporaryFolder) throws Exception {
+    void testNoCacheIsPropagatedToBuildx() throws Exception {
 
         //Given
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.noCache(true));
@@ -133,7 +139,7 @@ class BuildXServiceTest {
     }
 
     @Test
-    void testBuildXCacheFromIsNotPresentIfNotProvided(@TempDir File temporaryFolder) throws Exception {
+    void testBuildXCacheFromIsNotPresentIfNotProvided() throws Exception {
 
         //Given
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheFrom(null));
@@ -159,7 +165,7 @@ class BuildXServiceTest {
     }
 
     @Test
-    void testBuildXCacheToIsNotPresentIfNotProvided(@TempDir File temporaryFolder) throws Exception {
+    void testBuildXCacheToIsNotPresentIfNotProvided() throws Exception {
 
         //Given
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo(null));
@@ -172,7 +178,7 @@ class BuildXServiceTest {
     }
 
     @Test
-    void testBuildXCacheToIsPresentIfProvided(@TempDir File temporaryFolder) throws Exception {
+    void testBuildXCacheToIsPresentIfProvided() throws Exception {
 
         //Given
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo("cacheToSpec"));
@@ -209,7 +215,7 @@ class BuildXServiceTest {
     }
 
     @Test
-    void useBuilder_whenConfiguredRegistryAbsentInDockerRegistry_thenAddConfigOptionToBuildX(@TempDir File temporaryFolder) throws MojoExecutionException, IOException {
+    void useBuilder_whenConfiguredRegistryAbsentInDockerRegistry_thenAddConfigOptionToBuildX() throws MojoExecutionException, IOException {
         // Given
         BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
         Mockito.doReturn(temporaryFolder.toPath()).when(buildx).getDockerStateDir(Mockito.any(), Mockito.any());
@@ -229,26 +235,29 @@ class BuildXServiceTest {
     }
 
     @Test
-    void useBuilder_whenAuthConfigFromDockerConfig_thenDoNotAddConfigOptionToBuildX() throws MojoExecutionException {
-        try (MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class)) {
+    void useBuilder_whenDockerBuildXIncompatibleWithConfigOverride_thenCopyBuildXBinaryToTemporaryConfig() throws IOException, MojoExecutionException {
+        try (MockedStatic<EnvUtil> envUtilMockedStatic = mockStatic(EnvUtil.class);
+            MockedConstruction<BuildXService.BuildXListWithConfigCommand> ignore = mockConstruction(BuildXService.BuildXListWithConfigCommand.class, (mock, ctx) -> {
+            when(mock.isSuccessFul()).thenReturn(false);
+        })) {
             // Given
-            AuthConfig registryAuthConfig = new AuthConfig("user", "password", null, null);
-            registryAuthConfig.setRegistry(configuredRegistry);
-            authConfigList = new AuthConfigList(registryAuthConfig);
-            dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
-                .thenReturn(registryAuthConfig.toJsonObject());
+            Path configDirPath = temporaryFolder.toPath().resolve("docker-state-dir");
+            Files.createDirectory(configDirPath);
+            Files.createDirectory(temporaryFolder.toPath().resolve(".docker"));
+            Files.createDirectory(temporaryFolder.toPath().resolve(".docker").resolve("cli-plugins"));
+            Files.createFile(temporaryFolder.toPath().resolve(".docker").resolve("cli-plugins").resolve("docker-buildx"));
+            envUtilMockedStatic.when(EnvUtil::getUserHome).thenReturn(temporaryFolder.getAbsolutePath());
             BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
-            givenAnImageConfiguration(new BuildXConfiguration.Builder()
-                .platforms(Arrays.asList(FOREIGN1, FOREIGN2))
-                .build());
+            givenAnImageConfiguration("linux/arm46", "linux/amd64");
 
             // When
             buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, builder);
 
             // Then
-            ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
-            Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
-            assertEquals(Arrays.asList("docker", "buildx"), buildXArgCaptor.getValue());
+            assertTrue(configDirPath.resolve("cli-plugins").toFile().exists());
+            assertTrue(configDirPath.resolve("cli-plugins").resolve("docker-buildx").toFile().exists());
+            verify(logger).debug("Detected current version of BuildX not working with --config override");
+            verify(logger).debug("Copying BuildX binary to " + temporaryFolder.toPath().resolve("docker-state-dir"));
         }
     }
 

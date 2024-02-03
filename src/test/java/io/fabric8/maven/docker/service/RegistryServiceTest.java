@@ -16,7 +16,6 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.mockStatic;
 
 /**
  * @author roland
@@ -64,7 +60,6 @@ class RegistryServiceTest {
     private boolean hasImage;
     private Map<String, String> authConfig;
     private MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic;
-    private MockedConstruction<BuildXService.DockerVersionExternalCommand> dockerVersionExternalCommandMockedConstruction;
 
     @TempDir
     private File projectBaseDir;
@@ -104,14 +99,6 @@ class RegistryServiceTest {
         hasImage = false;
         registry = null;
         imageConfiguration = null;
-        dockerFileUtilMockedStatic = mockStatic(DockerFileUtil.class);
-        dockerVersionExternalCommandMockedConstruction = mockConstruction(BuildXService.DockerVersionExternalCommand.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        dockerFileUtilMockedStatic.close();
-        dockerVersionExternalCommandMockedConstruction.close();
     }
 
     @ParameterizedTest
@@ -326,7 +313,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration("user/test:1.0.1", null, null, null);
         givenCredentials("skroob", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -340,7 +326,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration("user/test:1.0.1", null, dockerFile, null);
         givenCredentials("skroob", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -353,7 +338,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder", null, null);
         givenCredentials("King_Roland_of_Druidia", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -366,7 +350,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
         givenCredentials("King_Roland_of_Druidia", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -380,7 +363,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
         givenCredentials("King_Roland_of_Druidia", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -394,7 +376,6 @@ class RegistryServiceTest {
         givenBuildxImageConfiguration(registry + "/" + "user/test:1.0.1", null, null, "perri-air");
         givenCredentials("King_Roland_of_Druidia", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -409,7 +390,6 @@ class RegistryServiceTest {
         andImageConfigRegistry(registry);
         givenCredentials("King_Roland_of_Druidia", "12345");
         givenRegistry(registry);
-        givenRegistryCredentialsPresentInLocalDockerConfig();
 
         whenPushImage();
 
@@ -467,11 +447,11 @@ class RegistryServiceTest {
         String builderName = providedBuilder != null ? providedBuilder : "maven";
 
         if (providedBuilder == null) {
-            Mockito.verify(exec).process(Arrays.asList("docker", "buildx", "create", "--driver", "docker-container", "--name", builderName, "--node",  builderName+"0"));
+            Mockito.verify(exec).process(Arrays.asList("docker","--config", config, "buildx", "create", "--driver", "docker-container", "--name", builderName, "--node",  builderName+"0"));
         }
 
         List<String> cmds =
-            BuildXService.append(new ArrayList<>(), "docker", "buildx", "build",
+            BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx", "build",
                 "--progress=plain", "--builder", builderName, "--platform",
                 "linux/amd64,linux/arm64", "--tag",
                 new ImageName(imageConfiguration.getName()).getFullName(registry));
@@ -596,14 +576,6 @@ class RegistryServiceTest {
     private void andImageConfigRegistry(String registry) {
         Objects.requireNonNull(imageConfiguration, "ImageConfiguration must first be set with `givenAnImage....`");
         imageConfiguration.setRegistry(registry);
-    }
-
-    private void givenRegistryCredentialsPresentInLocalDockerConfig() {
-        AuthConfig testAuth = new AuthConfig(authConfig);
-        testAuth.setRegistry(registry);
-
-        dockerFileUtilMockedStatic.when(DockerFileUtil::readDockerConfig)
-            .thenReturn(testAuth.toJsonObject());
     }
 
     private void givenCredentials(String username, String password) throws MojoExecutionException {
