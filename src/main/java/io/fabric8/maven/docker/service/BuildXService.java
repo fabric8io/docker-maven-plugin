@@ -14,7 +14,6 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.BufferedReader;
@@ -27,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,10 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static io.fabric8.maven.docker.util.AuthConfigFactory.hasAuthForRegistryInDockerConfig;
-
 public class BuildXService {
-    private static final int DOCKER_CLI_BUILDX_CONFIG_COMPATIBLE_MAJOR_VERSION = 23;
     private static final String DOCKER = "docker";
     private final DockerAccess dockerAccess;
     private final DockerAssemblyManager dockerAssemblyManager;
@@ -71,13 +68,12 @@ public class BuildXService {
         BuildDirs buildDirs = new BuildDirs(projectPaths, imageConfig.getName());
 
         Path configPath = getDockerStateDir(imageConfig.getBuildConfiguration(),  buildDirs);
-        List<String> buildX = new ArrayList<>();
-        buildX.add(DOCKER);
-        if (isDockerCLINotLegacy() || shouldAddConfigInLegacyDockerCLI(authConfig, configuredRegistry)) {
-            buildX.add("--config");
-            buildX.add(configPath.toString());
+        List<String> buildX = new ArrayList<>(Arrays.asList(DOCKER, "--config", configPath.toString(), "buildx"));
+        if (!isDockerBuildXWorkingWithOverriddenConfig(configPath)) {
+            logger.debug("Detected current version of BuildX not working with --config override");
+            logger.debug("Copying BuildX binary to " + configPath);
+            copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(configPath);
         }
-        buildX.add("buildx");
 
         String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
         Path configJson = configPath.resolve("config.json");
@@ -89,29 +85,16 @@ public class BuildXService {
         }
     }
 
-    private boolean shouldAddConfigInLegacyDockerCLI(AuthConfigList authConfigList, String configuredRegistry) throws MojoExecutionException {
-        return authConfigList != null && !authConfigList.isEmpty() &&
-            !hasAuthForRegistryInDockerConfig(logger, configuredRegistry, authConfigList);
-    }
-
-    private boolean isDockerCLINotLegacy() {
-        DockerVersionExternalCommand dockerVersionExternalCommand = new DockerVersionExternalCommand(logger);
+    private void copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(Path configPath) {
         try {
-            dockerVersionExternalCommand.execute();
-        } catch (IOException e) {
-            logger.info("Failure in getting docker CLI version", e);
-        }
-        String version = dockerVersionExternalCommand.getVersion();
-        if (StringUtils.isNotBlank(version)) {
-            version = version.replaceAll("(^')|('$)", "");
-            String[] versionParts = version.split("\\.");
-            logger.info("Using Docker CLI " + version);
-            if (versionParts.length >= 3) {
-                int cliMajorVersion = Integer.parseInt(versionParts[0]);
-                return cliMajorVersion >= DOCKER_CLI_BUILDX_CONFIG_COMPATIBLE_MAJOR_VERSION;
+            File buildXInUserHomeDockerConfig = Paths.get(EnvUtil.getUserHome(), ".docker/cli-plugins/docker-buildx").toFile();
+            Files.createDirectory(configPath.resolve("cli-plugins"));
+            if (buildXInUserHomeDockerConfig.exists() && buildXInUserHomeDockerConfig.isFile()) {
+                Files.copy(buildXInUserHomeDockerConfig.toPath(), configPath.resolve("cli-plugins").resolve("docker-buildx"), StandardCopyOption.COPY_ATTRIBUTES);
             }
+        } catch (IOException exception) {
+            logger.debug(exception.getMessage());
         }
-        return false;
     }
 
     protected void createConfigJson(Path configJson, AuthConfigList authConfig) throws MojoExecutionException {
@@ -335,27 +318,30 @@ public class BuildXService {
         }
     }
 
-    public static class DockerVersionExternalCommand extends ExternalCommand {
-        private final StringBuilder outputBuilder;
-        public DockerVersionExternalCommand(Logger logger) {
+    private boolean isDockerBuildXWorkingWithOverriddenConfig(Path configPath) {
+        BuildXListWithConfigCommand buildXList = new BuildXListWithConfigCommand(logger, configPath);
+        try {
+            buildXList.execute();
+            return buildXList.isSuccessFul();
+        } catch (IOException e) {
+          return false;
+        }
+    }
+
+    static class BuildXListWithConfigCommand extends ExternalCommand {
+        private final Path configPath;
+        public BuildXListWithConfigCommand(Logger logger, Path configPath) {
             super(logger);
-            outputBuilder = new StringBuilder();
+            this.configPath = configPath;
         }
 
         @Override
         protected String[] getArgs() {
-            return new String[] {DOCKER, "version", "--format", "'{{.Client.Version}}'"};
+            return new String[] { DOCKER, "--config", configPath.toString(), "buildx", "ls"};
         }
 
-        @Override
-        protected void processLine(String line) {
-            if (StringUtils.isNotBlank(line)) {
-                outputBuilder.append(line);
-            }
-        }
-
-        public String getVersion() {
-            return outputBuilder.toString();
+        public boolean isSuccessFul() {
+            return getStatusCode() == 0;
         }
     }
 }
