@@ -1,0 +1,35 @@
+name: E2E Tests
+
+env:
+  MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 1 * * *' # Every day at 1
+
+jobs:
+  windows-build:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Get Windows Version > Used to retrieve specific Docker Image
+        shell: cmd
+        run: |
+          ver
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: Install DMP
+        run: mvn ${MAVEN_ARGS} clean install -DskipTests
+      - name: Run Integration tests
+        run: |
+          cd it/windows-build
+          mvn clean install -Pwindows
