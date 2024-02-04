@@ -78,7 +78,7 @@ public class SourceMojo extends AbstractBuildSupportMojo {
                 }
             }
         }
-        if (sourceMode == BuildImageSelectMode.first && imageConfigs.size() > 0) {
+        if (sourceMode == BuildImageSelectMode.first && !imageConfigs.isEmpty()) {
             ImageConfiguration imageConfig = imageConfigs.get(0);
             File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
             projectHelper.attachArtifact(project, getArchiveType(imageConfig),
