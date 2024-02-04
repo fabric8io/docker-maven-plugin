@@ -1,0 +1,24 @@
+name: Mac OS Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Java ${{ matrix.java }} Maven Wrapper
+    runs-on: macos-13
+    strategy:
+      matrix:
+        java: [11]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Build Project
+        run: ./mvnw -B -C -V -ntp clean install
