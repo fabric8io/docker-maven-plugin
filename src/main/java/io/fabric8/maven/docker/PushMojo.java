@@ -51,7 +51,7 @@ public class PushMojo extends AbstractDockerMojo {
     }
 
     private void executeDockerPush(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
-        hub.getRegistryService().pushImages(createProjectPaths(), getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        hub.getRegistryService().pushImages(createProjectPaths(), getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag, createMojoParameters());
     }
 
     private void executeJibPush(ServiceHub hub) throws MojoExecutionException {

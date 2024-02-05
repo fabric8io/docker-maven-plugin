@@ -4,6 +4,7 @@
   - The <noCache> option is now propagated down to the buildx command, if it is set in the <build> section. ([1717](https://github.com/fabric8io/docker-maven-plugin/pull/1717))
   - Fix Buildx build with Dockerfile outside of the Docker build context directory ([1721](https://github.com/fabric8io/docker-maven-plugin/pull/1721))
   - Add support setting driverOpts for buildx ([1704](https://github.com/fabric8io/docker-maven-plugin/pull/1704))
+  - Multi-Architecture push is not sending pull registry auth credentials ([1709](https://github.com/fabric8io/docker-maven-plugin/issues/1709))
 
 * **0.43.4** (2023-08-18):
   - Always pass `--config` option for latest versions of Docker CLI ([1701](https://github.com/fabric8io/docker-maven-plugin/issues/1701))
