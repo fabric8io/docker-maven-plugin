@@ -37,9 +37,11 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.NamePatternUtil;
 
 import io.fabric8.maven.docker.util.ProjectPaths;
+import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -49,6 +51,8 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
@@ -224,6 +228,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Parameter(property = "docker.skip.pom", defaultValue = "false")
     protected boolean skipPom;
+
+    @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
+    protected List<MavenProject> reactorProjects;
+    @Parameter
+    protected MavenArchiveConfiguration archive;
+
+    @Component
+    protected MavenFileFilter mavenFileFilter;
+
+    @Component
+    protected MavenReaderFilter mavenFilterReader;
+
+    @Parameter
+    protected Map<String, String> buildArgs;
 
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
@@ -607,5 +625,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected ProjectPaths createProjectPaths() {
         return new ProjectPaths(project.getBasedir(), outputDirectory);
+    }
+
+    protected MojoParameters createMojoParameters() {
+        return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
+            settings, sourceDirectory, outputDirectory, reactorProjects);
     }
 }
