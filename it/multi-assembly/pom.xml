@@ -97,6 +97,7 @@
               <run>
                 <wait>
                   <log>Hello from Spring Boot!</log>
+                  <time>30000</time>
                 </wait>
               </run>
             </image>
