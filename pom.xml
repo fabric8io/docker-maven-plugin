@@ -40,7 +40,7 @@
   </developers>
 
   <prerequisites>
-    <maven>${maven.version}</maven>
+    <maven>${minimum.maven.version}</maven>
   </prerequisites>
 
   <scm>
@@ -76,6 +76,7 @@
     <jnr-unixsocket.version>0.38.19</jnr-unixsocket.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <maven.version>3.8.1</maven.version>
+    <minimum.maven.version>3.3.9</minimum.maven.version>
     <mockito.version>4.5.1</mockito.version>
     <project.build.outputTimestamp>2023-08-18T06:38:11Z</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
