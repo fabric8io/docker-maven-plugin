@@ -35,6 +35,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
   setups that you can use as blueprints for your projects.
 * [ChangeLog](doc/changelog.md) has the release history of this plugin.
 * [Contributing](CONTRIBUTING.md) explains how you can contribute to this project. Pull requests are highly appreciated!
+* We publish nightly builds on maven central. Read How to use [Docker Maven Plugin Snapshot artifacts](./doc/HowToUseDockerMavenPluginSnapshotArtifacts.md).
 
 
 #### Docker API Support
