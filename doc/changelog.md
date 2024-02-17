@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.45-SNAPSHOT**:
+
 * **0.44.0** (2024-02-17):
   - Add new option "useDefaultExclusion" for build configuration to handle exclusion of hidden files ([1708](https://github.com/fabric8io/docker-maven-plugin/issues/1708))
   - The <noCache> option is now propagated down to the buildx command, if it is set in the <build> section. ([1717](https://github.com/fabric8io/docker-maven-plugin/pull/1717))
