@@ -1,10 +1,17 @@
 # ChangeLog
-* **0.44-SNAPSHOT**:
+* **0.44.0** (2024-02-17):
   - Add new option "useDefaultExclusion" for build configuration to handle exclusion of hidden files ([1708](https://github.com/fabric8io/docker-maven-plugin/issues/1708))
   - The <noCache> option is now propagated down to the buildx command, if it is set in the <build> section. ([1717](https://github.com/fabric8io/docker-maven-plugin/pull/1717))
   - Fix Buildx build with Dockerfile outside of the Docker build context directory ([1721](https://github.com/fabric8io/docker-maven-plugin/pull/1721))
   - Add support setting driverOpts for buildx ([1704](https://github.com/fabric8io/docker-maven-plugin/pull/1704))
   - Multi-Architecture push is not sending pull registry auth credentials ([1709](https://github.com/fabric8io/docker-maven-plugin/issues/1709))
+  - Adding support for `--cacheFrom` and `--cacheTo` buildX arguments ([1621](https://github.com/fabric8io/docker-maven-plugin/issues/1621))
+  - Add support for using maven/system properties for an ARG used as the FROM image in a dockerfile ([1731](https://github.com/fabric8io/docker-maven-plugin/pull/1731))
+  - Revert workaround for checking docker version for checking whether to add `docker --config` flag or not. ([1754](https://github.com/fabric8io/docker-maven-plugin/pull/1754)) 
+  - Add a workaround to copy docker-buildx binary to temporary config directory created for docker buildx build. This seems to make docker recognize buildx even after config override.  ([1754](https://github.com/fabric8io/docker-maven-plugin/pull/1754))
+  - Fix Windows volume bindings for Rancher, Podman and Windows-based containers ([1719](https://github.com/fabric8io/docker-maven-plugin/issues/1719))
+  - Extract the Docker Compose v2.1+ `depends_on` conditions and apply them as Docker Maven Plugin waiting configurations ([888](https://github.com/fabric8io/docker-maven-plugin/issues/888))
+  - Update `org.apache.maven:maven-core` to `3.8.1` ([1702](https://github.com/fabric8io/docker-maven-plugin/pull/1702))
 
 * **0.43.4** (2023-08-18):
   - Always pass `--config` option for latest versions of Docker CLI ([1701](https://github.com/fabric8io/docker-maven-plugin/issues/1701))
