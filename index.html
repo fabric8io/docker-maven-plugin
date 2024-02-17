@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.43.4,</span>
-<span id="revdate">2023-08-18</span>
+<span id="revnumber">version 0.44.0,</span>
+<span id="revdate">2024-02-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.43.4<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.44.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2295,6 +2295,10 @@ restricted to simple options (e.g.: fromImage, fromSrc, platform).</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workdir</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Directory to change to when starting the container.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useDefaultExcludes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to true this plugin won&#8217;t include any hidden files in the docker image.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -2950,6 +2954,10 @@ Any downstream consumers, regardless of native architecture, will be able to use
 The builder manages the build cache.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>driverOpts</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nodeName</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specify the name of the node to be created or modified.</p></td>
 </tr>
@@ -2976,6 +2984,14 @@ elements are ignored.  If no platform architecture is specified, buildx is <stro
 <td class="tableblock halign-left valign-top"><p class="tableblock">The configuration of attestation modes.  The <code>&lt;provenance&gt;</code> element may be set to <code>min</code>,
 <code>max</code>, or <code>false</code>. The <code>&lt;sbom&gt;</code> element may be set to <code>true</code> or <code>false</code>. The <code>&lt;provenance&gt;</code>
 element defaults to <code>min</code> and the <code>&lt;sbom&gt;</code> element defaults to <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheFrom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A value to be passed through to the <code>--cache-from</code> option of <code>docker buildx build</code>. See <a href="https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-from">docker buildx reference docs</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheTo</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A value to be passed through to the <code>--cache-to</code> option of <code>docker buildx build</code>. See <a href="https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to">docker buildx reference docs</a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -5253,6 +5269,14 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Platform for multi-architecture image</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.cacheFrom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cache source for buildx builder</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildx.cacheTo</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cache destination for buildx builder</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capAdd.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to add to the container. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
@@ -6024,13 +6048,16 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <div class="ulist">
 <ul>
 <li>
-<p><code>cgroup_parent</code>, <code>devices</code>, <code>env_file</code>, <code>expose</code>, <code>pid</code>, <code>security_opt</code>, <code>stop_signal</code>, <code>cpu_quota</code>, <code>ipc</code>, <code>mac_address</code>, <code>read_only</code> are not yet supported (but might be in a future version).</p>
+<p><code>cgroup_parent</code>, <code>devices</code>, <code>env_file</code>, <code>expose</code>, <code>pid</code>, <code>security_opt</code>, <code>stop_signal</code>, <code>cpu_quota</code>, <code>ipc</code>, <code>mac_address</code>, <code>read_only</code>, <code>healthcheck</code> are not yet supported (but might be in a future version).</p>
 </li>
 <li>
 <p><code>extend</code> for including other Docker Compose files is not yet implemented.</p>
 </li>
 <li>
 <p>Only <strong>services</strong> are currently evaluated, there is no supported yet for <strong>volumes</strong> and <strong>networks</strong>.</p>
+</li>
+<li>
+<p>When using <a href="https://docs.docker.com/compose/compose-file/compose-file-v2/#depends_on"><code>depends_on</code> with long syntax</a> in a Docker Compose file, be advised the plugin cannot apply all usage constellations expressible in it. The root cause is this plugin uses the concept of pausing execution based on <a href="#start-wait">wait conditions</a> attached to dependent containers, while Docker Compose applies checks when starting the depending container. Keep in mind that execution of a container is continued as soon as any wait condition is fulfilled.</p>
 </li>
 </ul>
 </div>
@@ -6505,7 +6532,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.43.4<br>
+Version 0.44.0<br>
 Last updated 2023-07-28 11:49:48 IST
 </div>
 </div>
