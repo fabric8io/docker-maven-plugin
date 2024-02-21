@@ -1,16 +1,15 @@
 package io.fabric8.maven.docker.model;
 
+import com.google.common.base.Joiner;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 
 public class ContainerDetails implements Container {
@@ -77,10 +76,8 @@ public class ContainerDetails implements Container {
     public String getName() {
         String name = json.get(NAME).getAsString();
 
-        if (name.startsWith(SLASH)) {
-            name = name.substring(1);
-        }
-        return name;
+        return name.startsWith(SLASH) ? name.substring(1) :
+          name;
     }
 
     @Override
