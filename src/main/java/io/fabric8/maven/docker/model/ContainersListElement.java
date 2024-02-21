@@ -1,12 +1,11 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ContainersListElement implements Container {
 
@@ -133,9 +132,7 @@ public class ContainersListElement implements Container {
         int length = labels.size();
         Map<String, String> mapped = new HashMap<>(length);
 
-        Iterator<String> iterator = labels.keySet().iterator();
-        while (iterator.hasNext()) {
-            String key = iterator.next();
+        for (String key : labels.keySet()) {
             mapped.put(key, labels.get(key).getAsString());
         }
 
