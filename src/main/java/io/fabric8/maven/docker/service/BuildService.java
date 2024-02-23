@@ -66,7 +66,7 @@ public class BuildService {
 
         Map<String, String> buildArgs = addBuildArgs(buildContext);
         if (imagePullManager != null) {
-            autoPullBaseImage(imageConfig, imagePullManager, buildContext, buildArgs);
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext, prepareBuildArgs(buildArgs, imageConfig.getBuildConfiguration()));
             autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
         }
 

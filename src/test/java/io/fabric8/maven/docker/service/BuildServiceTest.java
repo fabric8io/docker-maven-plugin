@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.Assertions;
@@ -61,6 +62,9 @@ class BuildServiceTest {
 
     @Mock
     MavenProject mavenProject;
+
+    @Mock
+    MavenSession mavenSession;
 
     @Mock
     private QueryService queryService;
@@ -189,6 +193,35 @@ class BuildServiceTest {
         //verify that tries to pull both images
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s2i-java");
         verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s1i-java");
+    }
+
+    @Test
+    void testDockerfileWithBuildArgsInBuildConfig_ShouldPullImage() throws Exception {
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+            .dockerFile(getClass().getResource("/io/fabric8/maven/docker/util/Dockerfile_from_build_arg").getPath())
+            .args(Collections.singletonMap("FROM_IMAGE", "sample/base-image:latest"))
+            .build();
+
+        buildConfig.initAndValidate(logger);
+
+        imageConfig = new ImageConfiguration.Builder()
+            .name("build-image")
+            .buildConfig(buildConfig)
+            .build();
+
+        final ImagePullManager pullManager = new ImagePullManager(null, null, null);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+            .mojoParameters(mojoParameters)
+            .build();
+
+        Mockito.when(mojoParameters.getSession()).thenReturn(mavenSession);
+        mockMavenProject();
+
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+
+        //verify that tries to pull both images
+        verifyImagePull(buildConfig, pullManager, buildContext, "sample/base-image:latest");
     }
 
     @Test

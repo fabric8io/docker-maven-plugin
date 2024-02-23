@@ -31,6 +31,7 @@
     <module>docker-compose-dependon</module>
     <module>dockerfile</module>
     <module>dockerfile-base-as-arg</module>
+    <module>dockerfile-base-as-arg-buildconfig</module>
     <module>dockerignore</module>
     <module>healthcheck</module>
     <module>helloworld</module>
