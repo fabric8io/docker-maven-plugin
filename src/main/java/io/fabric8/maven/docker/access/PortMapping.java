@@ -403,6 +403,10 @@ public class PortMapping {
 
         private void writeProperties(Properties props, String file) throws IOException {
             File propFile = new File(file);
+            File parent = propFile.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
             try (OutputStream os = new FileOutputStream(propFile)) {
                 props.store(os, "Docker ports");
             } catch (IOException e) {

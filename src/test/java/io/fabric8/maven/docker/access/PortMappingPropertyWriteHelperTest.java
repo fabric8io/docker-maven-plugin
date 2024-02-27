@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +83,37 @@ class PortMappingPropertyWriteHelperTest {
         thenPropsContains("jolokia.port1", 49900);
         thenPropsContains("other.port1", 49901);
         thenPropsContains("other.ip1", "1.2.3.4");
+    }
+
+    @Test
+    void testWriteCreatePaths() throws IOException {
+        File dir = Files.createTempDirectory("dmp-").toFile();
+        Assertions.assertTrue(dir.delete());
+        String globalFile = Paths.get(dir.getAbsolutePath(), "dmp-tmp.properties").toFile().getAbsolutePath();
+        PortMapping mapping = createPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "127.0.0.1:other.port:5678");
+
+        // check that we can write on non-existant path with create set to "true"
+        givenAPortMappingWriter(globalFile);
+        whenUpdateDynamicMapping(mapping, "0.0.0.0", 8080, 49900);
+        whenUpdateDynamicMapping(mapping, "127.0.0.1", 5678, 49901);
+        whenWritePortMappings(null, mapping);
+        thenPropsFileExists(globalFile);
+        thenPropsSizeIs(2);
+        thenPropsContains("jolokia.port", 49900);
+        thenPropsContains("other.port", 49901);
+
+        // Check that we can still write in an existing path
+        String globalFile2 = Paths.get(dir.getAbsolutePath(), "dmp-tmp2.properties").toFile().getAbsolutePath();
+        givenAPortMappingWriter(globalFile2);
+        whenUpdateDynamicMapping(mapping, "0.0.0.0", 8080, 49900);
+        whenUpdateDynamicMapping(mapping, "127.0.0.1", 5678, 49901);
+        whenWritePortMappings(null, mapping);
+        thenPropsFileExists(globalFile2);
+        thenPropsSizeIs(2);
+        thenPropsContains("jolokia.port", 49900);
+        thenPropsContains("other.port", 49901);
+
+
     }
 
     private void givenADockerHostAddress(String host) {
