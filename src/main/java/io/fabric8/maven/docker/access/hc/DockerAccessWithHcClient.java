@@ -476,7 +476,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
         JsonObject imageDetails = JsonFactory.newJsonObject(response.getBody());
-        return imageDetails.get("Id").getAsString().substring(0, 12);
+        return imageDetails.get("Id").getAsString();
     }
 
     @Override
