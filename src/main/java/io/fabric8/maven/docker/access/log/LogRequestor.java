@@ -15,27 +15,26 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.time.ZonedDateTime;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import io.fabric8.maven.docker.util.TimestampFactory;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extractor for parsing the response of a log request
@@ -170,7 +169,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
                                   " [ Header: " + Hex.encodeHexString(headerBuffer.array()) + "]", e);
         }
 
-        String message = Charsets.UTF_8.newDecoder().decode(payload).toString();
+        String message = StandardCharsets.UTF_8.decode(payload).toString();
         callLogCallback(type, message);
         return true;
     }

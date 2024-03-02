@@ -1,6 +1,5 @@
 package io.fabric8.maven.docker.access.log;
 
-import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.http.HttpEntity;
@@ -22,12 +21,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
- 
-import java.time.ZonedDateTime;
 
 @ExtendWith(MockitoExtension.class)
 class LogRequestorTest {
@@ -321,7 +320,7 @@ class LogRequestorTest {
     private static ByteBuffer messageToBuffer(Streams stream, String message) throws IOException {
         String logMessage = logMessage(message);
 
-        CharsetEncoder encoder = Charsets.UTF_8.newEncoder();
+        CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
         ByteBuffer payload = encoder.encode(CharBuffer.wrap(logMessage.toCharArray()));
         assert payload.order() == ByteOrder.BIG_ENDIAN;
         int length = payload.limit();
