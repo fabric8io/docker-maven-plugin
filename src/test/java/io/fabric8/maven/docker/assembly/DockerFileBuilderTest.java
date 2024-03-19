@@ -1,14 +1,23 @@
 package io.fabric8.maven.docker.assembly;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckMode;
+import io.fabric8.maven.docker.config.RunCommand;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
  class DockerFileBuilderTest {
 
@@ -27,9 +36,34 @@ import org.junit.jupiter.api.Assertions;
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1"))
                 .shell(b)
-                .run(Arrays.asList("echo something", "echo second"))
+                .run(RunCommand.run("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
+        Assertions.assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    void testBuildDockerFileUserChange() throws IOException {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        Arguments b = Arguments.Builder.get().withParam("/bin/sh").withParam("-c").build();
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .shell(b)
+                .run(Arrays.asList(
+                        new RunCommand(DockerFileKeyword.USER, "root"),
+                        new RunCommand("echo something"),
+                        new RunCommand(DockerFileKeyword.USER, "notroot"),
+                        new RunCommand("echo second")))
+                .content();
+        String expected = loadFile("docker/Dockerfile_user_change.test");
         Assertions.assertEquals(expected, stripCR(dockerfileContent));
     }
 
@@ -48,7 +82,7 @@ import org.junit.jupiter.api.Assertions;
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1"))
                 .shell(b)
-                .run(Arrays.asList("echo something", "echo second"))
+                .run(RunCommand.run("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
         Assertions.assertEquals(expected, stripCR(dockerfileContent));
@@ -89,7 +123,7 @@ import org.junit.jupiter.api.Assertions;
                 .maintainer("maintainer@example.com")
                 .workdir("/tmp")
                 .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
+                .run(RunCommand.run("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile_udp.test");
         Assertions.assertEquals(expected, stripCR(dockerfileContent));
@@ -106,7 +140,7 @@ import org.junit.jupiter.api.Assertions;
                 .maintainer("maintainer@example.com")
                 .workdir("/tmp")
                 .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
+                .run(RunCommand.run("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile_tcp.test");
         Assertions.assertEquals(expected, stripCR(dockerfileContent));
@@ -123,7 +157,7 @@ import org.junit.jupiter.api.Assertions;
             .workdir("/tmp")
             .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
             .volumes(Collections.singletonList("/vol1"))
-            .run(Arrays.asList("echo something", "echo second"));
+            .run(RunCommand.run("echo something", "echo second"));
         return builder;
     }
 
@@ -143,7 +177,7 @@ import org.junit.jupiter.api.Assertions;
     void testDockerFileOptimisation() throws Exception {
         String dockerfileContent = getFileBuilder()
             .expose(Collections.singletonList("8080"))
-            .run(Arrays.asList("echo third", "echo fourth", "echo fifth"))
+            .run(RunCommand.run("echo third", "echo fourth", "echo fifth"))
             .optimise()
             .content();
         String expected = loadFile("docker/Dockerfile_optimised.test");
@@ -158,7 +192,7 @@ import org.junit.jupiter.api.Assertions;
 
     @Test
     void testOptimise() {
-        String dockerfileContent = new DockerFileBuilder().optimise().run(Arrays.asList("echo something", "echo two")).content();
+        String dockerfileContent = new DockerFileBuilder().optimise().run(RunCommand.run("echo something", "echo two")).content();
         Assertions.assertEquals("echo something && echo two", dockerfileToMap(dockerfileContent).get("RUN"));
     }
 

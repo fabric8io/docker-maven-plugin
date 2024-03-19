@@ -76,7 +76,7 @@ class PushMojoBuildXTest {
     when(mavenProject.getBuild().getOutputDirectory()).thenReturn(targetDir.getAbsolutePath());
     when(mavenProject.getBasedir()).thenReturn(temporaryFolder);
     when(dockerAccessFactory.createDockerAccess(any())).thenReturn(dockerAccess);
-    when(mockedPlexusContainer.lookup(SecDispatcher.ROLE, "maven")).thenReturn(mockedSecDispatcher);
+//    when(mockedPlexusContainer.lookup(SecDispatcher.ROLE, "maven")).thenReturn(mockedSecDispatcher);
     when(mockedSecDispatcher.decrypt(anyString())).thenReturn("testpassword");
     Map<String, Object> pluginContext = new HashMap<>();
     defaultExecMockedConstruction = mockConstruction(BuildXService.DefaultExec.class);

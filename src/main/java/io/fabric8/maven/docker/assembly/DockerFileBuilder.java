@@ -1,17 +1,23 @@
 package io.fabric8.maven.docker.assembly;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-
+import io.fabric8.maven.docker.config.RunCommand;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static io.fabric8.maven.docker.assembly.DockerFileKeyword.RUN;
+import static io.fabric8.maven.docker.assembly.DockerFileKeyword.USER;
 
 /**
  * Create a dockerfile
@@ -62,7 +68,7 @@ public class DockerFileBuilder {
     private Arguments shell;
 
     // list of RUN Commands to run along with image build see issue #191 on github
-    private List<String> runCmds = new ArrayList<>();
+    private List<RunCommand> runCmds = new ArrayList<>();
 
     // environment
     private Map<String,String> envEntries = new LinkedHashMap<>();
@@ -127,7 +133,7 @@ public class DockerFileBuilder {
 
     private void addUser(StringBuilder b) {
         if (user != null) {
-            DockerFileKeyword.USER.addTo(b, user);
+            USER.addTo(b, user);
         }
     }
 
@@ -213,13 +219,13 @@ public class DockerFileBuilder {
             if (entryUser != null) {
                 String[] userParts = entryUser.split(":");
                 if (userParts.length > 2) {
-                    DockerFileKeyword.USER.addTo(b, "root");
+                    USER.addTo(b, "root");
                 }
                 addCopyEntries(b, entry, "", (userParts.length > 1 ?
                         userParts[0] + ":" + userParts[1] :
                         userParts[0]));
                 if (userParts.length > 2) {
-                    DockerFileKeyword.USER.addTo(b, userParts[2]);
+                    USER.addTo(b, userParts[2]);
                 }
             } else {
                 addCopyEntries(b, entry, "", null);
@@ -323,9 +329,13 @@ public class DockerFileBuilder {
 
     private void addOptimisation() {
         if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
-            String optimisedRunCmd = StringUtils.join(runCmds.iterator(), " && ");
+            if(runCmds.stream().map(RunCommand::getAction).anyMatch(USER::equals)) return;
+            String commands = runCmds.stream()
+                    .filter(rc -> rc.getAction() == RUN)
+                    .map(r -> r.getParams())
+                    .collect(Collectors.joining(" && "));
             runCmds.clear();
-            runCmds.add(optimisedRunCmd);
+            runCmds.add(new RunCommand(commands));
         }
     }
 
@@ -336,8 +346,8 @@ public class DockerFileBuilder {
     }
 
 	private void addRun(StringBuilder b) {
-		for (String run : runCmds) {
-            DockerFileKeyword.RUN.addTo(b, run);
+		for (RunCommand run : runCmds) {
+            if(run != null) run.getAction().addTo(b, run.getParams());
 		}
 	}
 
@@ -456,14 +466,8 @@ public class DockerFileBuilder {
      * @param runCmds
      * @return
      */
-    public DockerFileBuilder run(List<String> runCmds) {
-        if (runCmds != null) {
-            for (String cmd : runCmds) {
-                if (!StringUtils.isEmpty(cmd)) {
-                    this.runCmds.add(cmd);
-                }
-            }
-        }
+    public DockerFileBuilder run(List<RunCommand> runCmds) {
+        if(runCmds != null) this.runCmds.addAll(runCmds);
         return this;
     }
 
