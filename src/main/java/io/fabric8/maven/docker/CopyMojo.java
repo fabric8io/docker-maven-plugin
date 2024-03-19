@@ -1,19 +1,5 @@
 package io.fabric8.maven.docker;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.regex.Matcher;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.config.CopyConfiguration;
 import io.fabric8.maven.docker.config.CopyConfiguration.Entry;
@@ -28,6 +14,19 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
 
 /**
  * <p>Mojo for copying file or directory from container.<p/>
@@ -41,7 +40,7 @@ import io.fabric8.maven.docker.util.Logger;
  * matching images configured in the project are searched and the copying is performed from the found containers
  * only.</p>
  */
-@Mojo(name = "copy", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "copy", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, configurator = "fabric8-mojo-configurator")
 public class CopyMojo extends AbstractDockerMojo {
 
     private static final String COPY_NAME_PATTERN_CONFIG = "copyNamePattern";

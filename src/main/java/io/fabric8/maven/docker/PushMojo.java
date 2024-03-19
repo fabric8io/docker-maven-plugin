@@ -3,7 +3,6 @@ package io.fabric8.maven.docker;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
-
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -15,7 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  * @author roland
  */
-@Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
+@Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY, configurator = "fabric8-mojo-configurator")
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified

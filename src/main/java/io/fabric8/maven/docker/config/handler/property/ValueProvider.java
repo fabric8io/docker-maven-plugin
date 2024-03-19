@@ -1,10 +1,20 @@
 package io.fabric8.maven.docker.config.handler.property;
 
-import java.util.*;
-
+import io.fabric8.maven.docker.config.RunCommand;
 import io.fabric8.maven.docker.util.EnvUtil;
 
-import static io.fabric8.maven.docker.util.EnvUtil.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import static io.fabric8.maven.docker.util.EnvUtil.extractFromPropertiesAsList;
+import static io.fabric8.maven.docker.util.EnvUtil.extractFromPropertiesAsListOfProperties;
+import static io.fabric8.maven.docker.util.EnvUtil.extractFromPropertiesAsMap;
 
 /**
  * Helper to extract values from a set of Properties, potentially mixing it up with XML-based configuration based on the
@@ -98,6 +108,15 @@ public class ValueProvider {
 
     public List<String> getList(ConfigKey key, List<String> fromConfig) {
         return stringListValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
+
+    public List<RunCommand> getRunCommands(ConfigKey key, List<RunCommand> fromConfig) {
+        return new ListValueExtractor<RunCommand>() {
+            @Override
+            protected List<RunCommand> process(List<String> strings) {
+                return strings.stream().map(RunCommand::new).collect(Collectors.toList());
+            }
+        }.getFromPreferredSource(prefix, key, fromConfig);
     }
 
     public List<Integer> getIntList(ConfigKey key, List<Integer> fromConfig) {

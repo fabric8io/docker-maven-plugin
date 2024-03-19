@@ -20,7 +20,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
  * @since 23.10.14
  *
  */
-@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, configurator = "fabric8-mojo-configurator")
 public class RemoveMojo extends AbstractDockerMojo {
 
     private static final String REMOVE_NAME_PATTERN_CONFIG = "removeNamePattern";

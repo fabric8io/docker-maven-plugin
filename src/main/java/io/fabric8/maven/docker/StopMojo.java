@@ -1,21 +1,5 @@
 package io.fabric8.maven.docker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -28,6 +12,21 @@ import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.GavLabel;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
 
 
 /**
@@ -43,7 +42,7 @@ import io.fabric8.maven.docker.util.GavLabel;
  * @since 26.03.14
  *
  */
-@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, configurator = "fabric8-mojo-configurator")
 public class StopMojo extends AbstractDockerMojo {
 
     private static final String STOP_NAME_PATTERN_CONFIG = "stopNamePattern";

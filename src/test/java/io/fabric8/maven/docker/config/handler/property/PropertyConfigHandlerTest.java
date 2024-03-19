@@ -25,12 +25,11 @@ import io.fabric8.maven.docker.config.CopyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunCommand;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
-import io.fabric8.maven.docker.util.Logger;
-
 import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.assembly.model.DependencySet;
 import org.apache.maven.project.MavenProject;
@@ -195,8 +194,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         Assertions.assertEquals(1, configs.size());
 
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
-        Assertions.assertArrayEquals(new String[] { "foo", "bar", "wibble" }, runCommands);
+        Assertions.assertEquals(RunCommand.run( "foo", "bar", "wibble" ), buildConfig.getRunCmds());
     }
 
     @Test
@@ -220,7 +218,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         imageConfiguration = new ImageConfiguration.Builder()
             .externalConfig(new HashMap<>())
             .buildConfig(new BuildImageConfiguration.Builder()
-                .runCmds(Arrays.asList("some", "ignored", "value"))
+                .runCmds(RunCommand.run("some", "ignored", "value"))
                 .cacheFrom((Collections.singletonList("foo/bar:latest")))
                 .build()
             )
@@ -240,8 +238,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         Assertions.assertEquals(1, configs.size());
 
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
-        Assertions.assertArrayEquals(new String[] { "propconf", "withrun", "used" }, runCommands);
+        Assertions.assertEquals(RunCommand.run("propconf", "withrun", "used"), buildConfig.getRunCmds());
     }
 
     @Test
@@ -276,7 +273,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         imageConfiguration = new ImageConfiguration.Builder()
             .externalConfig(externalConfigMode(PropertyMode.Fallback))
             .buildConfig(new BuildImageConfiguration.Builder()
-                .runCmds(Arrays.asList("some", "configured", "value"))
+                .runCmds(RunCommand.run("some", "configured", "value"))
                 .cacheFrom((Collections.singletonList("foo/bar:latest")))
                 .build()
             )
@@ -294,8 +291,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         Assertions.assertEquals(1, configs.size());
 
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
-        Assertions.assertArrayEquals(new String[] { "some", "configured", "value" }, runCommands);
+        Assertions.assertEquals(RunCommand.run("some", "configured", "value"), buildConfig.getRunCmds());
     }
 
     @Test

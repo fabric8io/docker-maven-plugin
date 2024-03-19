@@ -16,23 +16,22 @@ package io.fabric8.maven.docker;
  * limitations under the License.
  */
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.BuildImageSelectMode;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.MojoParameters;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProjectHelper;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Mojo for attaching one more source docker tar file to an artifact.
@@ -44,7 +43,7 @@ import org.apache.maven.project.MavenProjectHelper;
  * @author roland
  * @since 25/10/15
  */
-@Mojo(name = "source", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "source", defaultPhase = LifecyclePhase.PACKAGE, configurator = "fabric8-mojo-configurator")
 public class SourceMojo extends AbstractBuildSupportMojo {
 
     @Component

@@ -121,7 +121,7 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | Shell to be used for the *runCmds*. It contains *arg* elements which are defining the executable and its params.
 
 | *runCmds*
-| Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* into the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
+| Commands to be run during the build process. It contains *run* elements which are passed to the shell. You may also change user with a *user* element, but beware this will overwrite default user from the parent image, so you should supply a user for the image if you do. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* into the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
@@ -181,6 +181,8 @@ remote API.
   <runCmds>
     <run>groupadd -r appUser</run>
     <run>useradd -r -g appUser appUser</run>
+    <user>appUser</user
+    <run>id</run>
   </runCmds>
 
   <entryPoint>

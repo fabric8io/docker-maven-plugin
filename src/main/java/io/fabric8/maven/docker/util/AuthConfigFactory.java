@@ -1,26 +1,12 @@
 package io.fabric8.maven.docker.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import com.google.common.net.UrlEscapers;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.AuthConfigList;
+import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -34,16 +20,24 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
-import com.google.common.net.UrlEscapers;
-import com.google.gson.Gson;
-
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
-import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -669,18 +663,19 @@ public class AuthConfigFactory {
     }
 
     private String decrypt(String password) throws MojoExecutionException {
-        try {
-            // Done by reflection since I have classloader issues otherwise
-            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
-            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
-            synchronized(secDispatcher) {
-                return (String) method.invoke(secDispatcher, password);
-            }
-        } catch (ComponentLookupException e) {
-            throw new MojoExecutionException("Error looking security dispatcher",e);
-        } catch (ReflectiveOperationException e) {
-            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
-        }
+//        try {
+//            // Done by reflection since I have classloader issues otherwise
+//            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
+//            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
+//            synchronized(secDispatcher) {
+//                return (String) method.invoke(secDispatcher, password);
+//            }
+//        } catch (ComponentLookupException e) {
+//            throw new MojoExecutionException("Error looking security dispatcher",e);
+//        } catch (ReflectiveOperationException e) {
+//            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
+//        }
+        return password;
     }
 
     private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {

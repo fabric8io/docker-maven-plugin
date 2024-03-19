@@ -1,5 +1,12 @@
 package io.fabric8.maven.docker.config;
 
+import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,15 +20,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
-import org.apache.maven.plugins.annotations.Parameter;
-
-import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 
 /**
  * @author roland
@@ -123,7 +121,7 @@ public class BuildImageConfiguration implements Serializable {
      * RUN Commands within Build/Image
      */
     @Parameter
-    private List<String> runCmds;
+    private List<RunCommand> runCmds;
 
     @Parameter
     private String cleanup;
@@ -462,8 +460,8 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     @Nonnull
-    public List<String> getRunCmds() {
-        return EnvUtil.removeEmptyEntries(runCmds);
+    public List<RunCommand> getRunCmds() {
+        return runCmds;
     }
 
     public String getUser() {
@@ -631,7 +629,7 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder runCmds(List<String> theCmds) {
+        public Builder runCmds(List<RunCommand> theCmds) {
             if (theCmds == null) {
                 config.runCmds = new ArrayList<>();
             } else {
@@ -872,4 +870,5 @@ public class BuildImageConfiguration implements Serializable {
         // No dockerfile mode
         return null;
     }
+
 }

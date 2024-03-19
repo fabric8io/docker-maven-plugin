@@ -15,17 +15,9 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import io.fabric8.maven.docker.config.AttestationConfiguration;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Supplier;
-
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.AttestationConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.CopyConfiguration;
@@ -45,7 +37,148 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
 
-import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Supplier;
+
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ALIAS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ARGS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLIES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_BASEDIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_DESCRIPTOR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_DESCRIPTOR_REF;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_DOCKER_FILE_DIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_EXPORT_BASEDIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_IGNORE_PERMISSIONS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_MODE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_NAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_PERMISSIONS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_TARLONGFILEMODE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ASSEMBLY_USER;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.AUTO_REMOVE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BIND;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_ATTESTATION_PROVENANCE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_ATTESTATION_SBOM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_BUILDERNAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_CACHE_FROM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_CACHE_TO;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_CONFIGFILE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_DOCKERSTATEDIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_NODENAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILDX_PLATFORMS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILD_NETWORK;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.BUILD_OPTIONS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CACHE_FROM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CAP_ADD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CAP_DROP;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CLEANUP;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CMD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CONTEXT_DIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.COPY_ENTRIES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.COPY_NAME_PATTERN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CPUS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CPUSET;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.CPUSHARES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DEPENDS_ON;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DNS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DNS_SEARCH;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DOCKER_ARCHIVE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DOCKER_FILE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DOCKER_FILE_DIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.DOMAINNAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ENTRYPOINT;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ENV;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ENV_BUILD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ENV_PROPERTY_FILE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ENV_RUN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.EXPOSED_PROPERTY_KEY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.EXTRA_HOSTS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.FILTER;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.FROM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.FROM_EXT;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_CMD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_INTERVAL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_MODE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_RETRIES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_START_PERIOD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HEALTHCHECK_TIMEOUT;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.HOSTNAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.IMAGE_PULL_POLICY_BUILD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.IMAGE_PULL_POLICY_RUN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.ISOLATION;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LABELS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LINKS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOAD_NAME_PATTERN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_COLOR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_DATE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_DRIVER_NAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_DRIVER_OPTS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_ENABLED;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_FILE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.LOG_PREFIX;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.MAINTAINER;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.MEMORY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.MEMORY_SWAP;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NAMING_STRATEGY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NET;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NETWORK_ALIAS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NETWORK_MODE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NETWORK_NAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.NO_CACHE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.OPTIMISE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.PLATFORM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.PORTS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.PORT_PROPERTY_FILE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.PRIVILEGED;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.READ_ONLY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.REGISTRY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.REMOVE_NAME_PATTERN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.RESTART_POLICY_NAME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.RESTART_POLICY_RETRY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.RUN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SECURITY_OPTS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SHELL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SHMSIZE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SKIP_BUILD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SKIP_PUSH;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SKIP_RUN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SQUASH;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.STOP_NAME_PATTERN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.SYSCTLS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.TAGS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.TMPFS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.USER;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.USE_DEFAULT_EXCLUDES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.VOLUMES;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.VOLUMES_FROM;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_EXEC_BREAK_ON_ERROR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_EXEC_POST_START;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_EXEC_PRE_STOP;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_EXIT;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_HEALTHY;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_HTTP_METHOD;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_HTTP_STATUS;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_HTTP_URL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_KILL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_LOG;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_SHUTDOWN;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_TCP_HOST;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_TCP_MODE;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_TCP_PORT;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_TIME;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WAIT_URL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WATCH_INTERVAL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WATCH_POSTEXEC;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WATCH_POSTGOAL;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WORKDIR;
+import static io.fabric8.maven.docker.config.handler.property.ConfigKey.WORKING_DIR;
 
 /**
  * @author roland
@@ -163,7 +296,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .labels(valueProvider.getMap(LABELS, config.getLabels()))
             .ports(extractPortValues(config.getPorts(), valueProvider))
             .shell(extractArguments(valueProvider, SHELL, config.getShell()))
-            .runCmds(valueProvider.getList(RUN, config.getRunCmds()))
+            .runCmds(valueProvider.getRunCommands(RUN, config.getRunCmds()))
             .from(valueProvider.getString(FROM, config.getFrom()))
             .fromExt(valueProvider.getMap(FROM_EXT, config.getFromExt()))
             .registry(valueProvider.getString(REGISTRY, config.getRegistry()))
