@@ -36,6 +36,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHealthCheckConfig;
 import io.fabric8.maven.docker.access.ContainerHostConfig;
 import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -44,6 +45,7 @@ import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.NetworkCreateConfig;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
@@ -389,6 +391,11 @@ public class RunService {
                     new ContainerNetworkingConfig()
                         .aliases(networkConfig);
                 config.networkingConfig(networkingConfig);
+            }
+            
+            HealthCheckConfiguration healthCheckConfiguration = runConfig.getHealthCheck();
+            if (healthCheckConfiguration != null) {
+                config.healthCheck(new ContainerHealthCheckConfig(healthCheckConfiguration));
             }
 
             return config;
