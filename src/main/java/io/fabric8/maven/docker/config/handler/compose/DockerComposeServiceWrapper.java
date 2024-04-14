@@ -404,20 +404,20 @@ class DockerComposeServiceWrapper {
         RunVolumeConfiguration.Builder builder = new RunVolumeConfiguration.Builder();
         List<String> volumes = asList("volumes");
         boolean added = false;
-        if (volumes.size() > 0) {
+        if (!volumes.isEmpty()) {
             builder.bind(volumes);
             added = true;
         }
         List<String> volumesFrom = asList("volumes_from");
-        if (volumesFrom.size() > 0) {
+        if (!volumesFrom.isEmpty()) {
             builder.from(volumesFrom);
             added = true;
         }
 
         if (added) {
-            RunVolumeConfiguration configuration = builder.build();
-            VolumeBindingUtil.resolveRelativeVolumeBindings(baseDir, configuration);
-            return configuration;
+            RunVolumeConfiguration runVolumeConfiguration = builder.build();
+            VolumeBindingUtil.resolveRelativeVolumeBindings(baseDir, runVolumeConfiguration);
+            return runVolumeConfiguration;
         }
 
         return null;
