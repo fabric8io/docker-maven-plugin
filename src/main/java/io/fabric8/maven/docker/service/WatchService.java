@@ -58,7 +58,7 @@ public class WatchService {
     public synchronized void watch(WatchContext context, BuildService.BuildContext buildContext, List<ImageConfiguration> images) throws DockerAccessException,
             MojoExecutionException {
 
-        // Important to be be a single threaded scheduler since watch jobs must run serialized
+        // Important to be a single threaded scheduler since watch jobs must run serialized
         ScheduledExecutorService executor = null;
         try {
             executor = Executors.newSingleThreadScheduledExecutor();
@@ -97,7 +97,7 @@ public class WatchService {
                     tasks.add("restarting");
                 }
 
-                if (tasks.size() > 0) {
+                if (!tasks.isEmpty()) {
                     log.info("%s: Watch for %s", imageConfig.getDescription(), StringUtils.join(tasks.toArray(), " and "));
                 }
             }
@@ -125,22 +125,19 @@ public class WatchService {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
 
         final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, assemblyName, mojoParameters);
-        return new Runnable() {
-            @Override
-            public void run() {
-                List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
-                if (entries != null && entries.size() > 0) {
-                    try {
-                        log.info("%s: Assembly %s changed. Copying changed files to container ...", imageConfig.getDescription(), assemblyName);
+        return () -> {
+            List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
+            if (entries != null && !entries.isEmpty()) {
+                try {
+                    log.info("%s: Assembly %s changed. Copying changed files to container ...", imageConfig.getDescription(), assemblyName);
 
-                        File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
-                                imageConfig.getName(), mojoParameters);
-                        dockerAccess.copyArchiveToContainer(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
-                        callPostExec(watcher);
-                    } catch (MojoExecutionException | IOException | ExecException e) {
-                        log.error("%s: Error when copying files to container %s: %s",
-                                  imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
-                    }
+                    File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
+                            imageConfig.getName(), mojoParameters);
+                    dockerAccess.copyArchiveToContainer(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
+                    callPostExec(watcher);
+                } catch (MojoExecutionException | IOException | ExecException e) {
+                    log.error("%s: Error when copying files to container %s: %s",
+                              imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
                 }
             }
         };
@@ -168,7 +165,7 @@ public class WatchService {
             @Override
             public void run() {
                 List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
-                if (entries != null && entries.size() > 0) {
+                if (entries != null && !entries.isEmpty()) {
                     try {
                         log.info("%s: Assembly %s changed. Rebuild ...", imageConfig.getDescription(), assemblyName);
 
