@@ -6,7 +6,6 @@ import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
-import net.jodah.failsafe.internal.util.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
@@ -70,6 +69,15 @@ class DockerComposeConfigHandlerTest {
         validateRunConfiguration(configs.get(0).getRunConfiguration());
     }
 
+    @Test
+    void simpleExtraIn24() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_2.4.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        Assertions.assertEquals(1, configs.size());
+        RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
+        Assertions.assertEquals("linux/amd64", runConfig.getPlatform());
+    }
+    
     @Test
     void networkAliases() throws IOException, MavenFilteringException {
         setupComposeExpectations("docker-compose-network-aliases.yml");
@@ -266,7 +274,6 @@ class DockerComposeConfigHandlerTest {
      * system
      */
     private void assertHostBindingExists(String bindString) {
-        //        System.err.println(">>>> " + bindString);
 
         // Extract the host-portion of the volume binding string, accounting for windows platform paths and unix style
         // paths.  For example:

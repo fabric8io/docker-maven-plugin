@@ -128,7 +128,11 @@ class DockerComposeServiceWrapper {
     boolean usesLongSyntaxDependsOn() {
         return asObject("depends_on") instanceof Map;
     }
-    
+
+    public String getPlatform() {
+        return asString("platform");
+    }
+
     /**
      * <a href="https://docs.docker.com/compose/compose-file/compose-file-v2/#depends_on">Docker Compose Spec v2.1+ defined conditions</a>
      */
