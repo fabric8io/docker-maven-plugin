@@ -1,0 +1,5 @@
+version: 2.4
+services:
+  service:
+    image: image
+    platform: linux/amd64

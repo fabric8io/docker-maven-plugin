@@ -212,6 +212,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .labels(wrapper.getLabels())
                 .links(wrapper.getLinks()) // external_links and links are handled the same in d-m-p
                 .log(wrapper.getLogConfiguration())
+                .platform(wrapper.getPlatform())
                 .network(wrapper.getNetworkConfig()) // TODO: Up to now only a single network is supported and not ipv4, ipv6
                 // pid not supported
                 .ports(wrapper.getPortMapping())
