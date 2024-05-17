@@ -126,6 +126,7 @@ public enum ConfigKey {
     SHMSIZE,
     SKIP_BUILD("skip.build"),
     SKIP_PUSH,
+    SKIP_TAG("skip.tag"),
     SKIP_RUN("skip.run"),
     STOP_NAME_PATTERN,
     COPY_NAME_PATTERN,

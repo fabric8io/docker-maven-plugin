@@ -142,10 +142,12 @@ public class BuildXService {
         append(cmdLine, "build", "--progress=plain", "--builder", builderName, "--platform",
             String.join(",", platforms), "--tag",
             new ImageName(imageConfig.getName()).getFullName(configuredRegistry));
-        buildConfiguration.getTags().forEach(t -> {
-            cmdLine.add("--tag");
-            cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName(configuredRegistry));
-        });
+        if (!buildConfiguration.skipTag()) {
+            buildConfiguration.getTags().forEach(t -> {
+                cmdLine.add("--tag");
+                cmdLine.add(new ImageName(imageConfig.getName(), t).getFullName(configuredRegistry));
+            });
+        }
 
         Map<String, String> args = buildConfiguration.getArgs();
         if (args != null) {

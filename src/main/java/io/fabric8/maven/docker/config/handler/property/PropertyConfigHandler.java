@@ -174,6 +174,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .workdir(valueProvider.getString(WORKDIR, config.getWorkdir()))
             .skip(valueProvider.getBoolean(SKIP_BUILD, config.getSkip()))
             .skipPush(valueProvider.getBoolean(SKIP_PUSH, config.getSkipPush()))
+            .skipTag(valueProvider.getBoolean(SKIP_TAG, config.skipTag()))
             .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_BUILD, config.getImagePullPolicy()))
             .contextDir(valueProvider.getString(CONTEXT_DIR, config.getContextDirRaw()))
             .dockerArchive(valueProvider.getString(DOCKER_ARCHIVE, config.getDockerArchiveRaw()))

@@ -213,4 +213,13 @@ class BuildImageConfigurationTest {
                 assemblies(Arrays.asList(assemblyConfigurationOne, assemblyConfigurationTwo)).build();
         Assertions.assertThrows(IllegalArgumentException.class, () -> config.initAndValidate(logger));
     }
+
+    @Test
+    void skipTag() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().skipTag(true)
+                        .build();
+        config.initAndValidate(logger);
+        Assertions.assertTrue(config.skipTag());
+    }
 }
