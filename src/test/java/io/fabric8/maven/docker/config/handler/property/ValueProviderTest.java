@@ -190,4 +190,14 @@ class ValueProviderTest {
         Assertions.assertEquals("notignored1", m.get("ckey"));
     }
 
+    @Test
+    void testSkipTag() {
+        configure(PropertyMode.Override);
+        Assertions.assertNull(provider.getBoolean(ConfigKey.SKIP_TAG, null));
+
+        props.put("docker.skip.tag", "true");
+        Assertions.assertTrue(provider.getBoolean(ConfigKey.SKIP_TAG, null));
+        props.put("docker.skip.tag", "false");
+        Assertions.assertFalse(provider.getBoolean(ConfigKey.SKIP_TAG, null));
+    }
 }

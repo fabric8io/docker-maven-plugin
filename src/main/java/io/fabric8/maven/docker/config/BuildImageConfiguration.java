@@ -191,6 +191,9 @@ public class BuildImageConfiguration implements Serializable {
     private Boolean skipPush;
 
     @Parameter
+    private Boolean skipTag;
+
+    @Parameter
     private ArchiveCompression compression = ArchiveCompression.none;
 
     @Parameter
@@ -409,6 +412,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public boolean skipPush() {
         return skipPush != null ? skipPush : false;
+    }
+
+    public boolean skipTag() {
+        return skipTag != null ? skipTag : false;
     }
 
     public boolean useDefaultExcludes() {
@@ -730,6 +737,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder skipPush(Boolean skipPush) {
             config.skipPush = skipPush;
+            return this;
+        }
+
+        public Builder skipTag(Boolean skipTag) {
+            config.skipTag = skipTag;
             return this;
         }
 

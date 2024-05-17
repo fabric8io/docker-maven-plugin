@@ -35,6 +35,13 @@ public class TagMojo extends AbstractDockerMojo {
         List<ImageConfiguration> imageConfigs = getResolvedImages();
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            if (buildConfig.skipTag()) {
+                continue;
+            }
+            if (buildConfig.isBuildX()) {
+                // Tag happens the building stage.
+                continue;
+            }
 
             hub.getBuildService().tagImage(imageConfig.getName(), tagName, repo, buildConfig.cleanupMode());
         }
