@@ -17,6 +17,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.GavLabel;
+import java.util.function.Consumer;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
 import org.apache.maven.monitor.logging.DefaultLog;
@@ -113,18 +114,25 @@ abstract class MojoTestBase {
     }
 
     ImageConfiguration singleImageConfiguration(BuildXConfiguration buildx, String contextDir) {
-        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
-            .from("scratch")
-            .buildx(buildx)
-            .args(Collections.singletonMap("foo", "bar"))
-            .contextDir(contextDir)
-            .build();
+        return singleImageConfiguration(builder -> {
+            builder.buildx(buildx);
+            builder.contextDir(contextDir);
+        });
+    }
+
+    ImageConfiguration singleImageConfiguration(
+            Consumer<BuildImageConfiguration.Builder> buildImageConfigurationConsumer) {
+        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder()
+                .from("scratch")
+                .args(Collections.singletonMap("foo", "bar"));
+        buildImageConfigurationConsumer.accept(builder);
+        BuildImageConfiguration buildImageConfiguration = builder.build();
         buildImageConfiguration.initAndValidate(log);
 
         return new Builder()
-            .name("example:latest")
-            .buildConfig(buildImageConfiguration)
-            .build();
+                .name("example:latest")
+                .buildConfig(buildImageConfiguration)
+                .build();
     }
 
     ImageConfiguration singleImageConfigurationWithBuildWithSquash(BuildXConfiguration buildx, String contextDir) {

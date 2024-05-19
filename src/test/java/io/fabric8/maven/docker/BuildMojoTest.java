@@ -11,6 +11,8 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.BuildXService;
 import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.util.ImageName;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 class BuildMojoTest extends MojoTestBase {
@@ -241,6 +244,75 @@ class BuildMojoTest extends MojoTestBase {
         thenAuthContainsRegistry("custom-registry.org");
     }
 
+    void buildUsingBuildxWithTag(boolean skipTag) throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag-" + System.currentTimeMillis());
+        tags.add("tag-" + System.currentTimeMillis());
+
+        givenMavenProject(buildMojo);
+        ImageConfiguration imageConfiguration = singleImageConfiguration(builder -> {
+            builder.buildx(getBuildXPlatforms(TWO_BUILDX_PLATFORMS).build());
+            builder.tags(tags);
+            builder.skipTag(skipTag);
+        });
+        givenResolvedImages(buildMojo, Collections.singletonList(imageConfiguration));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        List<String> fullTags = skipTag ? Collections.emptyList() : tags.stream()
+                .map(tag -> new ImageName(imageConfiguration.getName(), tag).getFullName())
+                .collect(Collectors.toList());
+        thenBuildxRun(null, null, true, null, fullTags);
+    }
+
+    @Test
+    void buildUsingBuildxWithTag() throws IOException, MojoExecutionException {
+        buildUsingBuildxWithTag(false);
+    }
+
+    @Test
+    void buildUsingBuildxWithSkipTag() throws IOException, MojoExecutionException {
+        buildUsingBuildxWithTag(true);
+    }
+
+    void buildWithTag(boolean skipTag) throws IOException, MojoExecutionException {
+        givenMavenProject(buildMojo);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag-" + System.currentTimeMillis());
+        tags.add("tag-" + System.currentTimeMillis());
+
+        ImageConfiguration imageConfiguration = singleImageConfiguration(builder -> {
+            builder.skipTag(skipTag);
+            builder.tags(tags);
+        });
+        givenResolvedImages(buildMojo, Collections.singletonList(imageConfiguration));
+        givenPackaging("jar");
+        givenSkipPom(true);
+
+        whenMojoExecutes();
+
+        thenBuildRun();
+
+        if (!skipTag) {
+            Mockito.verify(buildService, Mockito.times(1))
+                    .tagImage(Mockito.any(ImageConfiguration.class));
+        }
+    }
+
+    @Test
+    void buildWithTag() throws IOException, MojoExecutionException {
+        buildWithTag(false);
+    }
+
+    @Test
+    void buildWithSkipTag() throws IOException, MojoExecutionException {
+        buildWithTag(true);
+    }
+
     private void givenBuildXService() {
         BuildXService buildXService = new BuildXService(dockerAccess, dockerAssemblyManager, log, exec);
 
@@ -288,24 +360,39 @@ class BuildMojoTest extends MojoTestBase {
             .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any());
     }
 
+    private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded,
+                               String attestation) throws MojoExecutionException {
+        thenBuildxRun(relativeConfigFile, contextDir, nativePlatformIncluded, attestation, Collections.emptyList());
+    }
+
     private void thenBuildxRun(String relativeConfigFile, String contextDir,
-        boolean nativePlatformIncluded, String attestation) throws MojoExecutionException {
+                               boolean nativePlatformIncluded, String attestation, List<String> tags)
+            throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
         String config = getOsDependentBuild(buildPath, "docker");
-        String configFile = relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) : null;
+        String configFile =
+                relativeConfigFile != null ? getOsDependentBuild(projectBaseDirectory.toPath(), relativeConfigFile) :
+                        null;
 
         List<String> cmds =
-            BuildXService.append(new ArrayList<>(), "docker",  "--config", config, "buildx",
-                "create", "--driver", "docker-container", "--name", "maven" , "--node", "maven0");
+                BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx",
+                        "create", "--driver", "docker-container", "--name", "maven", "--node", "maven0");
         if (configFile != null) {
             BuildXService.append(cmds, "--config", configFile.replace('/', File.separatorChar));
         }
         Mockito.verify(exec).process(cmds);
 
         if (nativePlatformIncluded) {
-            List<String> buildXLine = BuildXService.append(new ArrayList<>(), "docker",  "--config", config, "buildx",
+            List<String> buildXLine = BuildXService.append(new ArrayList<>(), "docker", "--config", config, "buildx",
                     "build", "--progress=plain", "--builder", "maven",
-                    "--platform", NATIVE_PLATFORM, "--tag", "example:latest", "--build-arg", "foo=bar");
+                    "--platform", NATIVE_PLATFORM, "--tag", "example:latest");
+
+            tags.forEach(tag -> {
+                buildXLine.add("--tag");
+                buildXLine.add(tag);
+            });
+            buildXLine.add("--build-arg");
+            buildXLine.add("foo=bar");
 
             if (attestation != null) {
                 buildXLine.add(attestation);
@@ -315,7 +402,7 @@ class BuildMojoTest extends MojoTestBase {
                 buildXLine.add(getOsDependentBuild(buildPath, "build"));
             } else {
                 Path contextPath = tmpDir.resolve("docker-build");
-                BuildXService.append(buildXLine, "--file=" + contextPath.resolve("Dockerfile"), contextPath.toString() );
+                BuildXService.append(buildXLine, "--file=" + contextPath.resolve("Dockerfile"), contextPath.toString());
             }
 
             buildXLine.add("--load");

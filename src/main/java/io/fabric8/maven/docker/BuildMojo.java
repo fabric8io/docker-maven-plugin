@@ -105,7 +105,9 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
                 if (!skipTag) {
-                    buildService.tagImage(imageConfig);
+                    if (!imageConfig.getBuildConfiguration().skipTag()) {
+                        buildService.tagImage(imageConfig);
+                    }
                 }
             }
         }
