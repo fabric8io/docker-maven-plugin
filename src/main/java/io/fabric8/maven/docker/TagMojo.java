@@ -39,7 +39,7 @@ public class TagMojo extends AbstractDockerMojo {
                 continue;
             }
             if (buildConfig.isBuildX()) {
-                // Tag happens the building stage.
+                // Tag happens at the building stage.
                 continue;
             }
 
