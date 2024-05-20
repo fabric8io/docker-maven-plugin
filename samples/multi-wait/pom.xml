@@ -23,7 +23,7 @@
           <images>
             <image>
               <alias>db</alias>
-              <name>postgres:9.6.0</name>
+              <name>postgres:16.3-alpine</name>
               <run>
                 <env>
                   <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
@@ -35,7 +35,7 @@
             </image>
             <image>
               <alias>db2</alias>
-              <name>postgres:9.6.0</name>
+              <name>postgres:16.3-alpine</name>
               <run>
                 <env>
                   <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
