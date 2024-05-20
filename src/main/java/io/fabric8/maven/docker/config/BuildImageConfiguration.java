@@ -415,7 +415,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public boolean skipTag() {
-        return skipTag != null ? skipTag : false;
+        return skipTag != null && skipTag;
     }
 
     public boolean useDefaultExcludes() {
