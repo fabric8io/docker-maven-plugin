@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -244,7 +246,9 @@ class BuildMojoTest extends MojoTestBase {
         thenAuthContainsRegistry("custom-registry.org");
     }
 
-    void buildUsingBuildxWithTag(boolean skipTag) throws IOException, MojoExecutionException {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void buildWithTagByBuildx(boolean skipTag) throws IOException, MojoExecutionException {
         givenBuildXService();
 
         List<String> tags = new ArrayList<>();
@@ -268,17 +272,9 @@ class BuildMojoTest extends MojoTestBase {
         thenBuildxRun(null, null, true, null, fullTags);
     }
 
-    @Test
-    void buildUsingBuildxWithTag() throws IOException, MojoExecutionException {
-        buildUsingBuildxWithTag(false);
-    }
-
-    @Test
-    void buildUsingBuildxWithSkipTag() throws IOException, MojoExecutionException {
-        buildUsingBuildxWithTag(true);
-    }
-
-    void buildWithTag(boolean skipTag) throws IOException, MojoExecutionException {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void buildWithTagByNormalBuild(boolean skipTag) throws IOException, MojoExecutionException {
         givenMavenProject(buildMojo);
 
         List<String> tags = new ArrayList<>();
@@ -301,16 +297,6 @@ class BuildMojoTest extends MojoTestBase {
             Mockito.verify(buildService, Mockito.times(1))
                     .tagImage(Mockito.any(ImageConfiguration.class));
         }
-    }
-
-    @Test
-    void buildWithTag() throws IOException, MojoExecutionException {
-        buildWithTag(false);
-    }
-
-    @Test
-    void buildWithSkipTag() throws IOException, MojoExecutionException {
-        buildWithTag(true);
     }
 
     private void givenBuildXService() {
