@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -263,6 +265,9 @@ class BuildXServiceTest {
         }
     }
 
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
     void testBuildWithTag(boolean skipTag) throws Exception {
         List<String> tags = new ArrayList<>();
         tags.add("tag-" + System.currentTimeMillis());
@@ -285,16 +290,6 @@ class BuildXServiceTest {
         } else {
             verifyBuildXArgumentPresentInExec(fullTags);
         }
-    }
-
-    @Test
-    void testBuildWithSkipTag() throws Exception {
-        testBuildWithTag(true);
-    }
-
-    @Test
-    void testBuildWithTag() throws Exception {
-        testBuildWithTag(false);
     }
 
     private void givenAnImageConfiguration(String... platforms) {
