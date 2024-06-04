@@ -663,19 +663,18 @@ public class AuthConfigFactory {
     }
 
     private String decrypt(String password) throws MojoExecutionException {
-//        try {
-//            // Done by reflection since I have classloader issues otherwise
-//            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
-//            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
-//            synchronized(secDispatcher) {
-//                return (String) method.invoke(secDispatcher, password);
-//            }
-//        } catch (ComponentLookupException e) {
-//            throw new MojoExecutionException("Error looking security dispatcher",e);
-//        } catch (ReflectiveOperationException e) {
-//            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
-//        }
-        return password;
+        try {
+            // Done by reflection since I have classloader issues otherwise
+            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
+            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
+            synchronized(secDispatcher) {
+                return (String) method.invoke(secDispatcher, password);
+            }
+        } catch (ComponentLookupException e) {
+            throw new MojoExecutionException("Error looking security dispatcher",e);
+        } catch (ReflectiveOperationException e) {
+            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
+        }
     }
 
     private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {

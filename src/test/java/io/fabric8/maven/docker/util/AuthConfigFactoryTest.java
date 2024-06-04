@@ -101,7 +101,7 @@ class AuthConfigFactoryTest {
 
     @BeforeEach
     void containerSetup() throws ComponentLookupException, SecDispatcherException {
-//        Mockito.lenient().when(container.lookup(SecDispatcher.ROLE, "maven")).thenReturn(secDispatcher);
+        Mockito.lenient().when(container.lookup(SecDispatcher.ROLE, "maven")).thenReturn(secDispatcher);
         Mockito.lenient().when(secDispatcher.decrypt(Mockito.anyString())).thenAnswer(invocation -> invocation.getArguments()[0]);
 
         factory = new AuthConfigFactory(container);
