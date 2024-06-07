@@ -14,7 +14,6 @@ import java.util.function.Predicate;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
 import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
 
 import static org.fusesource.jansi.Ansi.Color.*;
 import static org.fusesource.jansi.Ansi.ansi;
@@ -244,13 +243,7 @@ public class AnsiLogger implements Logger, Closeable {
 
     private void initializeColor(boolean useColor) {
         this.useAnsi = useColor && !log.isDebugEnabled();
-        if (useAnsi) {
-            AnsiConsole.systemInstall();
-            Ansi.setEnabled(true);
-        }
-        else {
-            Ansi.setEnabled(false);
-        }
+        Ansi.setEnabled(useAnsi);
     }
 
     private void initializePrintWriter() throws FileNotFoundException {
