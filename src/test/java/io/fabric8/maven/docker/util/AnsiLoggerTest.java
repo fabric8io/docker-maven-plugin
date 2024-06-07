@@ -21,11 +21,7 @@ package io.fabric8.maven.docker.util;
 import org.apache.maven.monitor.logging.DefaultLog;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,29 +29,6 @@ import org.junit.jupiter.api.Test;
  * @since 07/10/16
  */
 class AnsiLoggerTest {
-    @BeforeAll
-    public static void installAnsi() {
-        AnsiConsole.systemInstall();
-    }
-
-    @BeforeEach
-    void forceAnsiPassthrough() {
-        // Because the AnsiConsole keeps a per-VM counter of calls to systemInstall, it is
-        // difficult to force it to pass through escapes to stdout during test.
-        // Additionally, running the test in a suite (e.g. with mvn test) means other
-        // code may have already initialized or manipulated the AnsiConsole.
-        // Hence we just reset the stdout/stderr references to those captured by AnsiConsole
-        // during its static initialization and restore them after tests.
-        System.setOut(AnsiConsole.system_out);
-        System.setErr(AnsiConsole.system_err);
-    }
-
-    @AfterAll
-    public static void restoreAnsiPassthrough() {
-        AnsiConsole.systemUninstall();
-        System.setOut(AnsiConsole.out);
-        System.setErr(AnsiConsole.err);
-    }
 
     @Test
     void emphasizeDebug() {
