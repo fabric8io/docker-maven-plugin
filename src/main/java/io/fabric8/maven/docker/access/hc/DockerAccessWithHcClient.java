@@ -517,7 +517,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         String url = urlBuilder.removeContainer(containerId, removeVolumes);
         log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
         try {
-            delegate.delete(url, HTTP_NO_CONTENT);
+            delegate.delete(url, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
         }
