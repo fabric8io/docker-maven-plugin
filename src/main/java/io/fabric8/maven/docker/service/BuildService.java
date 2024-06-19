@@ -172,9 +172,13 @@ public class BuildService {
 
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 
+        String builderVersion = null != buildConfig.getBuildOptions()
+                ? buildConfig.getBuildOptions().getOrDefault("version", docker.getDefaultBuilderVersion()) // use configured version …
+                : docker.getDefaultBuilderVersion(); // … or use the default version
         // auto is now supported by docker, consider switching?
         BuildOptions opts =
                 new BuildOptions(buildConfig.getBuildOptions())
+                        .builderVersion(builderVersion)
                         .dockerfile(buildConfig.getDockerfileName())
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
