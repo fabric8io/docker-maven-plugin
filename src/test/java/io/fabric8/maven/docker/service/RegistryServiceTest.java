@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
+import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -55,8 +57,9 @@ class RegistryServiceTest {
     private TestCacheStore cacheStore;
     private AutoPullMode autoPullMode;
     private RegistryService registryService;
+    private boolean hasImage;
     private Map<String, String> authConfig;
-
+    private MockedStatic<DockerFileUtil> dockerFileUtilMockedStatic;
 
     @TempDir
     private File projectBaseDir;
@@ -93,6 +96,7 @@ class RegistryServiceTest {
         imageName = null;
         imagePullPolicy = null;
         autoPullMode = null;
+        hasImage = false;
         registry = null;
         imageConfiguration = null;
     }
@@ -103,6 +107,8 @@ class RegistryServiceTest {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenImagePullPolicy(ImagePullPolicy.Always);
+        givenHasImage(hasImage);
+
         checkPulledButNotTagged();
     }
 
@@ -112,6 +118,8 @@ class RegistryServiceTest {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAutoPullMode(AutoPullMode.ALWAYS);
+        givenHasImage(hasImage);
+
         checkPulledButNotTagged();
     }
 
@@ -128,6 +136,7 @@ class RegistryServiceTest {
     void pullImageAlwaysWhenPreviouslyPulled() throws Exception {
         givenAnImage();
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
+        givenHasImage(false);
         givenPreviousPulled(true);
         givenImagePullPolicy(ImagePullPolicy.Always);
 
@@ -158,6 +167,7 @@ class RegistryServiceTest {
     @Test
     void policyNeverWithImageAvailable() throws DockerAccessException {
         givenAnImage();
+        givenHasImage(true);
         givenPreviousPulled(false);
         givenImagePullPolicy(ImagePullPolicy.Never);
 
@@ -171,6 +181,7 @@ class RegistryServiceTest {
     @Test
     void policyNeverWithImageNotAvailable() throws DockerAccessException {
         givenAnImage();
+        givenHasImage(false);
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenPreviousPulled(false);
         givenImagePullPolicy(ImagePullPolicy.Never);
@@ -191,10 +202,13 @@ class RegistryServiceTest {
     void pullWithCustomRegistry() throws DockerAccessException {
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("myregistry.com/user/test:1.0.1");
+        givenHasImage(false);
         givenPreviousPulled(false);
         givenRegistry("anotherRegistry.com");
         givenImagePullPolicy(ImagePullPolicy.IfNotPresent);
+
         whenAutoPullImage();
+
         thenImageHasBeenPulledWithRegistry("myregistry.com");
         thenImageHasNotBeenTagged();
         thenNoExceptionThrown();
@@ -209,6 +223,7 @@ class RegistryServiceTest {
             .name("myregistry.com/user/app:1.0.1")
             .buildConfig(buildImageConfiguration).build();
         givenAnImage("myregistry.com/user/test:1.0.1");
+        givenHasImage(false);
         givenPreviousPulled(false);
         givenRegistry("anotherRegistry.com");
         givenImagePullPolicy(ImagePullPolicy.Always);
@@ -233,6 +248,7 @@ class RegistryServiceTest {
     void tagForCustomRegistry() throws DockerAccessException {
         givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("user/test:1.0.1");
+        givenHasImage(false);
         givenPreviousPulled(false);
         givenRegistry("anotherRegistry.com");
         givenImagePullPolicy(ImagePullPolicy.IfNotPresent);
@@ -517,6 +533,9 @@ class RegistryServiceTest {
         this.autoPullMode = autoPullMode;
     }
 
+    private void givenHasImage(boolean hasImage) {
+        this.hasImage = hasImage;
+    }
 
     private void givenPreviousPulled(boolean pulled) {
         this.cacheStore.put("dummyKey", pulled ? "{ '" + imageName + "': true}" : null);

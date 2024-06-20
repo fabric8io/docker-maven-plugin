@@ -15,7 +15,7 @@ import java.util.List;
  * Goal for Tagging an image so that it becomes part of a repository.
  *
  */
-@Mojo(name = "tag", defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "tag", defaultPhase = LifecyclePhase.INSTALL, configurator = "fabric8-mojo-configurator")
 public class TagMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;

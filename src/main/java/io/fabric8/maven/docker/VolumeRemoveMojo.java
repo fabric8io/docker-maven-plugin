@@ -5,7 +5,6 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.VolumeService;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -15,7 +14,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  *  @author Tom Burton
  */
-@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, configurator = "fabric8-mojo-configurator")
 public class VolumeRemoveMojo extends AbstractDockerMojo {
 
    @Override

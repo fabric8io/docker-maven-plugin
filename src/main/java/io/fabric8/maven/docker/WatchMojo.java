@@ -15,8 +15,6 @@ package io.fabric8.maven.docker;/*
  * limitations under the License.
  */
 
-import java.io.IOException;
-
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -25,6 +23,8 @@ import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.IOException;
 
 /**
  * Mojo for watching source code changes.
@@ -40,7 +40,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 16/06/15
  */
-@Mojo(name = "watch")
+@Mojo(name = "watch", configurator = "fabric8-mojo-configurator")
 public class WatchMojo extends AbstractBuildSupportMojo {
 
     /**
