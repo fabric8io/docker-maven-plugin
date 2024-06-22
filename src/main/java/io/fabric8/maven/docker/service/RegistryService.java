@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,8 +16,8 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.ImagePullPolicy;
+import io.fabric8.maven.docker.service.helper.BuildArgResolver;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
-import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
@@ -29,6 +27,9 @@ import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Settings;
+
+import static io.fabric8.maven.docker.service.BuildService.extractBaseFromDockerfile;
+import static io.fabric8.maven.docker.service.BuildService.prepareBuildArgs;
 
 /**
  * Allows to interact with registries, eg. to push/pull images.
@@ -58,7 +59,7 @@ public class RegistryService {
      * @throws MojoExecutionException
      */
     public void pushImages(ProjectPaths projectPaths, Collection<ImageConfiguration> imageConfigs,
-                            int retries, RegistryConfig registryConfig, boolean skipTag, MojoParameters mojoParameters) throws DockerAccessException, MojoExecutionException {
+                           int retries, RegistryConfig registryConfig, boolean skipTag, BuildService.BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig == null || buildConfig.skipPush()) {
@@ -74,8 +75,10 @@ public class RegistryService {
                 imageConfig.getRegistry(),
                 registryConfig.getRegistry());
 
+            BuildArgResolver buildArgResolver = new BuildArgResolver(log);
+            Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
             AuthConfig authConfigForLegacyPush = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
-            AuthConfigList authConfigListForBuildXPush = createCompleteAuthConfigList(true, imageConfig, registryConfig, mojoParameters);
+            AuthConfigList authConfigListForBuildXPush = createCompleteAuthConfigList(true, imageConfig, registryConfig, buildContext.getMojoParameters(), buildArgsFromExternalSources);
 
             if (imageConfig.isBuildX()) {
                 buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfigListForBuildXPush);
@@ -146,7 +149,7 @@ public class RegistryService {
     }
 
 
-    public static AuthConfigList createCompleteAuthConfigList(boolean isPush, ImageConfiguration imageConfig, RegistryConfig registryConfig, MojoParameters mojoParameters) throws MojoExecutionException {
+    public static AuthConfigList createCompleteAuthConfigList(boolean isPush, ImageConfiguration imageConfig, RegistryConfig registryConfig, MojoParameters mojoParameters, Map<String, String> buildArgsFromExternalSources) throws MojoExecutionException {
         ImageName imageName = new ImageName(imageConfig.getName());
         String configuredRegistry = EnvUtil.firstRegistryOf(
             imageName.getRegistry(),
@@ -154,7 +157,7 @@ public class RegistryService {
             registryConfig.getRegistry());
 
         AuthConfig authConfig = registryConfig.createAuthConfig(isPush, imageName.getUser(), configuredRegistry);
-        AuthConfigList authConfigList = createAuthConfigListForBaseImages(imageConfig.getBuildConfiguration(), mojoParameters, configuredRegistry, registryConfig);
+        AuthConfigList authConfigList = createAuthConfigListForBaseImages(imageConfig.getBuildConfiguration(), mojoParameters, configuredRegistry, registryConfig, buildArgsFromExternalSources);
         if (authConfig != null) {
             authConfigList.addAuthConfig(authConfig);
         }
@@ -162,9 +165,9 @@ public class RegistryService {
         return authConfigList;
     }
 
-    public static AuthConfigList createAuthConfigListForBaseImages(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, String configuredRegistry, RegistryConfig registryConfig) throws MojoExecutionException {
+    public static AuthConfigList createAuthConfigListForBaseImages(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, String configuredRegistry, RegistryConfig registryConfig, Map<String, String> buildArgsFromExternalSources) throws MojoExecutionException {
         AuthConfigList authConfigList = new AuthConfigList();
-        Set<String> fromRegistries = getRegistriesForPull(buildConfig, mojoParameters);
+        Set<String> fromRegistries = getRegistriesForPull(buildConfig, mojoParameters, buildArgsFromExternalSources);
         for (String fromRegistry : fromRegistries) {
             if (StringUtils.isNotBlank(configuredRegistry) && configuredRegistry.equalsIgnoreCase(fromRegistry)) {
                 continue;
@@ -180,9 +183,9 @@ public class RegistryService {
 
     // ============================================================================================================
 
-    private static Set<String> getRegistriesForPull(BuildImageConfiguration buildConfig, MojoParameters mojoParameters) {
+    private static Set<String> getRegistriesForPull(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, Map<String, String> buildArgsFromExternalSources) {
         Set<String> registries = new HashSet<>();
-        List<String> fromImages = extractBaseFromDockerfile(buildConfig, mojoParameters);
+        List<String> fromImages = extractBaseFromDockerfile(buildConfig, mojoParameters, prepareBuildArgs(buildArgsFromExternalSources, buildConfig));
         for (String fromImage : fromImages) {
             ImageName imageName = new ImageName(fromImage);
 
@@ -191,27 +194,6 @@ public class RegistryService {
             }
         }
         return registries;
-    }
-
-    private static List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, MojoParameters mojoParameters) {
-        if (buildConfig.getDockerFile() == null || !buildConfig.getDockerFile().exists()) {
-            if (buildConfig.getFrom() != null && !buildConfig.getFrom().isEmpty()) {
-                return Collections.singletonList(buildConfig.getFrom());
-            }
-            return Collections.emptyList();
-        }
-
-        List<String> fromImage;
-        try {
-            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(mojoParameters);
-            fromImage = DockerFileUtil.extractBaseImages(
-                fullDockerFilePath,
-                DockerFileUtil.createInterpolator(mojoParameters, buildConfig.getFilter()),
-                buildConfig.getArgs());
-        } catch (IOException e) {
-            return Collections.emptyList();
-        }
-        return fromImage;
     }
 
     private boolean imageRequiresPull(boolean hasImage, ImagePullPolicy pullPolicy, String imageName)
