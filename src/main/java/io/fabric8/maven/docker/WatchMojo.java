@@ -41,7 +41,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @since 16/06/15
  */
 @Mojo(name = "watch")
-public class WatchMojo extends AbstractBuildSupportMojo {
+public class WatchMojo extends AbstractDockerMojo {
 
     /**
      * Watching mode for rebuilding images

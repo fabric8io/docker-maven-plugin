@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.ProjectPaths;
@@ -12,6 +13,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 
 @ExtendWith(MockitoExtension.class)
 class PushMojoTest extends MojoTestBase {
@@ -82,7 +86,7 @@ class PushMojoTest extends MojoTestBase {
 
   private void verifyPush(int wantedNumberOfInvocations) throws DockerAccessException, MojoExecutionException {
     Mockito.verify(registryService, Mockito.times(wantedNumberOfInvocations))
-        .pushImages(Mockito.any(ProjectPaths.class), Mockito.anyCollection(), Mockito.anyInt(), Mockito.any(RegistryService.RegistryConfig.class), Mockito.anyBoolean(), Mockito.any(MojoParameters.class));
+        .pushImages(any(ProjectPaths.class), Mockito.anyCollection(), Mockito.anyInt(), any(RegistryService.RegistryConfig.class), Mockito.anyBoolean(), any(BuildService.BuildContext.class));
   }
 
   private void whenMojoExecutes() throws IOException, MojoExecutionException {

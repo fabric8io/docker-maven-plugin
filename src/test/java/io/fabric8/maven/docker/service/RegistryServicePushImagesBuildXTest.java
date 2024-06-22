@@ -9,8 +9,10 @@ import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -23,6 +25,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +43,9 @@ class RegistryServicePushImagesBuildXTest {
   private ProjectPaths projectPaths;
   private RegistryService.RegistryConfig registryConfig;
   private AuthConfigFactory authConfigFactory;
+  private BuildService.BuildContext buildContext;
+  private MojoParameters mojoParameters;
+  private MavenProject mavenProject;
 
   @TempDir
   private File temporaryFolder;
@@ -48,7 +54,10 @@ class RegistryServicePushImagesBuildXTest {
   void setUp() {
     buildXService = mock(BuildXService.class);
     Logger logger = mock(Logger.class);
+    buildContext = mock(BuildService.BuildContext.class);
     authConfigFactory = mock(AuthConfigFactory.class);
+    mojoParameters = mock(MojoParameters.class);
+    mavenProject = mock(MavenProject.class);
     DockerAccess dockerAccess = mock(DockerAccess.class);
     QueryService queryService = new QueryService(dockerAccess);
     imageConfigurationList = Collections.singletonList(createNewImageConfiguration("user1/sample-image:latest", "foo/base:latest", null));
@@ -56,6 +65,10 @@ class RegistryServicePushImagesBuildXTest {
         .registry("registry1.org")
         .authConfigFactory(authConfigFactory)
         .build();
+    when(buildContext.getBuildArgs()).thenReturn(Collections.emptyMap());
+    when(buildContext.getMojoParameters()).thenReturn(mojoParameters);
+    when(mojoParameters.getProject()).thenReturn(mavenProject);
+    when(mavenProject.getProperties()).thenReturn(new Properties());
     projectPaths = new ProjectPaths(temporaryFolder, "target/docker");
     registryService = new RegistryService(dockerAccess, queryService, buildXService, logger);
   }
@@ -63,7 +76,7 @@ class RegistryServicePushImagesBuildXTest {
   @Test
   void whenNoRegistryConfigured_thenAuthConfigEmpty() throws MojoExecutionException, DockerAccessException {
     // When
-    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, null);
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then
     verifyBuildXServiceInvokedWithAuthConfigListSize(0);
@@ -75,7 +88,7 @@ class RegistryServicePushImagesBuildXTest {
     givenAuthConfigExistsForRegistry("registry1.org", "user1", "password1");
 
     // When
-    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, null);
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then
     verifyBuildXServiceInvokedWithAuthConfigListSize(1);
@@ -89,7 +102,7 @@ class RegistryServicePushImagesBuildXTest {
     givenAuthConfigExistsForRegistry("registry2.org", "user2", "password2");
 
     // When
-    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, null);
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then
     verifyBuildXServiceInvokedWithAuthConfigListSize(2);
@@ -107,7 +120,7 @@ class RegistryServicePushImagesBuildXTest {
     givenAuthConfigExistsForRegistry("registry3.org", "user3", "password2");
 
     // When
-    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, null);
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then
     verifyBuildXServiceInvokedWithAuthConfigListSize(3);
