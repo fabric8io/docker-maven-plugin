@@ -7,6 +7,7 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.helper.BuildArgResolver;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -24,6 +25,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
 
 import static io.fabric8.maven.docker.service.RegistryService.createCompleteAuthConfigList;
 
@@ -34,7 +36,7 @@ import static io.fabric8.maven.docker.service.RegistryService.createCompleteAuth
  * @since 28.07.14
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.TEST)
-public class BuildMojo extends AbstractBuildSupportMojo {
+public class BuildMojo extends AbstractDockerMojo {
 
     public static final String DMP_PLUGIN_DESCRIPTOR = "META-INF/maven/io.fabric8/dmp-plugin";
     public static final String DOCKER_EXTRA_DIR = "docker-extra";
@@ -101,7 +103,9 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
         if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
             if (imageConfig.isBuildX()) {
-                hub.getBuildXService().build(createProjectPaths(), imageConfig, null, createCompleteAuthConfigList(false, imageConfig, getRegistryConfig(pullRegistry), createMojoParameters()), buildArchiveFile);
+                BuildArgResolver buildArgResolver = new BuildArgResolver(log);
+                Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
+                hub.getBuildXService().build(createProjectPaths(), imageConfig, null, createCompleteAuthConfigList(false, imageConfig, getRegistryConfig(pullRegistry), createMojoParameters(), buildArgsFromExternalSources), buildArchiveFile);
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
                 if (!skipTag && !imageConfig.getBuildConfiguration().skipTag()) {

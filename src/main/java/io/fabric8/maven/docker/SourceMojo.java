@@ -45,7 +45,7 @@ import org.apache.maven.project.MavenProjectHelper;
  * @since 25/10/15
  */
 @Mojo(name = "source", defaultPhase = LifecyclePhase.PACKAGE)
-public class SourceMojo extends AbstractBuildSupportMojo {
+public class SourceMojo extends AbstractDockerMojo {
 
     @Component
     private MavenProjectHelper projectHelper;
