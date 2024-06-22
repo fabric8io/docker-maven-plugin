@@ -82,6 +82,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.version>3.0.0-M2</surefire.version>
     <system-stubs.version>2.0.1</system-stubs.version>
+    <version.assertj-core>3.25.3</version.assertj-core>
   </properties>
 
   <dependencies>
@@ -210,6 +211,13 @@
           <artifactId>google-collections</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${version.assertj-core}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

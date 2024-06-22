@@ -220,7 +220,7 @@ public class DockerFileUtil {
     }
 
     public static JsonObject readDockerConfig() {
-        String dockerConfig = System.getenv("DOCKER_CONFIG");
+        String dockerConfig = EnvUtil.getEnv("DOCKER_CONFIG");
 
         Reader reader = dockerConfig == null
                 ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))

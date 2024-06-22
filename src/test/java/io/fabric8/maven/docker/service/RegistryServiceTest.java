@@ -13,10 +13,15 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.ProjectPaths;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,6 +33,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +44,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 
+import static org.mockito.Mockito.when;
 
 /**
  * @author roland
@@ -56,7 +66,7 @@ class RegistryServiceTest {
     private AutoPullMode autoPullMode;
     private RegistryService registryService;
     private Map<String, String> authConfig;
-
+    private Properties properties;
 
     @TempDir
     private File projectBaseDir;
@@ -79,6 +89,14 @@ class RegistryServiceTest {
     @Mock
     private BuildXService.Exec exec;
 
+    private MojoParameters mojoParameters;
+    @Mock
+    private MavenSession mockedMavenSession;
+    @Mock
+    private MavenProject mockedMavenProject;
+
+    private BuildService.BuildContext buildContext;
+
     private static String getOsDependentBuild(Path buildPath, String docker) {
         return buildPath.resolve(docker).toString().replace('/', File.separatorChar);
     }
@@ -89,12 +107,14 @@ class RegistryServiceTest {
         registryService = new RegistryService(docker, queryService, buildXService, logger);
         cacheStore = new TestCacheStore();
         authConfig = new HashMap<>();
+        properties = new Properties();
 
         imageName = null;
         imagePullPolicy = null;
         autoPullMode = null;
         registry = null;
         imageConfiguration = null;
+        mojoParameters = new MojoParameters(mockedMavenSession, mockedMavenProject, null, null, null, null, null, null, Collections.emptyList());
     }
 
     @ParameterizedTest
@@ -246,6 +266,7 @@ class RegistryServiceTest {
 
     @Test
     void pushImage() throws DockerAccessException {
+        givenBuildContext();
         givenAnImageConfiguration("user/test:1.0.1");
 
         whenPushImage();
@@ -259,6 +280,7 @@ class RegistryServiceTest {
         String registry = "myregistry.com";
         givenAnImageConfiguration("user/test:1.0.1");
         givenRegistry(registry);
+        givenBuildContext();
 
         whenPushImage();
 
@@ -271,6 +293,7 @@ class RegistryServiceTest {
     void pushImageWithImageRegistry() throws DockerAccessException {
         String registry = "myregistry.com";
         givenAnImageConfiguration(registry + "/" + "user/test:1.0.1");
+        givenBuildContext();
 
         whenPushImage();
 
@@ -284,6 +307,7 @@ class RegistryServiceTest {
         String registry = "myregistry.com";
         givenAnImageConfiguration("user/test:1.0.1");
         andImageConfigRegistry(registry);
+        givenBuildContext();
 
         whenPushImage();
 
@@ -293,91 +317,20 @@ class RegistryServiceTest {
     }
 
     @Test
-    void pushBuildXImage() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", null, null, null);
+    void pushImageWithDockerfileAndBuildArgs() throws MojoExecutionException, IOException {
+        properties.put("docker.buildArg.baseImage", "scratch");
+        when(mockedMavenProject.getProperties()).thenReturn(properties);
+        Path dockerFile = projectBaseDir.toPath().resolve("DockerfileWithBuildArgs");
+        Files.write(dockerFile, ("ARG baseImage\n" +
+          "FROM ${baseImage}").getBytes(StandardCharsets.UTF_8));
+        givenImageNameAndBuildX("user/test:1.0.1", null, dockerFile.toString(), null);
         givenCredentials("skroob", "12345");
         givenRegistry(registry);
+        givenBuildContext();
 
         whenPushImage();
 
-        thenBuildxImageHasBeenPushed(null, null, false, null);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageWithDockerfile() throws MojoExecutionException {
-        String dockerFile = projectBaseDir.toPath().resolve("src/docker/Dockerfile").toString();
-        givenBuildxImageConfiguration("user/test:1.0.1", null, dockerFile, null);
-        givenCredentials("skroob", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed(null, "Dockerfile", false, null);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageProvidedBuilder() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder", null, null);
-        givenCredentials("King_Roland_of_Druidia", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed("provided-builder", null, false, null);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageTag() throws MojoExecutionException {
-        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
-        givenCredentials("King_Roland_of_Druidia", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed(null, null, true, null);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageWithRegistry() throws MojoExecutionException {
-        String registry = "myregistry.com";
-        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
-        givenCredentials("King_Roland_of_Druidia", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed(null, null, true, registry);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageWithImageRegistry() throws MojoExecutionException {
-        String registry = "myregistry.com";
-        givenBuildxImageConfiguration(registry + "/" + "user/test:1.0.1", null, null, "perri-air");
-        givenCredentials("King_Roland_of_Druidia", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed(null, null, true, registry);
-        thenNoExceptionThrown();
-    }
-
-    @Test
-    void pushBuildXImageWithImageConfigRegistry() throws MojoExecutionException {
-        String registry = "myregistry.com";
-        givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
-        andImageConfigRegistry(registry);
-        givenCredentials("King_Roland_of_Druidia", "12345");
-        givenRegistry(registry);
-
-        whenPushImage();
-
-        thenBuildxImageHasBeenPushed(null, null, true, registry);
+        thenImageHasBeenPushed();
         thenNoExceptionThrown();
     }
 
@@ -400,6 +353,106 @@ class RegistryServiceTest {
 
         thenImageHasNotBeenPushed();
         thenNoExceptionThrown();
+    }
+
+    @Nested
+    @DisplayName("buildx")
+    class BuildX {
+        @Test
+        void pushImage() throws MojoExecutionException {
+            givenBuildxImageConfiguration("user/test:1.0.1", null, null, null);
+            givenCredentials("skroob", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, null, false, null);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageWithDockerfile() throws MojoExecutionException {
+            String dockerFile = projectBaseDir.toPath().resolve("src/docker/Dockerfile").toString();
+            givenBuildxImageConfiguration("user/test:1.0.1", null, dockerFile, null);
+            givenCredentials("skroob", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, "Dockerfile", false, null);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageProvidedBuilder() throws MojoExecutionException {
+            givenBuildxImageConfiguration("user/test:1.0.1", "provided-builder", null, null);
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed("provided-builder", null, false, null);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageTag() throws MojoExecutionException {
+            givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, null, true, null);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageWithRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, null, true, registry);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageWithImageRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfiguration(registry + "/" + "user/test:1.0.1", null, null, "perri-air");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, null, true, registry);
+            thenNoExceptionThrown();
+        }
+
+        @Test
+        void pushImageWithImageConfigRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfiguration("user/test:1.0.1", null, null, "perri-air");
+            andImageConfigRegistry(registry);
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+            givenBuildContext();
+
+            whenPushImage();
+
+            thenBuildxImageHasBeenPushed(null, null, true, registry);
+            thenNoExceptionThrown();
+        }
     }
 
     // ====================================================================================================
@@ -473,6 +526,14 @@ class RegistryServiceTest {
         Assertions.assertNotNull(cacheStore.get(imageName));
     }
 
+    private void givenBuildContext() {
+        when(mockedMavenProject.getProperties()).thenReturn(properties);
+        buildContext = new BuildService.BuildContext.Builder()
+          .mojoParameters(mojoParameters)
+          .buildArgs(Collections.emptyMap())
+          .build();
+    }
+
     private void whenAutoPullImage() {
 
         try {
@@ -503,7 +564,7 @@ class RegistryServiceTest {
                     .authConfig(authConfig)
                     .registry(registry)
                     .build();
-            registryService.pushImages(projectPaths, Collections.singleton(imageConfiguration), 1, registryConfig, false, null);
+            registryService.pushImages(projectPaths, Collections.singleton(imageConfiguration), 1, registryConfig, false, buildContext);
         } catch (Exception e) {
             this.actualException = e;
         }

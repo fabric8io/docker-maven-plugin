@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.service;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -14,6 +13,7 @@ import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.model.ImageArchiveManifest;
 import io.fabric8.maven.docker.model.ImageArchiveManifestEntry;
+import io.fabric8.maven.docker.service.helper.BuildArgResolver;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageArchiveUtil;
@@ -28,17 +28,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
 public class BuildService {
-
-    private final String argPrefix = "docker.buildArg.";
-
     private final DockerAccess docker;
     private final QueryService queryService;
     private final ArchiveService archiveService;
@@ -64,13 +60,14 @@ public class BuildService {
     public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, File buildArchiveFile)
             throws DockerAccessException, MojoExecutionException {
 
-        Map<String, String> buildArgs = addBuildArgs(buildContext);
+        BuildArgResolver buildArgResolver = new BuildArgResolver(log);
+        Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
         if (imagePullManager != null) {
-            autoPullBaseImage(imageConfig, imagePullManager, buildContext, prepareBuildArgs(buildArgs, imageConfig.getBuildConfiguration()));
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext, prepareBuildArgs(buildArgsFromExternalSources, imageConfig.getBuildConfiguration()));
             autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
         }
 
-        buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), buildArgs, buildArchiveFile);
+        buildImage(imageConfig, buildContext.getMojoParameters(), ConfigHelper.isNoCache(imageConfig), checkForSquash(imageConfig), buildArgsFromExternalSources, buildArchiveFile);
     }
 
     /**
@@ -206,8 +203,8 @@ public class BuildService {
         }
     }
 
-    private Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildImageConfiguration buildConfig) {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder().putAll(buildArgs);
+    static Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildImageConfiguration buildConfig) {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder().putAll(Optional.ofNullable(buildArgs).orElse(Collections.emptyMap()));
         if (buildConfig.getArgs() != null) {
             builder.putAll(buildConfig.getArgs());
         }
@@ -296,67 +293,7 @@ public class BuildService {
         return queryService.getImageId(imageName);
     }
 
-    private Map<String, String> addBuildArgs(BuildContext buildContext) {
-        Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
-        Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
-        Map<String, String> buildArgsFromDockerConfig = addBuildArgsFromDockerConfig();
 
-        //merge build args from all the sources into one map. Different sources maps are allowed to contain duplicate keys between them
-        Map<String, String> mergedBuildArgs = new HashMap<>();
-        mergedBuildArgs.putAll(buildArgsFromDockerConfig);
-        mergedBuildArgs.putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap());
-        mergedBuildArgs.putAll(buildArgsFromProject);
-        mergedBuildArgs.putAll(buildArgsFromSystem);
-
-        return ImmutableMap.copyOf(mergedBuildArgs);
-    }
-
-    private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        Map<String, String> buildArgs = new HashMap<>();
-        for (Object keyObj : properties.keySet()) {
-            String key = (String) keyObj;
-            if (key.startsWith(argPrefix)) {
-                String argKey = key.replaceFirst(argPrefix, "");
-                String value = properties.getProperty(key);
-
-                if (!isEmpty(value)) {
-                    buildArgs.put(argKey, value);
-                }
-            }
-        }
-        log.debug("Build args set %s", buildArgs);
-        return buildArgs;
-    }
-
-    private Map<String, String> addBuildArgsFromDockerConfig() {
-        JsonObject dockerConfig = DockerFileUtil.readDockerConfig();
-        if (dockerConfig == null) {
-            return Collections.emptyMap();
-        }
-
-        // add proxies
-        Map<String, String> buildArgs = new HashMap<>();
-        if (dockerConfig.has("proxies")) {
-            JsonObject proxies = dockerConfig.getAsJsonObject("proxies");
-            if (proxies.has("default")) {
-                JsonObject defaultProxyObj = proxies.getAsJsonObject("default");
-                String[] proxyMapping = new String[]{
-                        "httpProxy", "http_proxy",
-                        "httpsProxy", "https_proxy",
-                        "noProxy", "no_proxy",
-                        "ftpProxy", "ftp_proxy"
-                };
-
-                for (int index = 0; index < proxyMapping.length; index += 2) {
-                    if (defaultProxyObj.has(proxyMapping[index])) {
-                        buildArgs.put(proxyMapping[index + 1], defaultProxyObj.get(proxyMapping[index]).getAsString());
-                    }
-                }
-            }
-        }
-        log.debug("Build args set %s", buildArgs);
-        return buildArgs;
-    }
 
     private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, Map<String, String> buildArgs)
             throws DockerAccessException, MojoExecutionException {
@@ -370,7 +307,7 @@ public class BuildService {
 
         List<String> fromImages;
         if (buildConfig.isDockerFileMode()) {
-            fromImages = extractBaseFromDockerfile(buildConfig, buildContext, buildArgs);
+            fromImages = extractBaseFromDockerfile(buildConfig, buildContext.getMojoParameters(), buildArgs);
         } else {
             fromImages = new LinkedList<>();
             String baseImage = extractBaseFromConfiguration(buildConfig);
@@ -432,13 +369,20 @@ public class BuildService {
         return fromImage;
     }
 
-    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext, Map<String, String> buildArgs) {
+    static List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, Map<String, String> buildArgs) {
+        if (buildConfig.getDockerFile() == null || !buildConfig.getDockerFile().exists()) {
+            if (buildConfig.getFrom() != null && !buildConfig.getFrom().isEmpty()) {
+                return Collections.singletonList(buildConfig.getFrom());
+            }
+            return Collections.emptyList();
+        }
+
         List<String> fromImage;
         try {
-            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
+            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(mojoParameters);
             fromImage = DockerFileUtil.extractBaseImages(
                     fullDockerFilePath,
-                    DockerFileUtil.createInterpolator(buildContext.getMojoParameters(), buildConfig.getFilter()),
+                    DockerFileUtil.createInterpolator(mojoParameters, buildConfig.getFilter()),
                     buildArgs);
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
@@ -490,11 +434,6 @@ public class BuildService {
             return buildConfig.squash();
         }
     }
-
-    private boolean isEmpty(String str) {
-        return str == null || str.isEmpty();
-    }
-
 
     // ===========================================
 

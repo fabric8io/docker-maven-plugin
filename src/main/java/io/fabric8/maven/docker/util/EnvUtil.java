@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,8 +38,36 @@ public class EnvUtil {
     public static final String DOCKER_HTTP_PORT = "2375";
 
     public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
+    private static UnaryOperator<String> envGetter = System::getenv;
+    private static UnaryOperator<String> propertyGetter = System::getProperty;
+
 
     private EnvUtil() {}
+
+    /**
+     * Don't use in production code. Only for testing purposes.
+     * @param getter
+     */
+    public static void overrideEnvGetter(UnaryOperator<String> getter) {
+        envGetter = getter;
+    }
+
+    public static void overridePropertyGetter(UnaryOperator<String> propsGetter) {
+        propertyGetter = propsGetter;
+    }
+
+    /**
+     * Return the value of the given environment variable or null if it is not set.
+     * @param variableName name of the environment variable.
+     * @return the value of the environment variable or null if it is not set.
+     */
+    public static String getEnv(String variableName) {
+        return envGetter.apply(variableName);
+    }
+
+    public static String getProperty(String propertyName) {
+        return propertyGetter.apply(propertyName);
+    }
 
     // Convert docker host URL to an HTTP(s) URL
     public static String convertTcpToHttpUrl(String connect) {
@@ -397,7 +426,7 @@ public class EnvUtil {
             }
         }
         // Check environment as last resort
-        return System.getenv("DOCKER_REGISTRY");
+        return getEnv("DOCKER_REGISTRY");
     }
 
     // sometimes registries might be specified with https? schema, sometimes not
@@ -459,7 +488,7 @@ public class EnvUtil {
     }
 
     public static boolean isWindows() {
-        return System.getProperty("os.name").toLowerCase().contains("windows");
+        return getProperty("os.name").toLowerCase().contains("windows");
     }
 
     public static boolean isMaven350OrLater(MavenSession mavenSession) {
@@ -474,9 +503,9 @@ public class EnvUtil {
      * @return a String value for user's home directory
      */
     public static String getUserHome() {
-        String homeDir = System.getenv("HOME");
+        String homeDir = getEnv("HOME");
         if (homeDir == null) {
-            homeDir =  System.getProperty("user.home");
+            homeDir =  getProperty("user.home");
         }
         return homeDir;
     }

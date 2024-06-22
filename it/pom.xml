@@ -32,6 +32,7 @@
     <module>dockerfile</module>
     <module>dockerfile-base-as-arg</module>
     <module>dockerfile-base-as-arg-buildconfig</module>
+    <module>dockerfile-push-build-arg-from</module>
     <module>dockerignore</module>
     <module>graceful-container-removal</module>
     <module>healthcheck</module>

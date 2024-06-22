@@ -25,6 +25,7 @@ import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
@@ -242,6 +243,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Parameter
     protected Map<String, String> buildArgs;
+    // ==============================================================================================================
+    // Parameters required from Maven when building an assembly. They cannot be injected directly
+    // into DockerAssemblyCreator.
+    // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
+    @Parameter(property = "docker.pull.registry")
+    String pullRegistry;
 
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
@@ -313,6 +320,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    protected BuildService.BuildContext getBuildContext() {
+        return new BuildService.BuildContext.Builder()
+          .buildArgs(buildArgs)
+          .mojoParameters(createMojoParameters())
+          .registryConfig(getRegistryConfig(pullRegistry))
+          .build();
     }
 
     private void logException(Exception exp) {
