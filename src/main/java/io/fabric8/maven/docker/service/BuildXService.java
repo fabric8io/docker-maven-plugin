@@ -10,6 +10,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.SecretConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
@@ -35,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class BuildXService {
     private static final String DOCKER = "docker";
@@ -121,7 +124,7 @@ public class BuildXService {
         String nativePlatform = dockerAccess.getNativePlatform();
         if (platforms.size() == 1) {
             buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, platforms, buildArchive, "--load");
-        } else if (platforms.contains(nativePlatform)) {
+        } else if (platforms.isEmpty() || platforms.contains(nativePlatform)) {
             buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, Collections.singletonList(nativePlatform), buildArchive, "--load");
         } else  {
             logger.info("More than one platform specified not including native %s, no image built", nativePlatform);
@@ -130,7 +133,11 @@ public class BuildXService {
 
     protected void pushMultiPlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         // build and push all images.  The native platform may be re-built, image should be cached and build should be quick
-        buildX(buildX, builderName, buildDirs, imageConfig, configuredRegistry, imageConfig.getBuildConfiguration().getBuildX().getPlatforms(), buildArchive, "--push");
+        List<String> platforms = new ArrayList<>(imageConfig.getBuildConfiguration().getBuildX().getPlatforms());
+        if (platforms.isEmpty()) {
+            platforms.add(dockerAccess.getNativePlatform());
+        }
+        buildX(buildX, builderName, buildDirs, imageConfig, configuredRegistry, platforms, buildArchive, "--push");
     }
 
     protected void buildX(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String  configuredRegistry, List<String> platforms, File buildArchive, String extraParam)
@@ -190,6 +197,15 @@ public class BuildXService {
         if (buildXConfiguration.getCacheTo() != null) {
             cmdLine.add("--cache-to=" + buildXConfiguration.getCacheTo());
         }
+        SecretConfiguration secret = buildXConfiguration.getSecret();
+        if (secret != null) {
+            if (secret.getEnvs() != null) {
+                secret.getEnvs().forEach(buildXSecretConsumerFor("env", cmdLine::add));
+            }
+            if (secret.getFiles() != null) {
+                secret.getFiles().forEach(buildXSecretConsumerFor("src", cmdLine::add));
+            }
+        }
 
         if (buildConfiguration.squash()) {
             cmdLine.add("--squash");
@@ -211,6 +227,17 @@ public class BuildXService {
         if (rc != 0) {
             throw new MojoExecutionException("Error status (" + rc + ") when building");
         }
+    }
+
+    protected BiConsumer<String, String> buildXSecretConsumerFor(String attribute, Consumer<String> cmdLineConsumer) {
+        return (arg0, arg1) -> {
+            cmdLineConsumer.accept("--secret");
+            String secretParameter = "id=" + arg0;
+            if (arg1 != null) {
+                secretParameter += "," + attribute + "=" + arg1;
+            }
+            cmdLineConsumer.accept(secretParameter);
+        };
     }
 
     protected Path getContextPath(File buildArchive) throws MojoExecutionException {

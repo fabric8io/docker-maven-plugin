@@ -60,6 +60,8 @@ element defaults to `min` and the `<sbom>` element defaults to `false`.
 | A value to be passed through to the `--cache-from` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-from[docker buildx reference docs].
 | *cacheTo*
 | A value to be passed through to the `--cache-to` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to[docker buildx reference docs].
+| *secret*
+| Two Maps, under `envs` and `files` of `<ID>VALUE</id>` elements specifying the values of https://docs.docker.com/reference/cli/docker/buildx/build/#secret[Docker Buildx secret] to give to the build as `--secret id=ID[,[env\|src]=VALUE]`.
 |===
 
 .Examples

@@ -61,6 +61,12 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private Map<String, String> driverOpts;
 
+    /**
+     * Secret to expose to the build
+     */
+    @Parameter
+    private SecretConfiguration secret;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -86,7 +92,7 @@ public class BuildXConfiguration implements Serializable {
     }
 
     public boolean isBuildX() {
-        return !getPlatforms().isEmpty();
+        return !getPlatforms().isEmpty() || hasSecret();
     }
 
     @Nonnull
@@ -100,6 +106,14 @@ public class BuildXConfiguration implements Serializable {
 
     public Map<String, String> getDriverOpts() {
         return driverOpts;
+    }
+
+    public boolean hasSecret() {
+        return secret != null;
+    }
+
+    public SecretConfiguration getSecret() {
+        return secret;
     }
 
     public static class Builder {
@@ -159,7 +173,6 @@ public class BuildXConfiguration implements Serializable {
             return this;
         }
 
-
         public Builder cacheFrom(String cacheFrom) {
             config.cacheFrom = cacheFrom;
             if (cacheFrom != null) {
@@ -179,6 +192,14 @@ public class BuildXConfiguration implements Serializable {
         public Builder cacheTo(String cacheTo) {
             config.cacheTo = cacheTo;
             if (cacheTo != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder secret(SecretConfiguration secret) {
+            config.secret = secret;
+            if (secret != null) {
                 isEmpty = false;
             }
             return this;

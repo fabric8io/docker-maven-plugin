@@ -36,6 +36,7 @@ import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.SecretConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
@@ -342,6 +343,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .attestations(extractAttestations(config.getAttestations(), valueProvider))
             .cacheFrom(valueProvider.getString(BUILDX_CACHE_FROM, config.getCacheFrom()))
             .cacheTo(valueProvider.getString(BUILDX_CACHE_TO, config.getCacheTo()))
+            .secret(extractSecret(config.getSecret(), valueProvider))
             .build();
     }
 
@@ -354,6 +356,17 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .provenance(valueProvider.getString(BUILDX_ATTESTATION_PROVENANCE, config.getProvenance()))
             .sbom(valueProvider.getBoolean(BUILDX_ATTESTATION_SBOM, config.getSbom()))
             .build();
+    }
+
+    private SecretConfiguration extractSecret(SecretConfiguration config, ValueProvider valueProvider) {
+        if (config == null) {
+            config = new SecretConfiguration();
+        }
+
+        return new SecretConfiguration.Builder()
+             .envs(valueProvider.getMap(BUILDX_SECRET_ENVS, config.getEnvs()))
+             .files(valueProvider.getMap(BUILDX_SECRET_FILES, config.getFiles()))
+             .build();
     }
 
     // Extract only the values of the port mapping
