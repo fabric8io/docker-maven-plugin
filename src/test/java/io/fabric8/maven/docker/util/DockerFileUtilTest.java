@@ -53,6 +53,35 @@ class DockerFileUtilTest {
     }
 
     @Test
+    void testSimpleWithArgs() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_from_simple_with_args");
+        // default arg value
+        Assertions.assertEquals("alpine:latest", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).get(0));
+        // given arg value
+        Assertions.assertEquals("alpine:3", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.singletonMap("VERSION", "3")).get(0));
+    }
+
+    @Test
+    void testSimpleWithChainedArgs() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_from_simple_with_chained_args");
+        // default arg value
+        Assertions.assertEquals("alpine:latest", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).get(0));
+        // given arg value
+        Assertions.assertEquals("archlinux:latest", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.singletonMap("IMAGE_NAME", "archlinux")).get(0));
+        Assertions.assertEquals("alpine:3", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.singletonMap("IMAGE_TAG", "3")).get(0));
+        Map<String, String> buildArgsFromConfig = new HashMap<>();
+        buildArgsFromConfig.put("IMAGE_NAME", "archlinux");
+        buildArgsFromConfig.put("IMAGE_TAG", "base-devel");
+        Assertions.assertEquals("archlinux:base-devel", DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), buildArgsFromConfig).get(0));
+    }
+
+    @Test
     void testMultiStage() throws Exception {
         File toTest = copyToTempDir("Dockerfile_multi_stage");
         Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
