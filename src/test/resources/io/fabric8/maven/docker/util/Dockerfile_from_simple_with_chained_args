@@ -1,0 +1,5 @@
+# Dockerfile with a simple FROM clause with ARGs
+ARG IMAGE_NAME=alpine
+ARG IMAGE_TAG=latest
+ARG FULL_IMAGE=${IMAGE_NAME}:${IMAGE_TAG}
+FROM ${FULL_IMAGE}

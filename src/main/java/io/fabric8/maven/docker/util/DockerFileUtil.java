@@ -185,9 +185,12 @@ public class DockerFileUtil {
         String resolvedImageString = imageTagString;
         Set<String> foundArgs = findAllArgs(imageTagString);
         for (String foundArg : foundArgs) {
+            // check if the arg referenced in imageTagString exists in the Dockerfile
             if (args.containsKey(foundArg)) {
-                resolvedImageString = resolvedImageString.replaceFirst(String.format("\\$\\{*%s\\}*", foundArg),
-                        args.get(foundArg));
+                // resolve args that are referenced by this arg
+                String arg = resolveImageTagFromArgs(args.get(foundArg), args);
+                // replace the arg by its value
+                resolvedImageString = resolvedImageString.replaceFirst(String.format("\\$\\{*%s\\}*", foundArg), arg);
             }
         }
         return resolvedImageString;
