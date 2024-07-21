@@ -1,0 +1,3 @@
+# Dockerfile with a simple FROM clause with ARG
+ARG VERSION=latest
+FROM alpine:${VERSION}
