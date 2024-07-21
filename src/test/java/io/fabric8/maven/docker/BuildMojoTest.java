@@ -8,6 +8,7 @@ import io.fabric8.maven.docker.config.AttestationConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.SecretConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.BuildXService;
 import io.fabric8.maven.docker.service.ImagePullManager;
@@ -95,7 +96,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, null );
+        thenBuildxRun(null, null, true, Collections.emptyList());
     }
 
     @Test
@@ -108,7 +109,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun("src/docker/builder.toml", null, true, null );
+        thenBuildxRun("src/docker/builder.toml", null, true, Collections.emptyList());
     }
 
     @Test
@@ -126,7 +127,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, "src/main/docker", true,null );
+        thenBuildxRun(null, "src/main/docker", true, Collections.emptyList());
     }
 
     @Test
@@ -156,7 +157,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, "--squash");
+        thenBuildxRun(null, null, true, Collections.singletonList("--squash"));
     }
 
     @Test
@@ -169,7 +170,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, "--sbom=true");
+        thenBuildxRun(null, null, true, Collections.singletonList("--sbom=true"));
     }
 
     @Test
@@ -182,7 +183,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, "--provenance=mode=max");
+        thenBuildxRun(null, null, true, Collections.singletonList("--provenance=mode=max"));
     }
 
     @Test
@@ -195,7 +196,7 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, "--provenance=false");
+        thenBuildxRun(null, null, true, Collections.singletonList("--provenance=false"));
     }
 
     @Test
@@ -208,7 +209,61 @@ class BuildMojoTest extends MojoTestBase {
 
         whenMojoExecutes();
 
-        thenBuildxRun(null, null, true, null);
+        thenBuildxRun(null, null, true, Collections.emptyList());
+    }
+
+    @Test
+    void buildUsingBuildxWithSecretEnvs() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithSecret(
+            Collections.singletonMap("githubToken", "GITHUB_TOKEN"), Collections.emptyMap())));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        List<String> secrets = new ArrayList<>();
+        secrets.add("--secret");
+        secrets.add("id=githubToken,env=GITHUB_TOKEN");
+        thenBuildxRun(null, null, true, secrets);
+    }
+
+    @Test
+    void buildUsingBuildxWithSecretFiles() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithSecret(Collections.emptyMap(),
+                Collections.singletonMap("privateRepo", "../private.repo"))));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        List<String> secrets = new ArrayList<>();
+        secrets.add("--secret");
+        secrets.add("id=privateRepo,src=../private.repo");
+        thenBuildxRun(null, null, true, secrets);
+    }
+
+    @Test
+    void buildUsingBuildxWithSecretEnvsFilesMultiplePlatforms() throws IOException, MojoExecutionException {
+        givenBuildXService();
+
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleBuildXImageWithSecret(
+                Collections.singletonMap("githubToken", "GITHUB_TOKEN"),
+                Collections.singletonMap("privateRepo", "../private.repo"), TWO_BUILDX_PLATFORMS)));
+        givenPackaging("jar");
+
+        whenMojoExecutes();
+
+        List<String> secrets = new ArrayList<>();
+        secrets.add("--secret");
+        secrets.add("id=githubToken,env=GITHUB_TOKEN");
+        secrets.add("--secret");
+        secrets.add("id=privateRepo,src=../private.repo");
+        thenBuildxRun(null, null, true, secrets);
     }
 
     @Test
@@ -269,7 +324,7 @@ class BuildMojoTest extends MojoTestBase {
         List<String> fullTags = skipTag ? Collections.emptyList() : tags.stream()
                 .map(tag -> new ImageName(imageConfiguration.getName(), tag).getFullName())
                 .collect(Collectors.toList());
-        thenBuildxRun(null, null, true, null, fullTags);
+        thenBuildxRun(null, null, true, Collections.emptyList(), fullTags);
     }
 
     @ParameterizedTest
@@ -347,12 +402,13 @@ class BuildMojoTest extends MojoTestBase {
     }
 
     private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded,
-                               String attestation) throws MojoExecutionException {
-        thenBuildxRun(relativeConfigFile, contextDir, nativePlatformIncluded, attestation, Collections.emptyList());
+                               List<String> additionalParameters) throws MojoExecutionException {
+        thenBuildxRun(relativeConfigFile, contextDir, nativePlatformIncluded, additionalParameters,
+            Collections.emptyList());
     }
 
-    private void thenBuildxRun(String relativeConfigFile, String contextDir,
-                               boolean nativePlatformIncluded, String attestation, List<String> tags)
+    private void thenBuildxRun(String relativeConfigFile, String contextDir, boolean nativePlatformIncluded,
+                               List<String> additionalParameters, List<String> tags)
             throws MojoExecutionException {
         Path buildPath = projectBaseDirectory.toPath().resolve("target/docker/example/latest");
         String config = getOsDependentBuild(buildPath, "docker");
@@ -380,9 +436,7 @@ class BuildMojoTest extends MojoTestBase {
             buildXLine.add("--build-arg");
             buildXLine.add("foo=bar");
 
-            if (attestation != null) {
-                buildXLine.add(attestation);
-            }
+            buildXLine.addAll(additionalParameters);
 
             if (contextDir == null) {
                 buildXLine.add(getOsDependentBuild(buildPath, "build"));
@@ -443,6 +497,17 @@ class BuildMojoTest extends MojoTestBase {
     private ImageConfiguration singleBuildXImageWithAttestations(Boolean sbom, String provenance) {
         return singleImageConfiguration(getBuildXPlatforms(TWO_BUILDX_PLATFORMS).attestations(
                 new AttestationConfiguration.Builder().sbom(sbom).provenance(provenance).build())
+            .build(), null);
+    }
+
+    private ImageConfiguration singleBuildXImageWithSecret(Map<String, String> envs, Map<String, String> files) {
+        return singleBuildXImageWithSecret(envs, files, NATIVE_PLATFORM);
+    }
+
+    private ImageConfiguration singleBuildXImageWithSecret(Map<String, String> envs, Map<String, String> files,
+                                                           String... platform) {
+        return singleImageConfiguration(getBuildXPlatforms(platform).secret(
+                new SecretConfiguration.Builder().envs(envs).files(files).build())
             .build(), null);
     }
 

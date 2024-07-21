@@ -3,6 +3,7 @@
   - Automatically create parent directories of portPropertyFile path
   - Added support for `platform` attribute of a container in the docker-compose configuration.
   - `docker:push` failed with build `ARG` in `FROM` ([1778](https://github.com/fabric8io/docker-maven-plugin/issues/1778))
+  - Add the possibility to give secret to buildx build ([1798](https://github.com/fabric8io/docker-maven-plugin/issues/1798)
   - `FROM` can reference `ARG` that references other `ARG` ([1800](https://github.com/fabric8io/docker-maven-plugin/issues/1800))
   
 * **0.44.0** (2024-02-17):
