@@ -1,7 +1,7 @@
 
 [[build-buildx]]
 
-Buildx is enabled when there is a non-empty `<platform>` element inside the  `<buildx>` configuration.
+Buildx is enabled when there is a non-empty `<platform>` element inside the `<buildx>` configuration.
 
 The local image cache cannot hold multi-architecture images nor can it have two platform specific images of the same name.
 Thus the `build` goal will build and save a single-architecture image to the local image cache if possible:
@@ -29,7 +29,8 @@ The `<buildx>` element within `<build>` defines how to build multi-architecture 
 
 | *builderName*
 | Name of builder to use with buildx.  If not supplied, the builder is named `maven`.  The builder is created as necessary.
-The builder manages the build cache.
+The builder manages the build cache. Set to `default` to leverage the default buildx driver on local builds. This improves
+I/O performance, but will only work for the native platform.
 
 | *driverOpts*
 | Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created.
