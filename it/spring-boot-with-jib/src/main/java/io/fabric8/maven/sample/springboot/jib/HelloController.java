@@ -1,6 +1,6 @@
 package io.fabric8.maven.sample.springboot.jib;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
