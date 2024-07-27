@@ -5,6 +5,11 @@ on:
     branches:
       - dmp.fabric8.io
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     name: Documentation Build on Java ${{ matrix.java }}
@@ -21,6 +26,18 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build Project
         run: |
-          git config --global user.email "${GITHUB_ACTOR}"
-          git config --global user.name "${GITHUB_ACTOR}@users.noreply.github.com"
-          ./doc/ci-docs.sh
+          mvn -Pdoc-html && mvn -Pdoc-pdf
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./target/generated-docs
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
