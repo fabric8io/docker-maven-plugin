@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.44.0,</span>
-<span id="revdate">2024-02-17</span>
+<span id="revnumber">version 0.45.0,</span>
+<span id="revdate">2024-07-28</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -880,7 +880,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.44.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.45.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2992,6 +2992,10 @@ element defaults to <code>min</code> and the <code>&lt;sbom&gt;</code> element d
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheTo</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A value to be passed through to the <code>--cache-to</code> option of <code>docker buildx build</code>. See <a href="https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to">docker buildx reference docs</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>secret</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Two Maps, under <code>envs</code> and <code>files</code> of <code>&lt;ID&gt;VALUE&lt;/id&gt;</code> elements specifying the values of <a href="https://docs.docker.com/reference/cli/docker/buildx/build/#secret">Docker Buildx secret</a> to give to the build as <code>--secret id=ID[,[env|src]=VALUE]</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -6532,8 +6536,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.44.0<br>
-Last updated 2023-07-28 11:49:48 IST
+Version 0.45.0<br>
+Last updated 2024-07-27 23:32:30 IST
 </div>
 </div>
 </body>
