@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.46-SNAPSHOT**:
+
 * **0.45.0 (2024-07-27)**:
   - Automatically create parent directories of portPropertyFile path ([1761](https://github.com/fabric8io/docker-maven-plugin/pull/1761))
   - Use complete image id in DockerAccessWithHcClient while fetching image id ([1764](https://github.com/fabric8io/docker-maven-plugin/pull/1764))
