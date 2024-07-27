@@ -39,7 +39,7 @@ jobs:
         with:
           java-version: 11
           distribution: ${{ github.event.inputs.java_distribution }}
-          server-id: sonatype-nexus-staging 
+          server-id: oss-sonatype-staging
           server-username: OSSRHUSERNAME
           server-password: OSSRHPASSWORD
           gpg-private-key: ${{ secrets.SIGNINGKEY }}
