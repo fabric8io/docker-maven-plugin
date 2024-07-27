@@ -1,7 +1,12 @@
 # ChangeLog
-* **0.45-SNAPSHOT**:
-  - Automatically create parent directories of portPropertyFile path
+* **0.45.0 (2024-07-27)**:
+  - Automatically create parent directories of portPropertyFile path ([1761](https://github.com/fabric8io/docker-maven-plugin/pull/1761))
+  - Use complete image id in DockerAccessWithHcClient while fetching image id ([1764](https://github.com/fabric8io/docker-maven-plugin/pull/1764))
+  - Add skip tag to the image level by `<skipTag>` ([1787](https://github.com/fabric8io/docker-maven-plugin/pull/1787))
+  - Remove usage of `AnsiConsole` ([1791](https://github.com/fabric8io/docker-maven-plugin/pull/1791))
+  - Gracefully handle 404 when removing container ([1793](https://github.com/fabric8io/docker-maven-plugin/pull/1793))
   - Added support for `platform` attribute of a container in the docker-compose configuration.
+  - Image Build Config BuildArgs should be passed while pulling images ([1756](https://github.com/fabric8io/docker-maven-plugin/issues/1756))
   - `docker:push` failed with build `ARG` in `FROM` ([1778](https://github.com/fabric8io/docker-maven-plugin/issues/1778))
   - Add the possibility to give secret to buildx build ([1798](https://github.com/fabric8io/docker-maven-plugin/issues/1798)
   - `FROM` can reference `ARG` that references other `ARG` ([1800](https://github.com/fabric8io/docker-maven-plugin/issues/1800))
