@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker: [v25.0.2, v24.0.9, v23.0.6, v20.10.24]
+        docker: [v27.1.1, v26.1.4, v25.0.2, v24.0.9, v23.0.6, v20.10.24]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker: [v25.0.2,v24.0.9,v23.0.6,v20.10.24]
+        docker: [v27.1.1, v26.1.4, v25.0.2, v24.0.9, v23.0.6, v20.10.24]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
