@@ -233,9 +233,7 @@ public class VolumeBindingUtil {
             return;
         }
 
-        for (int i = 0; i < bindings.size(); i++) {
-            bindings.set(i, resolveRelativeVolumeBinding(baseDir, bindings.get(i)));
-        }
+        bindings.replaceAll(binding -> resolveRelativeVolumeBinding(baseDir, binding));
     }
 
     /**
