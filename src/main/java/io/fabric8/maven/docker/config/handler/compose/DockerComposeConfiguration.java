@@ -8,8 +8,7 @@ public class DockerComposeConfiguration {
     private final String composeFile;
     private final boolean ignoreBuild;
     
-    public DockerComposeConfiguration(Map<String, String> config) {
-        
+    public DockerComposeConfiguration(Map<String, String> config) {    
     basedir = config.getOrDefault("basedir", "src/main/docker");
     composeFile = config.getOrDefault("composeFile", "docker-compose.yml");
     ignoreBuild = Boolean.parseBoolean(config.getOrDefault("ignoreBuild", "false"));
