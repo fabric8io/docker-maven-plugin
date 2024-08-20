@@ -5,36 +5,17 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.AttestationConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.BuildXConfiguration;
-import io.fabric8.maven.docker.config.ConfigHelper;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.SecretConfiguration;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.ProjectPaths;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.file.*;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -74,7 +55,6 @@ public class BuildXService {
         List<String> buildX = new ArrayList<>(Arrays.asList(DOCKER, "--config", configPath.toString(), "buildx"));
         if (!isDockerBuildXWorkingWithOverriddenConfig(configPath)) {
             logger.debug("Detected current version of BuildX not working with --config override");
-            logger.debug("Copying BuildX binary to " + configPath);
             copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(configPath);
         }
 
@@ -90,10 +70,12 @@ public class BuildXService {
 
     private void copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(Path configPath) {
         try {
-            File buildXInUserHomeDockerConfig = Paths.get(EnvUtil.getUserHome(), ".docker/cli-plugins/docker-buildx").toFile();
+            String dockerBuildxExecutableName = "docker-buildx" + (EnvUtil.isWindows()?".exe":"");
+            File buildXInUserHomeDockerConfig = Paths.get(EnvUtil.getUserHome(), ".docker/cli-plugins/" + dockerBuildxExecutableName).toFile();
             Files.createDirectory(configPath.resolve("cli-plugins"));
             if (buildXInUserHomeDockerConfig.exists() && buildXInUserHomeDockerConfig.isFile()) {
-                Files.copy(buildXInUserHomeDockerConfig.toPath(), configPath.resolve("cli-plugins").resolve("docker-buildx"), StandardCopyOption.COPY_ATTRIBUTES);
+                Files.copy(buildXInUserHomeDockerConfig.toPath(), configPath.resolve("cli-plugins").resolve(dockerBuildxExecutableName), StandardCopyOption.COPY_ATTRIBUTES);
+                logger.debug("Copying BuildX binary to " + configPath);
             }
         } catch (IOException exception) {
             logger.debug(exception.getMessage());
