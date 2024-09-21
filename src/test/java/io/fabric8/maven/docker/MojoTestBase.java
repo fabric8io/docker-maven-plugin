@@ -251,6 +251,7 @@ abstract class MojoTestBase {
         mojo.project = mavenProject;
         mojo.log = ansiLogger;
         mojo.outputDirectory= "target/docker";
+        mojo.sourceDirectory = "src/main/docker";
         mojo.authConfigFactory= authConfigFactory;
         mojo.session = session;
 

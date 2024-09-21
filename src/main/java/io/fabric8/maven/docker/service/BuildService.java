@@ -370,7 +370,7 @@ public class BuildService {
     }
 
     static List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, Map<String, String> buildArgs) {
-        if (buildConfig.getDockerFile() == null || !buildConfig.getDockerFile().exists()) {
+        if (buildConfig.getDockerFile() == null || !buildConfig.getAbsoluteDockerFilePath(mojoParameters).exists()) {
             if (buildConfig.getFrom() != null && !buildConfig.getFrom().isEmpty()) {
                 return Collections.singletonList(buildConfig.getFrom());
             }
