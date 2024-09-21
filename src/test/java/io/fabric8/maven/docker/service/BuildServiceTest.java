@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.service;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -222,6 +223,38 @@ class BuildServiceTest {
 
         //verify that tries to pull both images
         verifyImagePull(buildConfig, pullManager, buildContext, "sample/base-image:latest");
+    }
+
+    @Test
+    void testRelativeDockerfile_ShouldPullImage() throws Exception {
+        final BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+            .cleanup("false")
+            .dockerFile("Dockerfile_from_simple")
+            .filter("false")
+            .build();
+
+        Mockito.when(mavenProject.getBasedir()).thenReturn(new File(getClass().getResource("/").getPath()));
+        Mockito.when(mojoParameters.getSourceDirectory()).thenReturn("io/fabric8/maven/docker/util");
+
+        buildConfig.initAndValidate(logger);
+
+        imageConfig = new ImageConfiguration.Builder()
+            .name("build-image")
+            .alias("build-alias")
+            .buildConfig(buildConfig)
+            .build();
+
+        final ImagePullManager pullManager = new ImagePullManager(null, null, null);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+            .mojoParameters(mojoParameters)
+            .build();
+
+        mockMavenProject();
+
+        final File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+
+        verifyImagePull(buildConfig, pullManager, buildContext, "fabric8/s2i-java");
     }
 
     @Test
