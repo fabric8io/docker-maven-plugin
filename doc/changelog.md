@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.46-SNAPSHOT**:
+  - Make copy docker-buildx binary to temporary config directory work on windows too ([1819](https://github.com/fabric8io/docker-maven-plugin/pull/1819))
 
 * **0.45.0 (2024-07-27)**:
   - Automatically create parent directories of portPropertyFile path ([1761](https://github.com/fabric8io/docker-maven-plugin/pull/1761))
