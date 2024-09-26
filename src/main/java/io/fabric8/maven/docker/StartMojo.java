@@ -100,9 +100,10 @@ public class StartMojo extends AbstractDockerMojo {
     protected boolean autoCreateCustomNetworks;
 
     /**
-     * Global across all the containers default wait time is milliseconds.
+     * Overrides the default across all the containers  wait time is milliseconds.
      * Overriding that property might become particularly useful when docker-compose config defines
-     * the healthchecks, but some containers require more time to become healthy.
+     * the healthchecks, but the default wait timeout {@link io.fabric8.maven.docker.wait.WaitUtil#DEFAULT_MAX_WAIT}
+     * is too short for some containers to become healthy.
      */
     @Parameter(property = DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, defaultValue = "10000")
     protected int defaultContainerWaitTimeout = 10000;
