@@ -3,19 +3,20 @@ package io.fabric8.maven.docker.access;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import com.google.gson.JsonPrimitive;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckMode;
 import org.apache.commons.text.StrSubstitutor;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.util.JsonFactory;
+
+import static io.fabric8.maven.docker.access.util.ComposeDurationUtil.goDurationToNanoseconds;
 
 public class ContainerCreateConfig {
 
@@ -72,7 +73,7 @@ public class ContainerCreateConfig {
                 String value = entry.getValue();
                 if (value == null) {
                     value = "";
-                } else if(value.matches("^\\+\\$\\{.*}$")) {
+                } else if (value.matches("^\\+\\$\\{.*}$")) {
                     /*
                      * This case is to handle the Maven interpolation issue which used
                      * to occur when using ${..} only without any suffix.
@@ -93,7 +94,7 @@ public class ContainerCreateConfig {
         return this;
     }
 
-    public ContainerCreateConfig labels(Map<String,String> labels) {
+    public ContainerCreateConfig labels(Map<String, String> labels) {
         if (labels != null && labels.size() > 0) {
             createConfig.add("Labels", JsonFactory.newJsonObject(labels));
         }
@@ -107,6 +108,37 @@ public class ContainerCreateConfig {
                 exposedPorts.add(portSpec, new JsonObject());
             }
             createConfig.add("ExposedPorts", exposedPorts);
+        }
+        return this;
+    }
+
+    public ContainerCreateConfig healthcheck(HealthCheckConfiguration healthCheckConfiguration) {
+        if (healthCheckConfiguration != null) {
+            JsonObject healthcheck = new JsonObject();
+            if (healthCheckConfiguration.getCmd() != null) {
+                healthcheck.add("Test", JsonFactory.newJsonArray(healthCheckConfiguration.getCmd().asStrings()));
+            }
+            if (healthCheckConfiguration.getMode() != HealthCheckMode.none) {
+                if (healthCheckConfiguration.getRetries() != null) {
+                    healthcheck.add("Retries", new JsonPrimitive(healthCheckConfiguration.getRetries()));
+                }
+                if (healthCheckConfiguration.getInterval() != null) {
+                    String intervalValue = healthCheckConfiguration.getInterval();
+                    String field = "Interval";
+                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+                }
+                if (healthCheckConfiguration.getStartPeriod() != null) {
+                    String field = "StartPeriod";
+                    String intervalValue = healthCheckConfiguration.getStartPeriod();
+                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+                }
+                if (healthCheckConfiguration.getTimeout() != null) {
+                    String field = "Timeout";
+                    String intervalValue = healthCheckConfiguration.getTimeout();
+                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+                }
+            }
+            createConfig.add("Healthcheck", healthcheck);
         }
         return this;
     }
