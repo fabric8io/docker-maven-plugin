@@ -55,7 +55,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
-    public static final String DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT = "docker.defaultContainerWaitTimeout";
     @Parameter(property = "docker.showLogs")
     private String showLogs;
 
@@ -99,6 +98,8 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
 
+    public static final String DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT = "docker.startContainerWaitTimeout";
+
     /**
      * Overrides the default across all the containers  wait time is milliseconds.
      * Overriding that property might become particularly useful when docker-compose config defines
@@ -106,7 +107,7 @@ public class StartMojo extends AbstractDockerMojo {
      * is too short for some containers to become healthy.
      */
     @Parameter(property = DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, defaultValue = "10000")
-    protected int defaultContainerWaitTimeout = 10000;
+    protected int startContainerWaitTimeout = 10000;
 
     // property file to write out with port mappings
     @Parameter
@@ -284,7 +285,7 @@ public class StartMojo extends AbstractDockerMojo {
         final Properties projProperties = project.getProperties();
         final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
-        projProperties.computeIfAbsent(DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, key -> defaultContainerWaitTimeout);
+        projProperties.computeIfAbsent(DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, key -> startContainerWaitTimeout);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
