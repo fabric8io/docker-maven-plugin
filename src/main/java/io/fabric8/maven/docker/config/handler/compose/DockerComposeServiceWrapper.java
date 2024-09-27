@@ -142,28 +142,30 @@ class DockerComposeServiceWrapper {
         Map<String, Object> healthCheckAsMap = (Map<String, Object>) configuration.get("healthcheck");
         HealthCheckConfiguration.Builder builder = new HealthCheckConfiguration.Builder();
         Object disable = healthCheckAsMap.get("disable");
-        if (disable != null && disable instanceof Boolean && (Boolean) disable) {
+        if (isaBoolean(disable)) {
             builder.mode(HealthCheckMode.none);
             return builder.build();
         }
 
         Object test = healthCheckAsMap.get("test");
-        if (test != null) {
-            if (test instanceof List) {
-                List<String> cmd = (List<String>) test;
-                if (cmd.size() > 0 && cmd.get(0).equalsIgnoreCase("NONE")) {
-                    builder.mode(HealthCheckMode.none);
-                    return builder.build();
-                } else {
-                    builder.cmd(new Arguments((List<String>) test));
-                    builder.mode(HealthCheckMode.cmd);
-                }
+        if (test == null) {
+            return null;
+        }
+        if (test instanceof List) {
+            List<String> cmd = (List<String>) test;
+            if (cmd.size() > 0 && cmd.get(0).equalsIgnoreCase("NONE")) {
+                builder.mode(HealthCheckMode.none);
+                return builder.build();
             } else {
-                builder.cmd(new Arguments(Arrays.asList("CMD-SHELL", (String) test)));
+                builder.cmd(new Arguments((List<String>) test));
                 builder.mode(HealthCheckMode.cmd);
             }
-            enableWaitCondition(WaitCondition.HEALTHY);
+        } else {
+            builder.cmd(new Arguments(Arrays.asList("CMD-SHELL", test.toString())));
+            builder.mode(HealthCheckMode.cmd);
         }
+        enableWaitCondition(WaitCondition.HEALTHY);
+
         Object interval = healthCheckAsMap.get("interval");
         if (interval != null) {
             builder.interval(interval.toString());
@@ -182,6 +184,10 @@ class DockerComposeServiceWrapper {
         }
 
         return builder.build();
+    }
+
+    private static boolean isaBoolean(Object disable) {
+        return disable != null && disable instanceof Boolean && (Boolean) disable;
     }
 
     /**

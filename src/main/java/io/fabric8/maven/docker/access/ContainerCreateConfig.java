@@ -113,33 +113,38 @@ public class ContainerCreateConfig {
     }
 
     public ContainerCreateConfig healthcheck(HealthCheckConfiguration healthCheckConfiguration) {
-        if (healthCheckConfiguration != null) {
-            JsonObject healthcheck = new JsonObject();
-            if (healthCheckConfiguration.getCmd() != null) {
-                healthcheck.add("Test", JsonFactory.newJsonArray(healthCheckConfiguration.getCmd().asStrings()));
-            }
-            if (healthCheckConfiguration.getMode() != HealthCheckMode.none) {
-                if (healthCheckConfiguration.getRetries() != null) {
-                    healthcheck.add("Retries", new JsonPrimitive(healthCheckConfiguration.getRetries()));
-                }
-                if (healthCheckConfiguration.getInterval() != null) {
-                    String intervalValue = healthCheckConfiguration.getInterval();
-                    String field = "Interval";
-                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
-                }
-                if (healthCheckConfiguration.getStartPeriod() != null) {
-                    String field = "StartPeriod";
-                    String intervalValue = healthCheckConfiguration.getStartPeriod();
-                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
-                }
-                if (healthCheckConfiguration.getTimeout() != null) {
-                    String field = "Timeout";
-                    String intervalValue = healthCheckConfiguration.getTimeout();
-                    healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
-                }
-            }
-            createConfig.add("Healthcheck", healthcheck);
+        if (healthCheckConfiguration == null) {
+            return this;
         }
+        JsonObject healthcheck = new JsonObject();
+        if (healthCheckConfiguration.getMode() == HealthCheckMode.none) {
+            healthcheck.add("Test", JsonFactory.newJsonArray(Collections.singletonList("NONE")));
+            createConfig.add("Healthcheck", healthcheck);
+            return this;
+        }
+
+        healthcheck.add("Test", JsonFactory.newJsonArray(healthCheckConfiguration.getCmd().asStrings()));
+
+        if (healthCheckConfiguration.getRetries() != null) {
+            healthcheck.add("Retries", new JsonPrimitive(healthCheckConfiguration.getRetries()));
+        }
+        if (healthCheckConfiguration.getInterval() != null) {
+            String intervalValue = healthCheckConfiguration.getInterval();
+            String field = "Interval";
+            healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+        }
+        if (healthCheckConfiguration.getStartPeriod() != null) {
+            String field = "StartPeriod";
+            String intervalValue = healthCheckConfiguration.getStartPeriod();
+            healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+        }
+        if (healthCheckConfiguration.getTimeout() != null) {
+            String field = "Timeout";
+            String intervalValue = healthCheckConfiguration.getTimeout();
+            healthcheck.add(field, new JsonPrimitive(goDurationToNanoseconds(intervalValue, field)));
+        }
+
+        createConfig.add("Healthcheck", healthcheck);
         return this;
     }
 

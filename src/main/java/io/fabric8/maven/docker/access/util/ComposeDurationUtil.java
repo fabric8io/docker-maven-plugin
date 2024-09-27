@@ -13,16 +13,23 @@ import static java.util.Objects.requireNonNull;
  * This implementation doesn't support combinations of timeunits.
  */
 public class ComposeDurationUtil {
-    private static Pattern SIMPLE_GO_DURATION_FORMAT = Pattern.compile("^([\\d]+)(ns|us|ms|s|m|h|d|w|y)?$");
-    private static Map<String, TimeUnit> goTypesToJava = new HashMap<String, TimeUnit>() {{
-        put("ns", TimeUnit.NANOSECONDS);
-        put("us", TimeUnit.MICROSECONDS);
-        put("ms", TimeUnit.MILLISECONDS);
-        put("s", TimeUnit.SECONDS);
-        put("m", TimeUnit.MINUTES);
-        put("h", TimeUnit.HOURS);
-        put("d", TimeUnit.DAYS);
-    }};
+
+    private ComposeDurationUtil() {
+    }
+
+    private static final Pattern SIMPLE_GO_DURATION_FORMAT = Pattern.compile("^([\\d]+)(ns|us|ms|s|m|h|d|w|y)?$");
+    private static final Map<String, TimeUnit> GO_TYPES_TO_JAVA = new HashMap<>();
+
+    static {
+        GO_TYPES_TO_JAVA.put("ns", TimeUnit.NANOSECONDS);
+        GO_TYPES_TO_JAVA.put("us", TimeUnit.MICROSECONDS);
+        GO_TYPES_TO_JAVA.put("ms", TimeUnit.MILLISECONDS);
+        GO_TYPES_TO_JAVA.put("s", TimeUnit.SECONDS);
+        GO_TYPES_TO_JAVA.put("m", TimeUnit.MINUTES);
+        GO_TYPES_TO_JAVA.put("h", TimeUnit.HOURS);
+        GO_TYPES_TO_JAVA.put("d", TimeUnit.DAYS);
+    }
+
 
     public static long goDurationToNanoseconds(String goDuration, String field) {
         requireNonNull(goDuration);
@@ -32,12 +39,12 @@ public class ComposeDurationUtil {
             String message = String.format("Unsupported duration value \"%s\" for the field \"%s\"", goDuration, field);
             throw new IllegalArgumentException(message);
         }
-        long duration = Long.valueOf(matcher.group(1));
+        long duration = Long.parseLong(matcher.group(1));
         if (matcher.groupCount() == 2 && matcher.group(2) != null) {
             String type = matcher.group(2);
 
-            if (goTypesToJava.containsKey(type)) {
-                duration = TimeUnit.NANOSECONDS.convert(duration, goTypesToJava.get(type));
+            if (GO_TYPES_TO_JAVA.containsKey(type)) {
+                duration = TimeUnit.NANOSECONDS.convert(duration, GO_TYPES_TO_JAVA.get(type));
             } else if ("w".equals(type)) {
                 duration = 7 * TimeUnit.NANOSECONDS.convert(duration, TimeUnit.DAYS);
             } else if ("y".equals(type)) {

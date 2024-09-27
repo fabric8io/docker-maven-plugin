@@ -284,9 +284,7 @@ public class StartMojo extends AbstractDockerMojo {
         final Properties projProperties = project.getProperties();
         final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
-        if (!projProperties.containsKey(DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT)) {
-            projProperties.put(DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, defaultContainerWaitTimeout);
-        }
+        projProperties.computeIfAbsent(DOCKER_DEFAULT_CONTAINER_WAIT_TIMEOUT, key -> defaultContainerWaitTimeout);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
