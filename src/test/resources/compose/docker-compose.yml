@@ -7,7 +7,7 @@
 # - dns (list)
 # - dns_search (list)
 #
-version: 2.4
+version: 2.2
 services:
   service:
     cap_add:
@@ -65,8 +65,6 @@ services:
       test: curl -s --fail http://localhost:8080/status
       interval: 1s
       timeout: 3s
-      start_period: 5s
-      retries: 100
     volumes:
       - /foo
       # mount /tmp with rw access control

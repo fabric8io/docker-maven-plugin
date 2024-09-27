@@ -1,0 +1,45 @@
+version: 2.4
+services:
+
+  serviceHealthcheck_CMD:
+    image: image
+    platform: linux/amd64
+    healthcheck:
+      test: [ "CMD", "curl", "-s", "--fail", "http://localhost:8080/status" ]
+      interval: 1s
+      timeout: 3s
+      start_period: 5s
+      retries: 100
+
+  serviceHealthcheckSame_CMD-SHELL:
+    image: image
+    platform: linux/amd64
+    healthcheck:
+      test: curl -s --fail http://localhost:8080/status 2>&1
+      interval: 1s
+      timeout: 3s
+      start_period: 5s
+      retries: 100
+
+  serviceHealthcheckInherited:
+    image: image
+    platform: linux/amd64
+    healthcheck:
+      test: [] # inherit value from the image
+      interval: 1s
+      timeout: 3s
+      start_period: 5s
+
+  serviceDisabledHealthcheck:
+    image: image
+    platform: linux/amd64
+    healthcheck:
+      disable: true # disable healthcheck
+      test: []
+
+
+  serviceDisabledHealthcheck2:
+    image: image
+    platform: linux/amd64
+    healthcheck:
+      test: [ "NONE" ] # another way to disable healthcheck

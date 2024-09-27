@@ -175,7 +175,7 @@ class DockerComposeServiceWrapper {
             builder.timeout(timeout.toString());
         }
         Object retries = healthCheckAsMap.get("retries");
-        if (retries != null && retries instanceof Number) {
+        if (retries instanceof Number) {
             builder.retries(((Number) retries).intValue());
         }
         Object startPeriod = healthCheckAsMap.get("start_period");
@@ -187,7 +187,7 @@ class DockerComposeServiceWrapper {
     }
 
     private static boolean isaBoolean(Object disable) {
-        return disable != null && disable instanceof Boolean && (Boolean) disable;
+        return disable instanceof Boolean && (Boolean) disable;
     }
 
     /**
