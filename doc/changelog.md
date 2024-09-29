@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.46-SNAPSHOT**:
+
 * **0.45.1 (2024-09-29)**:
   - Make copy docker-buildx binary to temporary config directory work on windows too ([1819](https://github.com/fabric8io/docker-maven-plugin/pull/1819))
   - Pull FROM images in relative path Dockerfiles ([1823](https://github.com/fabric8io/docker-maven-plugin/issues/1823))
