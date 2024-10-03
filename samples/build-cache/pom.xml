@@ -26,7 +26,7 @@
     <git-commit-id-plugin.version>4.0.3</git-commit-id-plugin.version>
 
     <git.commit.dateFormat>yyyy-MM-dd'T'HH:mm:ssXXX</git.commit.dateFormat>
-    <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version>
     <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
