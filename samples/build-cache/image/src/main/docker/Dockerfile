@@ -11,11 +11,6 @@ FROM gcr.io/distroless/java-debian10
 # Just for security
 USER nonroot
 
-# Entry point of the base image executes java which we don't need because we use tini in the image command.
-# tini (https://github.com/krallin/tini) is used to enforce zero exit code when Java application is stopped
-# using SIGINT or SIGTERM.
-ENTRYPOINT []
-
 # /app directory contains all items of the wanted Java class path.
 WORKDIR "/app"
 
@@ -31,6 +26,11 @@ ADD ["spring-boot-loader.tar", "/"]
 ADD ["snapshot-dependencies.tar", "/"]
 # ... application code
 ADD ["application.tar", "/"]
+
+# Entry point of the base image executes java which we don't need because we use tini in the image command.
+# tini (https://github.com/krallin/tini) is used to enforce zero exit code when Java application is stopped
+# using SIGINT or SIGTERM.
+ENTRYPOINT []
 
 # Put version into the last layer because LABEL directive produces more lightweight layer than ADD.
 LABEL name="@{image}" \
