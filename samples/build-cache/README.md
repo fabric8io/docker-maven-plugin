@@ -30,24 +30,36 @@ When building the project multiple times, note that subsequent builds log "Using
 ```
 $ mvn clean package
 ...
-[INFO] DOCKER> Step 1 : FROM gcr.io/distroless/java-debian10
-[INFO] DOCKER> ---> f6a5dc137f9b
-[INFO] DOCKER> Step 2 : USER nonroot
+[INFO] DOCKER> Step 1/10 : FROM gcr.io/distroless/java-debian10
+[INFO] DOCKER>
+[INFO] DOCKER> ---> 444adf12984c
+[INFO] DOCKER> Step 2/10 : USER nonroot
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> 26d64b9907e3
-[INFO] DOCKER> Step 3 : ENTRYPOINT
+[INFO] DOCKER> ---> 043b487914d1
+[INFO] DOCKER> Step 3/10 : WORKDIR "/app"
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> 6eb12980cd38
-[INFO] DOCKER> Step 4 : WORKDIR "/app"
+[INFO] DOCKER> ---> 08ef41fef30f
+[INFO] DOCKER> Step 4/10 : CMD ["tini", "-e", "130", "-e", "143", "--", "java", "org.springframework.boot.loader.JarLauncher"]
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> d6a408147d7c
-[INFO] DOCKER> Step 5 : CMD tini -e 130 -e 143 -- java org.springframework.boot.loader.JarLauncher
+[INFO] DOCKER> ---> 2ac94352abe0
+[INFO] DOCKER> Step 5/10 : ADD ["dependencies.tar", "/"]
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> 461505b7ade9
-[INFO] DOCKER> Step 6 : ADD dependencies.tar /
+[INFO] DOCKER> ---> aafdf67c0508
+[INFO] DOCKER> Step 6/10 : ADD ["spring-boot-loader.tar", "/"]
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> df87a8d003f3
-[INFO] DOCKER> Step 7 : ADD spring-boot-loader.tar /
+[INFO] DOCKER> ---> f593e7c3c58d
+[INFO] DOCKER> Step 7/10 : ADD ["snapshot-dependencies.tar", "/"]
+[INFO] DOCKER>
 [INFO] DOCKER> ---> Using cache
-[INFO] DOCKER> ---> 2de1bf3ac9ad
+[INFO] DOCKER> ---> ef1f89b783b5
+[INFO] DOCKER> Step 8/10 : ADD ["application.tar", "/"]
+[INFO] DOCKER>
+[INFO] DOCKER> ---> Using cache
+[INFO] DOCKER> ---> 055ba36bb45f
+...
 ```
