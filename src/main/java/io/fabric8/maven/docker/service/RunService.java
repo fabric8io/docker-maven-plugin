@@ -376,7 +376,8 @@ public class RunService {
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
                     .labels(mergeLabels(runConfig.getLabels(), gavLabel))
                     .command(runConfig.getCmd())
-                    .hostConfig(createContainerHostConfig(runConfig, mappedPorts, baseDir));
+                    .hostConfig(createContainerHostConfig(runConfig, mappedPorts, baseDir))
+                    .healthcheck(runConfig.getHealthCheckConfiguration());
             RunVolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
                 resolveRelativeVolumeBindings(baseDir, volumeConfig);

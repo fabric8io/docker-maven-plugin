@@ -1,5 +1,7 @@
 # ChangeLog
 * **0.46-SNAPSHOT**:
+  - Docker-compose healthcheck configuration support ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))
+  - Docker container wait timeout default value made configurable using startContainerWaitTimeout configuration option ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))
 
 * **0.45.1 (2024-09-29)**:
   - Make copy docker-buildx binary to temporary config directory work on windows too ([1819](https://github.com/fabric8io/docker-maven-plugin/pull/1819))

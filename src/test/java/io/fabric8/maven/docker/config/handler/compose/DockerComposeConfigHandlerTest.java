@@ -1,10 +1,6 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
@@ -27,11 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author roland
@@ -77,7 +71,67 @@ class DockerComposeConfigHandlerTest {
         RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
         Assertions.assertEquals("linux/amd64", runConfig.getPlatform());
     }
-    
+
+    @Test
+    void testHealthcheckInherited() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_healthcheck.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        RunImageConfiguration runConfig = findRunConfigurationByAlias(configs, "serviceHealthcheckInherited");
+        Assertions.assertEquals(HealthCheckMode.cmd, runConfig.getHealthCheckConfiguration().getMode());
+        Assertions.assertEquals(0, runConfig.getHealthCheckConfiguration().getCmd().asStrings().size());
+        Assertions.assertNull(runConfig.getHealthCheckConfiguration().getRetries());
+        Assertions.assertEquals("1s", runConfig.getHealthCheckConfiguration().getInterval());
+        Assertions.assertEquals("3s", runConfig.getHealthCheckConfiguration().getTimeout());
+        Assertions.assertEquals("5s", runConfig.getHealthCheckConfiguration().getStartPeriod());
+    }
+
+    @Test
+    void testHealthcheckCmd() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_healthcheck.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        RunImageConfiguration runConfig = findRunConfigurationByAlias(configs, "serviceHealthcheck_CMD");
+        Assertions.assertEquals(HealthCheckMode.cmd, runConfig.getHealthCheckConfiguration().getMode());
+        Assertions.assertEquals(5, runConfig.getHealthCheckConfiguration().getCmd().asStrings().size());
+        Assertions.assertEquals("CMD", runConfig.getHealthCheckConfiguration().getCmd().asStrings().get(0));
+        Assertions.assertEquals(100, runConfig.getHealthCheckConfiguration().getRetries());
+        Assertions.assertEquals("1s", runConfig.getHealthCheckConfiguration().getInterval());
+        Assertions.assertEquals("3s", runConfig.getHealthCheckConfiguration().getTimeout());
+        Assertions.assertEquals("5s", runConfig.getHealthCheckConfiguration().getStartPeriod());
+    }
+
+    @Test
+    void testHealthcheckCmdShell() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_healthcheck.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        RunImageConfiguration runConfig = findRunConfigurationByAlias(configs, "serviceHealthcheckSame_CMD-SHELL");
+        Assertions.assertEquals(HealthCheckMode.cmd, runConfig.getHealthCheckConfiguration().getMode());
+        Assertions.assertEquals(2, runConfig.getHealthCheckConfiguration().getCmd().asStrings().size());
+        Assertions.assertEquals("CMD-SHELL", runConfig.getHealthCheckConfiguration().getCmd().asStrings().get(0));
+        Assertions.assertEquals(100, runConfig.getHealthCheckConfiguration().getRetries());
+        Assertions.assertEquals("1s", runConfig.getHealthCheckConfiguration().getInterval());
+        Assertions.assertEquals("3s", runConfig.getHealthCheckConfiguration().getTimeout());
+        Assertions.assertEquals("5s", runConfig.getHealthCheckConfiguration().getStartPeriod());
+    }
+
+    @Test
+    void testHealthcheckDisabled() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_healthcheck.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        Arrays.asList("serviceDisabledHealthcheck", "serviceDisabledHealthcheck2")
+                .stream()
+                .map(alias -> findRunConfigurationByAlias(configs, alias))
+                .forEach(runConfig -> {
+                    Assertions.assertNotNull(runConfig);
+                    Assertions.assertEquals(HealthCheckMode.none, runConfig.getHealthCheckConfiguration().getMode());
+                    Assertions.assertNull(runConfig.getHealthCheckConfiguration().getCmd());
+                    Assertions.assertNull(runConfig.getHealthCheckConfiguration().getRetries());
+                    Assertions.assertNull(runConfig.getHealthCheckConfiguration().getInterval());
+                    Assertions.assertNull(runConfig.getHealthCheckConfiguration().getTimeout());
+                    Assertions.assertNull(runConfig.getHealthCheckConfiguration().getStartPeriod());
+                });
+
+    }
+
     @Test
     void networkAliases() throws IOException, MavenFilteringException {
         setupComposeExpectations("docker-compose-network-aliases.yml");
@@ -101,7 +155,7 @@ class DockerComposeConfigHandlerTest {
         Assertions.assertEquals(1, netSvc.getAliases().size());
         Assertions.assertEquals("alias1", netSvc.getAliases().get(0));
     }
-    
+
     @Test
     void longDependsOn() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-valid.yml");
@@ -110,43 +164,43 @@ class DockerComposeConfigHandlerTest {
         Assertions.assertEquals(Arrays.asList("service2", "service3"), configs.get(0).getRunConfiguration().getDependsOn());
         Assertions.assertEquals(Arrays.asList("service3", "service4", "service5"), configs.get(1).getRunConfiguration().getDependsOn());
     }
-    
+
     @Test
     void dependsOnUndefServiceRef() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-undef-ref.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
-        
+
         setupComposeExpectations("dependsOn/short-undef-ref.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
-    
+
     @Test
     void dependsOnServiceSelfRef() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-selfref.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
-        
+
         setupComposeExpectations("dependsOn/short-selfref.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
-    
+
     @Test
     void dependsOnServiceButNoConfig() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-map-keys-only.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
-    
+
     @Test
     void dependsOnServiceButMissingCondition() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-no-condition.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
-    
+
     @Test
     void dependsOnServiceButInvalidCondition() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-invalid-condition.yml");
         Assertions.assertThrows(IllegalArgumentException.class, () -> handler.resolve(unresolved, project, session));
     }
-    
+
     @Test
     void dependsOnServiceButConflictingConditions() throws IOException, MavenFilteringException {
         setupComposeExpectations("dependsOn/long-conflicting-condition.yml");
@@ -219,6 +273,13 @@ class DockerComposeConfigHandlerTest {
         Assertions.assertEquals(1.5, runConfig.getCpus());
         Assertions.assertEquals("default", runConfig.getIsolation());
         Assertions.assertEquals((Long) 1L, runConfig.getCpuShares());
+
+        Assertions.assertEquals(HealthCheckMode.cmd, runConfig.getHealthCheckConfiguration().getMode());
+        Assertions.assertEquals(Arrays.asList("CMD-SHELL", "curl -s --fail http://localhost:8080/status"),
+                runConfig.getHealthCheckConfiguration().getCmd().asStrings());
+        Assertions.assertEquals("1s", runConfig.getHealthCheckConfiguration().getInterval());
+        Assertions.assertEquals("3s", runConfig.getHealthCheckConfiguration().getTimeout());
+
         Assertions.assertNull(runConfig.getEnvPropertyFile());
 
         Assertions.assertNull(runConfig.getPortPropertyFile());
@@ -302,4 +363,14 @@ class DockerComposeConfigHandlerTest {
         return Arrays.asList(args);
     }
 
+    private static RunImageConfiguration findRunConfigurationByAlias(List<ImageConfiguration> configs, String alias) {
+        try {
+            return configs.stream()
+                    .filter(rc -> rc.getAlias().equals(alias))
+                    .findFirst().get().getRunConfiguration();
+        } catch (NoSuchElementException e) {
+            fail("Service configuration is not found for alias: "+alias);
+            return null;
+        }
+    }
 }

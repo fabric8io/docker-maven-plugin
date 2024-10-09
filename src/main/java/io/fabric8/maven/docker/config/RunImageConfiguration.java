@@ -43,6 +43,10 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> dependsOn;
 
+    // healthcheck
+    @Parameter
+    private HealthCheckConfiguration healthCheckConfiguration;
+
     /**
      * container entry point
      *
@@ -262,6 +266,10 @@ public class RunImageConfiguration implements Serializable {
     @Nonnull
     public List<String> getDependsOn() {
         return EnvUtil.splitAtCommasAndTrim(dependsOn);
+    }
+
+    public HealthCheckConfiguration getHealthCheckConfiguration() {
+        return healthCheckConfiguration;
     }
 
     public String getUser() {
@@ -579,6 +587,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder dependsOn(List<String> dependsOn) {
             config.dependsOn = dependsOn;
+            return this;
+        }
+
+        public Builder healthcheck(HealthCheckConfiguration healthCheckConfiguration) {
+            config.healthCheckConfiguration = healthCheckConfiguration;
             return this;
         }
 
