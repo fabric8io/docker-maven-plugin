@@ -10,6 +10,12 @@ services:
     build:
       context: .
       dockerfile: Postgres.Dockerfile
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 2s
+      timeout: 2s
+      retries: 10
+      start_period: 1s
     environment:
       POSTGRES_PASSWORD: supersecret
     tmpfs:
