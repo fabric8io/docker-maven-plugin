@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
@@ -124,13 +126,68 @@ class DockerComposeServiceWrapper {
             return new ArrayList<>(asMap("depends_on").keySet());
         }
     }
-    
+
     boolean usesLongSyntaxDependsOn() {
         return asObject("depends_on") instanceof Map;
     }
 
     public String getPlatform() {
         return asString("platform");
+    }
+
+    public HealthCheckConfiguration getHealthCheckConfiguration() {
+        if (!configuration.containsKey("healthcheck")) {
+            return null;
+        }
+        Map<String, Object> healthCheckAsMap = (Map<String, Object>) configuration.get("healthcheck");
+        HealthCheckConfiguration.Builder builder = new HealthCheckConfiguration.Builder();
+        Object disable = healthCheckAsMap.get("disable");
+        if (isaBoolean(disable)) {
+            builder.mode(HealthCheckMode.none);
+            return builder.build();
+        }
+
+        Object test = healthCheckAsMap.get("test");
+        if (test == null) {
+            return null;
+        }
+        if (test instanceof List) {
+            List<String> cmd = (List<String>) test;
+            if (cmd.size() > 0 && cmd.get(0).equalsIgnoreCase("NONE")) {
+                builder.mode(HealthCheckMode.none);
+                return builder.build();
+            } else {
+                builder.cmd(new Arguments((List<String>) test));
+                builder.mode(HealthCheckMode.cmd);
+            }
+        } else {
+            builder.cmd(new Arguments(Arrays.asList("CMD-SHELL", test.toString())));
+            builder.mode(HealthCheckMode.cmd);
+        }
+        enableWaitCondition(WaitCondition.HEALTHY);
+
+        Object interval = healthCheckAsMap.get("interval");
+        if (interval != null) {
+            builder.interval(interval.toString());
+        }
+        Object timeout = healthCheckAsMap.get("timeout");
+        if (timeout != null) {
+            builder.timeout(timeout.toString());
+        }
+        Object retries = healthCheckAsMap.get("retries");
+        if (retries instanceof Number) {
+            builder.retries(((Number) retries).intValue());
+        }
+        Object startPeriod = healthCheckAsMap.get("start_period");
+        if (startPeriod != null) {
+            builder.startPeriod(startPeriod.toString());
+        }
+
+        return builder.build();
+    }
+
+    private static boolean isaBoolean(Object disable) {
+        return disable instanceof Boolean && (Boolean) disable;
     }
 
     /**
@@ -140,19 +197,19 @@ class DockerComposeServiceWrapper {
         HEALTHY("service_healthy"),
         COMPLETED("service_completed_successfully"),
         STARTED("service_started");
-        
+
         private final String condition;
         WaitCondition(String condition) {
             this.condition = condition;
         }
-        
+
         static WaitCondition fromString(String string) {
             return Arrays.stream(WaitCondition.values()).filter(wc -> wc.condition.equals(string)).findFirst().orElseThrow(
                 () -> new IllegalArgumentException("invalid condition \"" + string + "\"")
             );
         }
     }
-    
+
     /**
      * Extract a required condition of another (dependent) service from this service.
      * In a compose file following v2.1+ format this looks like this:
@@ -175,15 +232,15 @@ class DockerComposeServiceWrapper {
      */
     WaitCondition getWaitCondition(String dependentServiceName) {
         Objects.requireNonNull(dependentServiceName, "Dependent service's name may not be null");
-        
+
         Object dependsOnObj = asObject("depends_on");
         if (dependsOnObj instanceof Map) {
             Map<String, Object> dependsOn = (Map<String, Object>) dependsOnObj;
             Object dependenSvcObj = dependsOn.get(dependentServiceName);
-            
+
             if (dependenSvcObj instanceof Map) {
                 Map<String, String> dependency = (Map<String,String>) dependenSvcObj;
-                
+
                 if (dependency.containsKey("condition")) {
                     String condition = dependency.get("condition");
                     try {
@@ -200,10 +257,10 @@ class DockerComposeServiceWrapper {
         throwIllegalArgumentException("depends_on does not use long syntax, cannot retrieve condition");
         return null;
     }
-    
+
     private boolean healthyWaitRequested;
     private boolean successExitWaitRequested;
-    
+
     /**
      * Switch on waiting conditions for this service.
      * It will not yet check for conflicting conditions, this is done in {@link #getWaitConfiguration()}
@@ -212,7 +269,7 @@ class DockerComposeServiceWrapper {
      */
     void enableWaitCondition(WaitCondition condition) {
         Objects.requireNonNull(condition, "Condition may not be null");
-        
+
         // We do not check for conflicting conditions here - this is done when the wrapper is asked for its WaitConfig
         // Note: yes, we check here again, as we rely on Strings, not an enum
         switch (condition) {
@@ -229,7 +286,7 @@ class DockerComposeServiceWrapper {
                 // Do nothing when unknown condition
         }
     }
-    
+
     /**
      * Build the actual wait configuration for this service.
      * <p>Please note: while Docker Compose allows you to create a dependency graph which will allow to wait
@@ -585,7 +642,7 @@ class DockerComposeServiceWrapper {
     void throwIllegalArgumentException(String msg) {
         throw new IllegalArgumentException(String.format("%s: %s - ", composeFile, name) + msg);
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -593,7 +650,7 @@ class DockerComposeServiceWrapper {
         DockerComposeServiceWrapper that = (DockerComposeServiceWrapper) o;
         return Objects.equals(name, that.name);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(name);

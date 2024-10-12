@@ -198,6 +198,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // container_name is taken as an alias and ignored here for run config
                 // devices not supported
                 .dependsOn(wrapper.getDependsOn()) // depends_on relies that no container_name is set
+                .healthcheck(wrapper.getHealthCheckConfiguration())
                 .wait(wrapper.getWaitConfiguration())
                 .dns(wrapper.getDns())
                 .dnsSearch(wrapper.getDnsSearch())

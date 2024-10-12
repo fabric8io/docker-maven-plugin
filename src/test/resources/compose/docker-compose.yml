@@ -61,6 +61,10 @@ services:
   # ulimits
     restart: on-failure:1
     user: tomcat
+    healthcheck:
+      test: curl -s --fail http://localhost:8080/status
+      interval: 1s
+      timeout: 3s
     volumes:
       - /foo
       # mount /tmp with rw access control

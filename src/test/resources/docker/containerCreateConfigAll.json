@@ -82,6 +82,16 @@
     ],
     "NetworkMode":"custom_network"
   },
+  "Healthcheck": {
+    "Test": [
+      "CMD",
+      "healthcheck.sh"
+    ],
+    "Retries": 10,
+    "Interval": 10000000000,
+    "StartPeriod": 20000000000,
+    "Timeout": 10000000000
+  },
   "Volumes":{
     "/container_tmp":{
 
