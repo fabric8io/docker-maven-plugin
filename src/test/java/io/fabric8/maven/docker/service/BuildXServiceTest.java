@@ -1,57 +1,54 @@
 package io.fabric8.maven.docker.service;
 
-import io.fabric8.maven.docker.util.ImageName;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.io.File;
-import java.nio.file.Paths;
-
-import io.fabric8.maven.docker.access.AuthConfig;
 import java.util.function.BiConsumer;
 
-import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
-import org.mockito.Spy;
 import org.mockito.Mockito;
-import org.mockito.quality.Strictness;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.AuthConfigList;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.ProjectPaths;
-import io.fabric8.maven.docker.config.BuildXConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.ProjectPaths;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.WARN)
@@ -238,10 +235,11 @@ class BuildXServiceTest {
         assertEquals(Arrays.asList("docker", "--config", temporaryFolder.getAbsolutePath(), "buildx"), buildXArgCaptor.getValue());
     }
 
-    @Test
-    void useBuilder_whenDockerBuildXIncompatibleWithConfigOverride_thenCopyBuildXBinaryToTemporaryConfig() throws IOException, MojoExecutionException {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void useBuilder_whenDockerBuildXIncompatibleWithConfigOverride_thenCopyBuildXBinaryToTemporaryConfig(boolean isWindows) throws IOException, MojoExecutionException {
         try (MockedStatic<EnvUtil> envUtilMockedStatic = mockStatic(EnvUtil.class);
-            MockedConstruction<BuildXService.BuildXListWithConfigCommand> ignore = mockConstruction(BuildXService.BuildXListWithConfigCommand.class, (mock, ctx) -> {
+             MockedConstruction<BuildXService.BuildXListWithConfigCommand> ignore = mockConstruction(BuildXService.BuildXListWithConfigCommand.class, (mock, ctx) -> {
             when(mock.isSuccessFul()).thenReturn(false);
         })) {
             // Given
@@ -249,9 +247,12 @@ class BuildXServiceTest {
             Files.createDirectory(configDirPath);
             Files.createDirectory(temporaryFolder.toPath().resolve(".docker"));
             Files.createDirectory(temporaryFolder.toPath().resolve(".docker").resolve("cli-plugins"));
-            Files.createFile(temporaryFolder.toPath().resolve(".docker").resolve("cli-plugins").resolve("docker-buildx"));
+            final String buildxExecutableFilename = "docker-buildx" + (isWindows ? ".exe" : "");
+            Files.createFile(temporaryFolder.toPath().resolve(".docker").resolve("cli-plugins").resolve(buildxExecutableFilename));
             envUtilMockedStatic.when(EnvUtil::getUserHome).thenReturn(temporaryFolder.getAbsolutePath());
+            envUtilMockedStatic.when(EnvUtil::isWindows).thenReturn(isWindows);
             BuildXService.Builder<File> builder = Mockito.mock(BuildXService.Builder.class);
+
             givenAnImageConfiguration("linux/arm46", "linux/amd64");
 
             // When
@@ -259,7 +260,7 @@ class BuildXServiceTest {
 
             // Then
             assertTrue(configDirPath.resolve("cli-plugins").toFile().exists());
-            assertTrue(configDirPath.resolve("cli-plugins").resolve("docker-buildx").toFile().exists());
+            assertTrue(configDirPath.resolve("cli-plugins").resolve(buildxExecutableFilename).toFile().exists());
             verify(logger).debug("Detected current version of BuildX not working with --config override");
             verify(logger).debug("Copying BuildX binary to " + temporaryFolder.toPath().resolve("docker-state-dir"));
         }

@@ -19,6 +19,12 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 | Starts docker images in parallel while dependencies expressed as <<start-links,Link>> or <<start-depends-on,dependsOn>> are respected. This option can significantly reduce the startup time because independent containers do not need to wait for each other.
 | `docker.startParallel`
 
+| *startContainerWaitTimeout*
+| Overrides the default across all the containers wait timeout (<wait><time>) is milliseconds.
+Overriding that property might become particularly useful when docker-compose config defines the healthchecks,
+but the default wait timeout of 10000ms is too short for some containers to become healthy.
+| `docker.startContainerWaitTimeout`
+
 |===
 
 The `<run>` configuration element knows the following sub elements:

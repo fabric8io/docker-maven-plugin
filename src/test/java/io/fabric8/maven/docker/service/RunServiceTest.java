@@ -9,16 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.StopMode;
-import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
@@ -404,6 +395,7 @@ class RunServiceTest {
                 .ports(ports())
                 .links(links())
                 .volumes(volumeConfiguration())
+                .healthcheck(healthCheckConfiguration())
                 .dns(dns())
                 .dnsSearch(dnsSearch())
                 .privileged(true)
@@ -416,6 +408,16 @@ class RunServiceTest {
                 .network(networkConfiguration())
                 .readOnly(false)
                 .autoRemove(false)
+                .build();
+    }
+
+    private HealthCheckConfiguration healthCheckConfiguration() {
+        return new HealthCheckConfiguration.Builder()
+                .retries(10)
+                .cmd(new Arguments(Arrays.asList("CMD", "healthcheck.sh")))
+                .timeout("10s")
+                .interval("10s")
+                .startPeriod("20s")
                 .build();
     }
 

@@ -29,6 +29,8 @@ import io.fabric8.maven.docker.wait.WaitChecker;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
 
+import static io.fabric8.maven.docker.StartMojo.DOCKER_START_CONTAINER_WAIT_TIMEOUT;
+
 /**
  * @author roland
  * @since 03.05.17
@@ -57,6 +59,9 @@ public class WaitService {
                 WaitUtil.sleep(timeout);
             }
             return;
+        }
+        if (timeout == 0 && projectProperties.containsKey(DOCKER_START_CONTAINER_WAIT_TIMEOUT)) {
+            timeout = Integer.parseInt(projectProperties.getProperty(DOCKER_START_CONTAINER_WAIT_TIMEOUT, "0"));
         }
 
         String logLine = extractCheckerLog(checkers);

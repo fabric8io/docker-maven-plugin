@@ -41,7 +41,7 @@
   </modules>
 
   <properties>
-    <latest-released-version>0.45.0</latest-released-version>
+    <latest-released-version>0.45.1</latest-released-version>
   </properties>
 
   <build>
