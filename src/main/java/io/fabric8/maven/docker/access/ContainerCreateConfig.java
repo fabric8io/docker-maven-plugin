@@ -11,7 +11,12 @@ import org.apache.commons.text.StrSubstitutor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.util.JsonFactory;
