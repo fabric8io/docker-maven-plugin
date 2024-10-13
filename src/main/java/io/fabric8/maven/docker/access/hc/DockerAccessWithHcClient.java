@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -111,6 +112,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private final ApacheHttpClientDelegate delegate;
     private final String apiVersion;
+    private final String defaultBuilderVersion;
     private final String nativePlatform;
     private final UrlBuilder urlBuilder;
 
@@ -149,6 +151,14 @@ public class DockerAccessWithHcClient implements DockerAccess {
         this.nativePlatform = info.get("Os").getAsString() + "/" + info.get("Arch").getAsString();
         this.urlBuilder = new UrlBuilder(baseUrl, "v" + apiVersion);
         this.log = log;
+        String pingUrl = baseUrl + "/_ping";
+        defaultBuilderVersion = delegate.get(pingUrl, response -> {
+            Header[] builderVersionHeaders = response.getHeaders("Builder-Version");
+            if (null != builderVersionHeaders && 0 < builderVersionHeaders.length) {
+                return builderVersionHeaders[0].getValue();
+            }
+            return null;
+        }, HTTP_OK);
     }
 
     static String stripTrailingSlash(String url) {
@@ -163,6 +173,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public String getServerApiVersion() {
         return apiVersion;
+    }
+
+    @Override
+    public String getDefaultBuilderVersion() {
+        return defaultBuilderVersion;
     }
 
     @Override
