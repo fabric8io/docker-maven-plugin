@@ -1,15 +1,9 @@
 package io.fabric8.maven.docker.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
@@ -164,11 +158,12 @@ public class ContainerNamingUtil {
     }
 
     private static Set<String> extractContainerNames(final Collection<Container> existingContainers) {
-        final ImmutableSet.Builder<String> containerNamesBuilder = ImmutableSet.builder();
+        final Set<String> containerNamesBuilder = new HashSet<>();
         for (final Container container : existingContainers) {
             containerNamesBuilder.add(container.getName());
         }
-        return containerNamesBuilder.build();
+
+        return Collections.unmodifiableSet(containerNamesBuilder);
     }
 
     private static String extractContainerNamePattern(ImageConfiguration image, String defaultContainerNamePattern) {
