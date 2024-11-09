@@ -20,7 +20,6 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.model.Image;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
