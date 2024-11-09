@@ -1,12 +1,11 @@
 package io.fabric8.maven.docker.util;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import io.fabric8.maven.docker.access.AuthConfig;
@@ -93,7 +92,7 @@ public class CredentialHelperClient {
     // echo <registryToLookup> | docker-credential-XXX get
     private class GetCommand extends ExternalCommand {
 
-        private List<String> reply = Lists.newLinkedList();
+        private final List<String> reply = new LinkedList<>();
 
         GetCommand() {
             super(CredentialHelperClient.this.log);
@@ -119,9 +118,10 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            JsonObject credentials = JsonFactory.newJsonObject(Joiner.on('\n').join(reply));
+            String joinedReply = String.join("\n", reply);
+            JsonObject credentials = JsonFactory.newJsonObject(joinedReply);
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
-                return null;
+                return null;  // If keys are missing, return null
             }
             return credentials;
         }
