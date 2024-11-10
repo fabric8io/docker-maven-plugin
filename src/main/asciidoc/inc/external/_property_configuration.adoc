@@ -281,7 +281,7 @@ See <<list-properties>>.
 | specifies a path to a port mapping used when starting a container.
 
 | *docker.ports.idx*
-| Sets a port mapping. For example `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property `${jolokia.port}`. See <<_port-mapping,Port mapping>> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.
+| Sets a port mapping. For example `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property `${jolokia.port}`. See <<start-port-mapping,Port mapping>> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.
 See <<list-properties>> for more information about list properties.
 
 | *docker.registry*

@@ -10,7 +10,7 @@ registry. This registry (or the default `docker.io` if no
 registry is given) is used during push and pull operations. This
 plugin follows the same semantics, so if an image name is specified
 with a registry part, this registry is contacted. Authentication is
-explained in the next <<_authentication,section>>.
+explained in the next <<authentication,section>>.
 
 There are some situations however where you want to have more
 flexibility for specifying a remote registry. This might be because
