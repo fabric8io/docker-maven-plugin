@@ -48,6 +48,10 @@ in the next sections.
 |Save images to a file
 |
 
+|**<<{plugin}:tag>>**
+|Tag images
+|install
+
 |**<<{plugin}:volume-create>>**
 |Create a volume for containers to share data
 |pre-integration-test
