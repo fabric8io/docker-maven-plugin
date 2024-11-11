@@ -49,7 +49,7 @@ in the next sections.
 |
 
 |**<<{plugin}:tag>>**
-|Tag images
+|Tag images so that they become part of a repository
 |install
 
 |**<<{plugin}:volume-create>>**
