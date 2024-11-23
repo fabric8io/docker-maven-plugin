@@ -57,7 +57,7 @@ jobs:
           path: ~/.m2/repository
           key: cache-e2e-${{ github.sha }}-${{ github.run_id }}
       - name: Set up Docker
-        uses: crazy-max/ghaction-setup-docker@v2
+        uses: crazy-max/ghaction-setup-docker@v3
         with:
           version: ${{ matrix.docker }}
       - name: Run Integration tests
@@ -87,8 +87,11 @@ jobs:
         with:
           path: ~/.m2/repository
           key: cache-e2e-${{ github.sha }}-${{ github.run_id }}
+      - # https://github.com/crazy-max/ghaction-setup-docker/issues/108
+        name: Install QEMU 9.0.2
+        uses: docker/actions-toolkit/.github/actions/macos-setup-qemu@19ca9ade20f5da695f76a10988d6532058575f82
       - name: Set up Docker
-        uses: crazy-max/ghaction-setup-docker@v2
+        uses: crazy-max/ghaction-setup-docker@v3
         with:
           version: ${{ matrix.docker }}
       - name: Set up Docker Buildx
@@ -98,6 +101,6 @@ jobs:
           ln -sfn /usr/local/opt/docker-buildx/bin/docker-buildx ~/.docker/cli-plugins/docker-buildx
       - name: Run Integration tests
         run: |
-          export DOCKER_HOST=unix:///Users/runner/.colima/default/docker.sock
+          export DOCKER_HOST=unix:///Users/runner/.lima/docker-actions-toolkit/docker.sock
           cd it/
           mvn clean install
