@@ -212,6 +212,12 @@ public class RunImageConfiguration implements Serializable {
     // How to stop a container
     @Parameter
     private StopMode stopMode;
+    
+    /**
+     * Add new or override build time provided healthcheck
+     */
+    @Parameter
+    private HealthCheckConfiguration healthCheck;
 
     public RunImageConfiguration() {
     }
@@ -226,14 +232,27 @@ public class RunImageConfiguration implements Serializable {
         if (cmd != null) {
             cmd.validate();
         }
+        if (healthCheck != null) {
+            // Context is running an image, thus default to inheriting a check defined at build time or parent image(s)
+            // (Which still allows to change any option while keeping the test itself!)
+            healthCheck.setModeIfNotPresent(HealthCheckMode.inherit);
+            healthCheck.validate();
+        }
+        
+        String minimalApiVersion = null;
 
         // Custom networks are available since API 1.21 (Docker 1.9)
         NetworkConfig config = getNetworkingConfig();
         if (config != null && config.isCustomNetwork()) {
-            return "1.21";
+            minimalApiVersion = "1.21";
+        }
+        
+        // Runtime provided healthchecks are available since API 1.24 (Docker 1.12)
+        if (healthCheck != null) {
+            minimalApiVersion = "1.24";
         }
 
-        return null;
+        return minimalApiVersion;
     }
 
     public Map<String, String> getEnv() {
@@ -454,6 +473,10 @@ public class RunImageConfiguration implements Serializable {
             return StopMode.graceful;
         }
         return stopMode;
+    }
+    
+    public HealthCheckConfiguration getHealthCheck() {
+        return this.healthCheck;
     }
 
     /**
@@ -736,6 +759,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder autoRemove(Boolean autoRemove) {
             config.autoRemove = autoRemove;
+            return this;
+        }
+        
+        public Builder healthCheck(HealthCheckConfiguration configuration) {
+            config.healthCheck = configuration;
             return this;
         }
 
