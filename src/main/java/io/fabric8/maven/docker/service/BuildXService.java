@@ -275,7 +275,7 @@ public class BuildXService {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
         String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
         String nodeName = buildXConfiguration.getNodeName();
-        Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName));
+        Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
         if(Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
             append(cmds, "create", "--driver", "docker-container", "--name", builderName);
