@@ -14,6 +14,8 @@ import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.Base64;
@@ -101,7 +103,7 @@ class AuthConfigFactoryTest {
 
     @BeforeEach
     void containerSetup() throws ComponentLookupException, SecDispatcherException {
-        Mockito.lenient().when(container.lookup(SecDispatcher.ROLE, "maven")).thenReturn(secDispatcher);
+        Mockito.lenient().when(container.lookup(SettingsDecrypter.class)).thenReturn(new DefaultSettingsDecrypter(secDispatcher));
         Mockito.lenient().when(secDispatcher.decrypt(Mockito.anyString())).thenAnswer(invocation -> invocation.getArguments()[0]);
 
         factory = new AuthConfigFactory(container);
