@@ -14,6 +14,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.jupiter.api.AfterEach;
@@ -62,6 +64,7 @@ class PushMojoBuildXTest {
     DockerAccess dockerAccess = mock(DockerAccess.class);
     PlexusContainer mockedPlexusContainer = mock(PlexusContainer.class);
     SecDispatcher mockedSecDispatcher = mock(SecDispatcher.class);
+    when(mockedPlexusContainer.lookup(SettingsDecrypter.class)).thenReturn(new DefaultSettingsDecrypter(mockedSecDispatcher));
     ServiceHubFactory serviceHubFactory = new ServiceHubFactory();
     when(mockedMavenSettings.getInteractiveMode()).thenReturn(false);
     Properties properties = new Properties();

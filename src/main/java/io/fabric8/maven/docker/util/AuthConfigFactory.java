@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import com.google.gson.JsonObject;
 
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -33,10 +32,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
@@ -670,16 +671,15 @@ public class AuthConfigFactory {
 
     private String decrypt(String password) throws MojoExecutionException {
         try {
-            // Done by reflection since I have classloader issues otherwise
-            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
-            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
-            synchronized(secDispatcher) {
-                return (String) method.invoke(secDispatcher, password);
-            }
+            SettingsDecrypter settingsDecrypter = container.lookup(SettingsDecrypter.class);
+            Server stub = new Server();
+            stub.setUsername("whatever");
+            stub.setPassword(password);
+
+            SettingsDecryptionResult result = settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(stub));
+            return result.getServers().get(0).getPassword();
         } catch (ComponentLookupException e) {
             throw new MojoExecutionException("Error looking security dispatcher",e);
-        } catch (ReflectiveOperationException e) {
-            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
         }
     }
 
