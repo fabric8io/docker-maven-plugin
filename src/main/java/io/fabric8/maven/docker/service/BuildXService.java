@@ -169,6 +169,11 @@ public class BuildXService {
             cmdLine.add("--no-cache");
         }
 
+        String networkMode = ConfigHelper.getNetwork(imageConfig);
+        if (networkMode!=null) {
+            cmdLine.add("--network="+networkMode);
+        }
+
         BuildXConfiguration buildXConfiguration = buildConfiguration.getBuildX();
         AttestationConfiguration attestations = buildXConfiguration.getAttestations();
         if (attestations != null) {
@@ -294,7 +299,8 @@ public class BuildXService {
             }
             int rc = exec.process(cmds);
             if (rc != 0) {
-                throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
+                logger.warn("Failed to execute: {}", cmds);
+                // throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
             }
         }
         return builderName;

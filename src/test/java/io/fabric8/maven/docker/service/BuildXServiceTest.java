@@ -127,6 +127,19 @@ class BuildXServiceTest {
     }
 
     @Test
+    void testNetworkIsPropagatedToBuildx() throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.network("host"));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentPresentInExec("--network=host");
+    }
+
+    @Test
     void testNoCacheIsPropagatedToBuildx() throws Exception {
 
         //Given
