@@ -2,6 +2,8 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +12,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
@@ -55,11 +56,6 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.utils.logging.MessageUtils;
-import org.codehaus.plexus.PlexusConstants;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.context.Context;
-import org.codehaus.plexus.context.ContextException;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.fusesource.jansi.Ansi;
 
 /**
@@ -68,7 +64,7 @@ import org.fusesource.jansi.Ansi;
  * @author roland
  * @since 26.03.14
  */
-public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
+public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigHelper.Customizer {
 
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
@@ -255,6 +251,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     List<ImageConfiguration> resolvedImages;
 
     // Handler dealing with authentication credentials
+    @Component
     AuthConfigFactory authConfigFactory;
 
     protected AnsiLogger log;
@@ -481,12 +478,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    @Override
-    public void contextualize(Context context) throws ContextException {
-        authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
-    }
-
-    // =================================================================================
     protected GavLabel getGavLabel() {
         // Label used for this run
         return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
@@ -501,8 +492,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return dispatcher;
     }
 
-    private ImmutableList<ImageConfiguration> getAllImages() {
-        ImmutableList.Builder<ImageConfiguration> allImages = ImmutableList.builder();
+    private List<ImageConfiguration> getAllImages() {
+        ArrayList<ImageConfiguration> allImages = new ArrayList<>();
         if (images != null) {
             allImages.addAll(images);
         }
@@ -514,7 +505,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 allImages.add(config);
             });
         }
-        return allImages.build();
+        return Collections.unmodifiableList(allImages);
     }
 
     public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {

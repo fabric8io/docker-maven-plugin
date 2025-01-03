@@ -28,12 +28,13 @@ import org.apache.maven.artifact.*;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.shared.utils.io.DirectoryScanner;
-import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.diags.TrackingArchiver;
-import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.components.io.resources.PlexusIoFileResource;
+import org.codehaus.plexus.util.DirectoryScanner;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * An archiver which remembers all resolved files and directories and returns them
@@ -42,7 +43,8 @@ import org.codehaus.plexus.components.io.resources.PlexusIoFileResource;
  * @author roland
  * @since 15/06/15
  */
-@Component(role = Archiver.class, hint = "track", instantiationStrategy = "singleton")
+@Singleton
+@Named("track")
 public class MappingTrackArchiver extends TrackingArchiver {
 
     // Logger to use

@@ -46,16 +46,18 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 
 /**
  * @author roland
  * @since 18/11/14
  */
-// Moved temporarily to resources/META-INF/plexus/components.xml because of https://github.com/codehaus-plexus/plexus-containers/issues/4
-// @Component(role = ExternalConfigHandler.class)
+@Singleton
+@Named(PropertyConfigHandler.TYPE_NAME)
 public class PropertyConfigHandler implements ExternalConfigHandler {
-
     public static final String TYPE_NAME = "properties";
     public static final String DEFAULT_PREFIX = "docker";
 

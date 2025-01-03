@@ -2,11 +2,13 @@ package io.fabric8.maven.docker.assembly;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 
@@ -20,8 +22,6 @@ import org.codehaus.plexus.util.StringUtils;
  * @since 17.04.14
  */
 public class DockerFileBuilder {
-
-    private static final Joiner JOIN_ON_COMMA = Joiner.on("\",\"");
 
     private static final Pattern ENV_VAR_PATTERN = Pattern.compile("^\\$(\\{[a-zA-Z0-9_]+\\}|[a-zA-Z0-9_]+).*");
 
@@ -177,13 +177,13 @@ public class DockerFileBuilder {
         if (arguments.getShell() != null) {
             arg = arguments.getShell();
         } else {
-            arg = "[\""  + JOIN_ON_COMMA.join(arguments.getExec()) + "\"]";
+            arg = "[\""  + String.join("\",\"", arguments.getExec()) + "\"]";
         }
         key.addTo(b, newline, arg);
     }
 
     private static void buildArgumentsAsJsonFormat(StringBuilder b, DockerFileKeyword key, boolean newline, Arguments arguments) {
-        String arg = "[\""  + JOIN_ON_COMMA.join(arguments.asStrings()) + "\"]";
+        String arg = "[\""  + String.join("\",\"", arguments.asStrings()) + "\"]";
         key.addTo(b, newline, arg);
     }
 

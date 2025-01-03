@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.base.Strings;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import org.apache.maven.project.MavenProject;
 
@@ -178,7 +177,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
             public String transform(MavenProject project, String tag, Date now) {
                 // In case the Maven property is also a placeholder, replace it as well
-                if (Strings.isNullOrEmpty(tag) || tag.equals("%" + letter)) {
+                if ((tag == null || tag.trim().isEmpty()) || tag.equals("%" + letter)) {
                     tag = project.getVersion();
                 }
                 return doTransform(tag, now);
