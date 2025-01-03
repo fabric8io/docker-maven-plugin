@@ -35,8 +35,6 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import com.google.common.net.UrlEscapers;
@@ -46,12 +44,18 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
 import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 /**
  * Factory for creating docker specific authentication configuration
  *
  * @author roland
  * @since 29.07.14
  */
+@Singleton
+@Named
 public class AuthConfigFactory {
 
     // Whether to check for OpenShift authentication
@@ -59,20 +63,21 @@ public class AuthConfigFactory {
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
-    private final PlexusContainer container;
-
     private Logger log;
     private static final String[] DEFAULT_REGISTRIES = new String[]{
             "docker.io", "index.docker.io", "registry.hub.docker.com"
     };
 
+    private SettingsDecrypter settingsDecrypter;
+
     /**
      * Constructor which should be used during startup phase of a plugin
      *
-     * @param container the container used for do decryption of passwords
+     * @param settingsDecrypter the settingsDecrypter used for do decryption of passwords
      */
-    public AuthConfigFactory(PlexusContainer container) {
-        this.container = container;
+    @Inject
+    public AuthConfigFactory(SettingsDecrypter settingsDecrypter) {
+        this.settingsDecrypter = settingsDecrypter;
     }
 
     public void setLog(Logger log) {
@@ -670,17 +675,12 @@ public class AuthConfigFactory {
     }
 
     private String decrypt(String password) throws MojoExecutionException {
-        try {
-            SettingsDecrypter settingsDecrypter = container.lookup(SettingsDecrypter.class);
-            Server stub = new Server();
-            stub.setUsername("whatever");
-            stub.setPassword(password);
+        Server stub = new Server();
+        stub.setUsername("whatever");
+        stub.setPassword(password);
 
-            SettingsDecryptionResult result = settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(stub));
-            return result.getServers().get(0).getPassword();
-        } catch (ComponentLookupException e) {
-            throw new MojoExecutionException("Error looking security dispatcher",e);
-        }
+        SettingsDecryptionResult result = settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(stub));
+        return result.getServers().get(0).getPassword();
     }
 
     private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {

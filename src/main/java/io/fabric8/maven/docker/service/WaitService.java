@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.text.StrSubstitutor;
-import org.apache.maven.shared.utils.StringUtils;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -28,6 +27,7 @@ import io.fabric8.maven.docker.wait.TcpPortChecker;
 import io.fabric8.maven.docker.wait.WaitChecker;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
+import org.codehaus.plexus.util.StringUtils;
 
 import static io.fabric8.maven.docker.StartMojo.DOCKER_START_CONTAINER_WAIT_TIMEOUT;
 

@@ -60,7 +60,6 @@ import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.fusesource.jansi.Ansi;
 
 /**
@@ -69,7 +68,7 @@ import org.fusesource.jansi.Ansi;
  * @author roland
  * @since 26.03.14
  */
-public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
+public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigHelper.Customizer {
 
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
@@ -256,6 +255,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     List<ImageConfiguration> resolvedImages;
 
     // Handler dealing with authentication credentials
+    @Component
     AuthConfigFactory authConfigFactory;
 
     protected AnsiLogger log;
@@ -482,12 +482,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    @Override
-    public void contextualize(Context context) throws ContextException {
-        authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
-    }
-
-    // =================================================================================
     protected GavLabel getGavLabel() {
         // Label used for this run
         return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
