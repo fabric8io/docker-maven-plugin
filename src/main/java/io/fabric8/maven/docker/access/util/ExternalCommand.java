@@ -19,9 +19,8 @@ package io.fabric8.maven.docker.access.util;
 import java.io.*;
 import java.util.concurrent.*;
 
-import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.shared.utils.StringUtils;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * @author roland

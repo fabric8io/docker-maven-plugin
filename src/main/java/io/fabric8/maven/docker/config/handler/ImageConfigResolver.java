@@ -19,15 +19,14 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler;
 import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * Manager holding all config handlers for external configuration
@@ -36,33 +35,23 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
  * @since 18/11/14
  */
 
-@Component(role = ImageConfigResolver.class, instantiationStrategy = "singleton")
-public class ImageConfigResolver implements Initializable {
+@Singleton
+@Named
+public class ImageConfigResolver {
     // Map type to handler
-    private Map<String,ExternalConfigHandler> registry;
+    private final Map<String, ExternalConfigHandler> registry;
 
-    // No List<ExternalConfigHandler> injection possible currently with Plexus.
-    // Strangely, only the first element is injected in the list.
-    // So the elements are injected via scalar field injection and collected later.
-    // Very ugly, but I dont see any other solution until Plexus is fixed.
-
-    @Requirement(role = PropertyConfigHandler.class)
-    private ExternalConfigHandler propertyConfigHandler;
-
-    @Requirement(role = DockerComposeConfigHandler.class)
-    private ExternalConfigHandler dockerComposeConfigHandler;
-
-    private Logger log;
-
-    @Override
-    public void initialize() throws InitializationException {
+    @Inject
+    public ImageConfigResolver(List<ExternalConfigHandler> externalConfigHandlers) {
         this.registry = new HashMap<>();
-        for (ExternalConfigHandler handler : new ExternalConfigHandler[] { propertyConfigHandler, dockerComposeConfigHandler }) {
+        for (ExternalConfigHandler handler : externalConfigHandlers) {
             if (handler != null) {
                 registry.put(handler.getType(), handler);
             }
         }
     }
+
+    private Logger log;
 
     public void setLog(Logger log) {
         this.log = log;
@@ -112,7 +101,7 @@ public class ImageConfigResolver implements Initializable {
         Map<String, String> externalConfig = unresolvedConfig.getExternalConfig();
         if(externalConfig == null) {
             externalConfig = new HashMap<>();
-            externalConfig.put("type", propertyConfigHandler.getType());
+            externalConfig.put("type", PropertyConfigHandler.TYPE_NAME);
             externalConfig.put("mode", mode);
             unresolvedConfig.setExternalConfiguration(externalConfig);
 
