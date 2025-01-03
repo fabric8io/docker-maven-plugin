@@ -68,7 +68,7 @@ public class AuthConfigFactory {
             "docker.io", "index.docker.io", "registry.hub.docker.com"
     };
 
-    private SettingsDecrypter settingsDecrypter;
+    private final SettingsDecrypter settingsDecrypter;
 
     /**
      * Constructor which should be used during startup phase of a plugin

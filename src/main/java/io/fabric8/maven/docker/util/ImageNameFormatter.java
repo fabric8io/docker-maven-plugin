@@ -180,7 +180,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
             public String transform(MavenProject project, String tag, Date now) {
                 // In case the Maven property is also a placeholder, replace it as well
-                if(isEmpty(tag) || tag.equals("%" + letter)) {
+                if ((tag == null || tag.trim().isEmpty()) || tag.equals("%" + letter)) {
                     tag = project.getVersion();
                 }
                 return doTransform(tag, now);
