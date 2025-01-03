@@ -118,10 +118,9 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            String joinedReply = String.join("\n", reply);
-            JsonObject credentials = JsonFactory.newJsonObject(joinedReply);
+            JsonObject credentials = JsonFactory.newJsonObject(String.join("\n", reply));
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
-                return null;  // If keys are missing, return null
+                return null;
             }
             return credentials;
         }
