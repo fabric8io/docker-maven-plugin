@@ -15,9 +15,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
-import org.apache.maven.settings.crypto.SettingsDecrypter;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.Base64;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -96,17 +93,13 @@ class AuthConfigFactoryTest {
     }
 
     @Mock
-    PlexusContainer container;
-
-    @Mock
     SecDispatcher secDispatcher;
 
     @BeforeEach
-    void containerSetup() throws ComponentLookupException, SecDispatcherException {
-        Mockito.lenient().when(container.lookup(SettingsDecrypter.class)).thenReturn(new DefaultSettingsDecrypter(secDispatcher));
+    void containerSetup() throws SecDispatcherException {
         Mockito.lenient().when(secDispatcher.decrypt(Mockito.anyString())).thenAnswer(invocation -> invocation.getArguments()[0]);
 
-        factory = new AuthConfigFactory(container);
+        factory = new AuthConfigFactory(new DefaultSettingsDecrypter(secDispatcher));
         factory.setLog(log);
 
         gsonBuilder = new GsonBuilder();

@@ -19,10 +19,10 @@ package io.fabric8.maven.docker.config;
 
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +50,7 @@ class ImageConfigResolverTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        resolver = new ImageConfigResolver();
-        ReflectionUtils.setVariableValueInObject(resolver, "propertyConfigHandler", new TestHandler(3));
-        resolver.initialize();
+        resolver = new ImageConfigResolver(Arrays.asList(new TestHandler(PropertyConfigHandler.TYPE_NAME, 3), new TestHandler("test", 3)));
         resolver.setLog(log);
     }
 
@@ -108,15 +107,17 @@ class ImageConfigResolverTest {
 
     private static class TestHandler implements ExternalConfigHandler {
 
-        int nr;
+        final String typeName;
+        final int nr;
 
-        public TestHandler(int nr) {
+        public TestHandler(String typeName, int nr) {
+            this.typeName = typeName;
             this.nr = nr;
         }
 
         @Override
         public String getType() {
-            return "test";
+            return typeName;
         }
 
         @Override

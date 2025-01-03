@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.assembly;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Nonnull;
@@ -14,11 +15,11 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
+import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.assembly.utils.InterpolationConstants;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
-import org.apache.maven.shared.utils.cli.CommandLineUtils;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.interpolation.fixed.PrefixedPropertiesValueSource;
 import org.codehaus.plexus.interpolation.fixed.PropertiesBasedValueSource;
@@ -93,11 +94,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
         return ".";
     }
 
-    @Override
-    public ArtifactRepository getLocalRepository() {
-        return params.getSession().getLocalRepository();
-    }
-    
     public MavenFileFilter getMavenFileFilter() {
         return params.getMavenFileFilter();
     }
@@ -106,12 +102,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     @Override
     public List<MavenProject> getReactorProjects() {
         return params.getReactorProjects();
-    }
-
-    // Maybe use injection
-    @Override
-    public List<ArtifactRepository> getRemoteRepositories() {
-        return params.getProject().getRemoteArtifactRepositories();
     }
 
     @Override
@@ -265,17 +255,56 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     }
 
     @Override
-    public boolean isUseJvmChmod() {
-        return false;
-    }
-
-    @Override
     public boolean isIgnorePermissions() {
         return assemblyConfig != null ? assemblyConfig.isIgnorePermissions() : false;
     }
 
+    @Override
+    public List<Assembly> getInlineDescriptors() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Properties getAdditionalProperties() {
+        return new Properties();
+    }
+
+    @Override
+    public Integer getOverrideUid() {
+        return null;
+    }
+
+    @Override
+    public String getOverrideUserName() {
+        return null;
+    }
+
+    @Override
+    public Integer getOverrideGid() {
+        return null;
+    }
+
+    @Override
+    public String getOverrideGroupName() {
+        return null;
+    }
+
+    @Override
+    public boolean isRecompressZippedFiles() {
+        return false;
+    }
+
+    @Override
+    public String getMergeManifestMode() {
+        return null;
+    }
+
     // =======================================================================
     // Taken from AbstractAssemblyMojo
+
+    private ArtifactRepository getLocalRepository() {
+        return params.getSession().getLocalRepository();
+    }
 
     private FixedStringSearchInterpolator mainProjectInterpolator(MavenProject mainProject)
     {
@@ -330,7 +359,18 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     private FixedStringSearchInterpolator createEnvInterpolator() {
         PrefixedPropertiesValueSource envProps = new PrefixedPropertiesValueSource(Collections.singletonList("env."),
-                                                                                   CommandLineUtils.getSystemEnvVars(false), true );
+                                                                                   getSystemEnvVars(), true );
         return FixedStringSearchInterpolator.create( envProps );
+    }
+
+    private static Properties getSystemEnvVars() {
+        Properties envVars = new Properties();
+        Map<String, String> envs = System.getenv();
+
+        for(String key : envs.keySet()) {
+            String value = envs.get(key);
+            envVars.put(key, value);
+        }
+        return envVars;
     }
 }
