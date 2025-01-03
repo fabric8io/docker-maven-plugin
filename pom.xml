@@ -225,6 +225,12 @@
 
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-filtering</artifactId>
+      <version>3.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
       <artifactId>maven-shared-utils</artifactId>
       <version>3.4.2</version>
     </dependency>
@@ -251,7 +257,13 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.5.1</version>
+      <version>4.0.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-xml</artifactId>
+      <version>3.0.1</version>
     </dependency>
 
     <dependency>
@@ -325,7 +337,15 @@
   </dependencies>
 
   <build>
-
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources-filtered</directory>
+      </resource>
+    </resources>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -474,22 +494,6 @@
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.3.1</version>
         <executions>
-          <execution>
-            <id>copy-plexus-resources</id>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <outputDirectory>${basedir}/target/filtered-resources/META-INF/plexus</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/resources/META-INF/plexus</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
           <execution>
             <id>copy-asciidoc</id>
             <goals>
