@@ -25,7 +25,6 @@ import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -78,7 +77,7 @@ class BuildXServiceCreateBuilderTest {
     buildXService.createBuilder(configPathSpy, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
 
     // Then
-    verify(configPathSpy).resolve(eq(expectedPath));
+    verify(configPathSpy).resolve(expectedPath);
   }
 
   @Test
