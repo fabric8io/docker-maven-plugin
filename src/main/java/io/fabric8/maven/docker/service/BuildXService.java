@@ -299,8 +299,7 @@ public class BuildXService {
             }
             int rc = exec.process(cmds);
             if (rc != 0) {
-                logger.warn("Failed to execute: {}", cmds);
-                // throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
+                throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
             }
         }
         return builderName;
