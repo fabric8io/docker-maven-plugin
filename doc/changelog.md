@@ -4,7 +4,7 @@
   - Docker-compose healthcheck configuration support ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))
   - Docker container wait timeout default value made configurable using startContainerWaitTimeout configuration option ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))
   - Respect `network` configuration in POM and with property `docker.build.network` or system property `docker.network.mode` in docker buildx [1850](https://github.com/fabric8io/docker-maven-plugin/pull/1850))
-  - Fix case sensitivity issue in builder name lookup by converting builderName to lowercase, ensuring compatibility across file systems. [1847](https://github.com/fabric8io/docker-maven-plugin/pull/1847)
+  - Fix case sensitivity issue in builder name lookup by converting builderName to lowercase, ensuring compatibility across file systems [1847](https://github.com/fabric8io/docker-maven-plugin/pull/1847)
 * **0.45.1 (2024-09-29)**:
   - Make copy docker-buildx binary to temporary config directory work on windows too ([1819](https://github.com/fabric8io/docker-maven-plugin/pull/1819))
   - Pull FROM images in relative path Dockerfiles ([1823](https://github.com/fabric8io/docker-maven-plugin/issues/1823))
