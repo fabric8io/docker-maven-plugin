@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.function.BiConsumer;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class BuildXServiceCreateBuilderTest {
   private BuildXService buildXService;
@@ -58,6 +60,24 @@ class BuildXServiceCreateBuilderTest {
 
     //Then
     verifyBuildXArgumentContains("--driver-opt", "network=foonet");
+  }
+
+
+
+  @Test
+  void builderPathWithLowerCasedBuilderName() throws Exception {
+    String builderName =  "myTestBuilder";
+    Path configPathSpy = Mockito.spy(configPath);
+    Path expectedPath = Paths.get("buildx","instances",builderName.toLowerCase());
+
+    //Given
+    buildConfigUsingBuildX(temporaryFolder,(buildX, buildImage) -> buildX.builderName(builderName));
+
+    // When
+    buildXService.createBuilder(configPathSpy, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    verify(configPathSpy).resolve(expectedPath);
   }
 
   @Test
