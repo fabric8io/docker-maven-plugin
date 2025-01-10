@@ -169,6 +169,11 @@ public class BuildXService {
             cmdLine.add("--no-cache");
         }
 
+        String networkMode = ConfigHelper.getNetwork(imageConfig);
+        if (networkMode!=null) {
+            cmdLine.add("--network="+networkMode);
+        }
+
         BuildXConfiguration buildXConfiguration = buildConfiguration.getBuildX();
         AttestationConfiguration attestations = buildXConfiguration.getAttestations();
         if (attestations != null) {

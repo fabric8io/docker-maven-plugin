@@ -173,6 +173,20 @@ public class ConfigHelper {
         }
     }
 
+    public static String getNetwork(ImageConfiguration imageConfig) {
+        String network = imageConfig.getBuildConfiguration().getNetwork();
+        if (network == null) {
+            network = System.getProperty("docker.network.mode");
+        }
+        if (network == null) {
+            network = System.getProperty("docker.build.network");
+        }
+        if(network!=null && network.isEmpty()) {
+           network = null;
+        }
+        return network;
+    }
+
     public static boolean isNoCache(ImageConfiguration imageConfig) {
         String noCache = System.getProperty("docker.noCache");
         if (noCache == null) {
