@@ -106,7 +106,7 @@ used for `descriptorRef`:
 | Assembly Reference | Description
 
 | *artifact-with-dependencies*
-| Attaches project's artifact and all its dependencies. Also, when a `classpath` file exists in the target directory, this will be added to.
+| Attaches project's artifact and all its dependencies. Also, when a `classpath` file exists in the target directory, this will be added too.
 
 | *artifact*
 | Attaches only the project's artifact but no dependencies.
