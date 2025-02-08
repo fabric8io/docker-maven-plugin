@@ -25,6 +25,8 @@ import java.util.Objects;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import org.apache.maven.project.MavenProject;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 /**
  * Replace placeholders in an image name with certain properties found in the
  * project
@@ -178,7 +180,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
             public String transform(MavenProject project, String tag, Date now) {
                 // In case the Maven property is also a placeholder, replace it as well
-                if(isNullorEmpty(tag) || tag.equals("%" + letter)) {
+                if(isEmpty(tag) || tag.equals("%" + letter)) {
                     tag = project.getVersion();
                 }
                 return doTransform(tag, now);
@@ -247,9 +249,5 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
         // All characters must be lowercase
         return ret.toString().toLowerCase();
-    }
-
-    private static boolean isNullorEmpty(String s) {
-        return Objects.isNull(s) || s.isEmpty();
     }
 }
