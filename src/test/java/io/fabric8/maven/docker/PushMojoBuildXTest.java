@@ -5,6 +5,8 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler;
+import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
 import io.fabric8.maven.docker.service.BuildXService;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
@@ -15,9 +17,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
-import org.apache.maven.settings.crypto.SettingsDecrypter;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,14 +56,12 @@ class PushMojoBuildXTest {
   private MockedConstruction<BuildXService.DefaultExec> defaultExecMockedConstruction;
 
   @BeforeEach
-  void setup() throws MojoExecutionException, MojoFailureException, IOException, ComponentLookupException, SecDispatcherException {
+  void setup() throws MojoExecutionException, MojoFailureException, IOException, SecDispatcherException {
     mockedMavenSettings = mock(Settings.class);
     MavenProject mavenProject = mock(MavenProject.class, RETURNS_DEEP_STUBS);
     DockerAccessFactory dockerAccessFactory = mock(DockerAccessFactory.class);
     DockerAccess dockerAccess = mock(DockerAccess.class);
-    PlexusContainer mockedPlexusContainer = mock(PlexusContainer.class);
     SecDispatcher mockedSecDispatcher = mock(SecDispatcher.class);
-    when(mockedPlexusContainer.lookup(SettingsDecrypter.class)).thenReturn(new DefaultSettingsDecrypter(mockedSecDispatcher));
     ServiceHubFactory serviceHubFactory = new ServiceHubFactory();
     when(mockedMavenSettings.getInteractiveMode()).thenReturn(false);
     Properties properties = new Properties();
@@ -79,7 +76,6 @@ class PushMojoBuildXTest {
     when(mavenProject.getBuild().getOutputDirectory()).thenReturn(targetDir.getAbsolutePath());
     when(mavenProject.getBasedir()).thenReturn(temporaryFolder);
     when(dockerAccessFactory.createDockerAccess(any())).thenReturn(dockerAccess);
-    when(mockedPlexusContainer.lookup(SecDispatcher.ROLE, "maven")).thenReturn(mockedSecDispatcher);
     when(mockedSecDispatcher.decrypt(anyString())).thenReturn("testpassword");
     Map<String, Object> pluginContext = new HashMap<>();
     defaultExecMockedConstruction = mockConstruction(BuildXService.DefaultExec.class);
@@ -88,8 +84,8 @@ class PushMojoBuildXTest {
     pushMojo.verbose = "true";
     pushMojo.settings = mockedMavenSettings;
     pushMojo.project = mavenProject;
-    pushMojo.authConfigFactory = new AuthConfigFactory(mockedPlexusContainer);
-    pushMojo.imageConfigResolver = new ImageConfigResolver();
+    pushMojo.authConfigFactory = new AuthConfigFactory(new DefaultSettingsDecrypter(mockedSecDispatcher));
+    pushMojo.imageConfigResolver = new ImageConfigResolver(Arrays.asList(new PropertyConfigHandler(), new DockerComposeConfigHandler()));
     pushMojo.dockerAccessFactory = dockerAccessFactory;
     pushMojo.serviceHubFactory = serviceHubFactory;
     pushMojo.outputDirectory = "target/docker";

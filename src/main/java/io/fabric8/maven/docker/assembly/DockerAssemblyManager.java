@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
@@ -31,8 +33,6 @@ import org.apache.maven.plugins.assembly.io.AssemblyReadException;
 import org.apache.maven.plugins.assembly.io.AssemblyReader;
 import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.PathTool;
-import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -42,11 +42,13 @@ import org.codehaus.plexus.archiver.tar.TarUnArchiver;
 import org.codehaus.plexus.archiver.tar.TarUnArchiver.UntarCompressionMethod;
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.PathTool;
 
 import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -55,7 +57,7 @@ import javax.annotation.Nonnull;
  * @author roland
  * @since 08.05.14
  */
-@Component(role = DockerAssemblyManager.class, instantiationStrategy = "per-lookup")
+@Named
 public class DockerAssemblyManager {
 
     public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";
@@ -69,16 +71,16 @@ public class DockerAssemblyManager {
 
     private static final String TAR_ARCHIVER_TYPE = "tar";
 
-    @Requirement
+    @Inject
     private AssemblyArchiver assemblyArchiver;
 
-    @Requirement
+    @Inject
     private AssemblyReader assemblyReader;
 
-    @Requirement
+    @Inject
     private ArchiverManager archiverManager;
 
-    @Requirement
+    @Inject
     private TrackArchiverCollection trackArchivers;
 
     /**
@@ -300,7 +302,7 @@ public class DockerAssemblyManager {
         synchronized (trackArchivers) {
             trackArchivers.init(log, assemblyName);
             assembly.setId("tracker");
-            File trackArchiverDestFile = assemblyArchiver.createArchive(assembly, assemblyName, "track", source, false, null);
+            File trackArchiverDestFile = assemblyArchiver.createArchive(assembly, assemblyName, "track", source, null);
             trackArchivers.get(assemblyName).setDestFile(trackArchiverDestFile);
             return trackArchivers.getAssemblyFiles(mojoParams.getSession(), assemblyName);
         }
@@ -394,7 +396,9 @@ public class DockerAssemblyManager {
         for (String file : new String[] { DOCKER_EXCLUDE, DOCKER_IGNORE } ) {
             File dockerIgnore = new File(directory, file);
             if (dockerIgnore.exists()) {
-                excludes.addAll(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
+                excludes.addAll(Files.readAllLines(dockerIgnore.toPath()).stream()
+                        .filter(l -> !l.startsWith("#") && !l.trim().isEmpty())
+                        .collect(Collectors.toList()));
                 excludes.add(DOCKER_IGNORE);
             }
         }
@@ -405,7 +409,9 @@ public class DockerAssemblyManager {
         File directory = fileSet.getDirectory();
         File dockerInclude = new File(directory, DOCKER_INCLUDE);
         if (dockerInclude.exists()) {
-            ArrayList<String> includes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerInclude)));
+            ArrayList<String> includes = new ArrayList<>(Files.readAllLines(dockerInclude.toPath()).stream()
+                    .filter(l -> !l.startsWith("#") && !l.trim().isEmpty())
+                    .collect(Collectors.toList()));
             fileSet.setIncludes(includes.toArray(new String[0]));
         }
     }
@@ -543,7 +549,7 @@ public class DockerAssemblyManager {
         try {
             originalArtifactFile = ensureThatArtifactFileIsSet(params.getProject());
             assembly.setId("docker");
-            assemblyArchiver.createArchive(assembly, assemblyConfig.getName(), buildMode.getExtension(), source, false, null);
+            assemblyArchiver.createArchive(assembly, assemblyConfig.getName(), buildMode.getExtension(), source, null);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
             String error = "Failed to create assembly for docker image " +
                            " (with mode '" + buildMode + "'): " + e.getMessage() + ".";

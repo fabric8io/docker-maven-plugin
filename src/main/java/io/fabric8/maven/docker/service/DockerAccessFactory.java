@@ -13,17 +13,19 @@ import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.access.DockerMachine;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.codehaus.plexus.component.annotations.Component;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  *
  */
-@Component(role = DockerAccessFactory.class, instantiationStrategy = "singleton")
+@Singleton
+@Named
 public class DockerAccessFactory {
 
     public DockerAccess createDockerAccess(DockerAccessContext dockerAccessContext) throws MojoExecutionException, MojoFailureException {
