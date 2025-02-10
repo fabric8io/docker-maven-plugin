@@ -117,12 +117,20 @@ public class ConfigHelper {
      * @param nameFormatter formatter for image names
      * @param log a logger for printing out diagnostic messages
      * @return the minimal API Docker API required to be used for the given configuration.
+     * @throws IllegalArgumentException When an image validation fails, the thrown exception will contain
+     *                                  the image's name as its message and wrap the underlying exception as cause.
      */
     public static String initAndValidate(List<ImageConfiguration> images, String apiVersion, NameFormatter nameFormatter,
                                          Logger log) {
         // Init and validate configs. After this step, getResolvedImages() contains the valid configuration.
         for (ImageConfiguration imageConfiguration : images) {
-            apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(nameFormatter, log));
+            try {
+                apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(nameFormatter, log));
+            } catch (IllegalArgumentException e) {
+                // Wrap the underlying validation and add the image's name/alias.
+                // Maven will properly unpack the wrapped exception.
+                throw new IllegalArgumentException(imageConfiguration.getName(), e);
+            }
         }
         return apiVersion;
     }
