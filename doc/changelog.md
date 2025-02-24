@@ -1,5 +1,6 @@
 # ChangeLog
 * **0.49-SNAPSHOT**:
+  - Fixed static default for outputDirectory when using diverting build directories ([1855](https://github.com/fabric8io/docker-maven-plugin/pull/1855))
 
 * **0.48.0 (2025-11-17)**:
   - Allow saving multiple images in docker:save using new parameters saveNames and saveAliases.
