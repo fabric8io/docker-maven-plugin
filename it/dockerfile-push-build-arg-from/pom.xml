@@ -6,12 +6,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.46.0</version>
+    <version>0.47-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dockerfile-push-build-arg-from</artifactId>
-  <version>0.46.0</version>
+  <version>0.47-SNAPSHOT</version>
   <name>dmp-it-dockerfile-build-arg-from</name>
 
   <properties>
