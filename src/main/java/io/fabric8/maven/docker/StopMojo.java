@@ -98,11 +98,6 @@ public class StopMojo extends AbstractDockerMojo {
                 // HttpDelete class is not used during start mojo, so we need to load it and initialize it. It is not
                 // possible to load classes in the shutdown hook as
                 Class.forName("org.apache.http.client.methods.HttpDelete", true, this.getClass().getClassLoader());
-
-                // com.google.common.base.Strings class from com.google.guava is required and it depends on Platforms
-                // Used in @see io.fabric8.maven.docker.util.ImageNameFormatter
-                Class.forName("com.google.common.base.Strings", true, this.getClass().getClassLoader());
-                Class.forName("com.google.common.base.Platform", true, this.getClass().getClassLoader());
             } catch (ClassNotFoundException e) {
                 log.error("Failure in loading org.apache.http.client.methods.HttpDelete class: %s", e.getMessage());
             }

@@ -2,15 +2,17 @@ package io.fabric8.maven.docker.assembly;
 
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
-import org.codehaus.plexus.component.annotations.Component;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Contains several {@link MappingTrackArchiver} instances, one per assembly
  */
-@Component(role = TrackArchiverCollection.class, instantiationStrategy = "singleton")
+@Singleton
+@Named
 public class TrackArchiverCollection {
     private final Map<String, MappingTrackArchiver> archivers = new HashMap<>();
 
