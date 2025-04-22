@@ -137,6 +137,7 @@ public class BuildMojo extends AbstractDockerMojo {
                     buildArchiveOnly.equalsIgnoreCase("true")) {
                 return Boolean.parseBoolean(buildArchiveOnly);
             }
+            return true;
         }
         return false;
     }

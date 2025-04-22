@@ -87,6 +87,27 @@ class BuildMojoTest extends MojoTestBase {
     }
 
     @Test
+    void noSkipWhenDefaultBuildArchiveOnly() throws IOException, MojoExecutionException {
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleImageConfiguration(builder -> {})));
+
+        whenMojoExecutes();
+
+        thenBuildRun();
+    }
+
+    @Test
+    void skipImageBuildWhenBuildArchiveOnlyPath() throws IOException, MojoExecutionException {
+        givenMavenProject(buildMojo);
+        givenResolvedImages(buildMojo, Collections.singletonList(singleImageConfiguration(builder -> {})));
+        givenBuildArchiveOnly("target");
+
+        whenMojoExecutes();
+
+        thenBuildNotRun();
+    }
+
+    @Test
     void buildUsingBuildx() throws IOException, MojoExecutionException {
         givenBuildXService();
 
@@ -456,6 +477,10 @@ class BuildMojoTest extends MojoTestBase {
 
     private void givenSkipPom(boolean skipPom) {
         buildMojo.skipPom = skipPom;
+    }
+
+    private void givenBuildArchiveOnly(String archiveOnly) {
+        buildMojo.buildArchiveOnly = archiveOnly;
     }
 
     private void whenMojoExecutes() throws IOException, MojoExecutionException {
