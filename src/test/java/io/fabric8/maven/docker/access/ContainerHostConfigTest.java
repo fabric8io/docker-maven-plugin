@@ -21,7 +21,7 @@ class ContainerHostConfigTest {
     @Test
     void testExtraHostsDoesNotResolve() {
         ContainerHostConfig hc = new ContainerHostConfig();
-        List<String> extraHosts = Collections.singletonList("database.pvt:ahostnamewhichreallyshouldnot.exist.zz");
+        List<String> extraHosts = Collections.singletonList("database.pvtahostnamewhichreallyshouldnot.exist.zz");
         Assertions.assertThrows(IllegalArgumentException.class, () -> hc.extraHosts(extraHosts));
     }
 
