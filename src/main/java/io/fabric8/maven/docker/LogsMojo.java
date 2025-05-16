@@ -24,7 +24,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @since 26.03.14
  *
  */
-@Mojo(name = "logs")
+@Mojo(name = "logs", threadSafe = true)
 public class LogsMojo extends AbstractDockerMojo {
 
     // Whether to log infinitely or to show only the logs happened until now.

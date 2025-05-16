@@ -43,7 +43,7 @@ import io.fabric8.maven.docker.util.GavLabel;
  * @since 26.03.14
  *
  */
-@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public class StopMojo extends AbstractDockerMojo {
 
     private static final String STOP_NAME_PATTERN_CONFIG = "stopNamePattern";

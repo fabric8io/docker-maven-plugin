@@ -15,7 +15,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  *  @author Tom Burton
  */
-@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public class VolumeRemoveMojo extends AbstractDockerMojo {
 
    @Override

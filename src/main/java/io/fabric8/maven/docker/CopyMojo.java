@@ -41,7 +41,7 @@ import io.fabric8.maven.docker.util.Logger;
  * matching images configured in the project are searched and the copying is performed from the found containers
  * only.</p>
  */
-@Mojo(name = "copy", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "copy", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public class CopyMojo extends AbstractDockerMojo {
 
     private static final String COPY_NAME_PATTERN_CONFIG = "copyNamePattern";

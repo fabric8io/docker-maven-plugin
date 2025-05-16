@@ -44,7 +44,7 @@ import org.apache.maven.project.MavenProjectHelper;
  * @author roland
  * @since 25/10/15
  */
-@Mojo(name = "source", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "source", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true)
 public class SourceMojo extends AbstractDockerMojo {
 
     @Component
