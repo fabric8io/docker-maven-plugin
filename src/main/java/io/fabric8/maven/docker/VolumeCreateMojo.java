@@ -15,7 +15,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  * @author Tom Burton
  * @version Dec 15, 2016
  */
-@Mojo(name = "volume-create", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
+@Mojo(name = "volume-create", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, threadSafe = true)
 public class VolumeCreateMojo extends AbstractDockerMojo {
 
     @Override

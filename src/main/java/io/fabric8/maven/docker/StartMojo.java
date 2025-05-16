@@ -52,7 +52,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  * @author roland
  */
-@Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
+@Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, threadSafe = true)
 public class StartMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.showLogs")

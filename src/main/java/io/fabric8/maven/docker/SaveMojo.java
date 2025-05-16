@@ -18,7 +18,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 
-@Mojo(name = "save")
+@Mojo(name = "save", threadSafe = true)
 public class SaveMojo extends AbstractDockerMojo {
 
     // Used when not automatically determined

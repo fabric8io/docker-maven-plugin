@@ -40,7 +40,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 16/06/15
  */
-@Mojo(name = "watch")
+@Mojo(name = "watch", threadSafe = true)
 public class WatchMojo extends AbstractDockerMojo {
 
     /**

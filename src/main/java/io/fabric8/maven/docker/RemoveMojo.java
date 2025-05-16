@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * @since 23.10.14
  *
  */
-@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST, threadSafe = true)
 public class RemoveMojo extends AbstractDockerMojo {
 
     private static final String REMOVE_NAME_PATTERN_CONFIG = "removeNamePattern";

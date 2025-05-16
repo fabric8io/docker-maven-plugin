@@ -35,7 +35,7 @@ import static io.fabric8.maven.docker.service.RegistryService.createCompleteAuth
  * @author roland
  * @since 28.07.14
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true)
 public class BuildMojo extends AbstractDockerMojo {
 
     public static final String DMP_PLUGIN_DESCRIPTOR = "META-INF/maven/io.fabric8/dmp-plugin";
