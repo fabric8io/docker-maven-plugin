@@ -35,7 +35,8 @@ public class TagMojo extends AbstractDockerMojo {
         List<ImageConfiguration> imageConfigs = getResolvedImages();
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            if (buildConfig.skipTag() || buildConfig.isBuildX()) {
+
+            if (buildConfig == null || buildConfig.skipTag() || buildConfig.isBuildX()) {
                 // Tag happens at the building stage.
                 continue;
             }
