@@ -15,6 +15,10 @@ import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.yaml.snakeyaml.Yaml;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveAbsolutely;
 import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveComposeFileAbsolutely;
 
@@ -23,18 +27,17 @@ import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolv
  * Docker Compose handler for allowing a docker-compose file to be used
  * to specify the docker images.
  */
-
-// Moved temporarily to resources/META-INF/plexus/components.xml because of https://github.com/codehaus-plexus/plexus-containers/issues/4
-// @Component(role = ExternalConfigHandler.class)
+@Singleton
+@Named(DockerComposeConfigHandler.TYPE_NAME)
 public class DockerComposeConfigHandler implements ExternalConfigHandler {
+    public static final String TYPE_NAME = "compose";
 
     @Override
     public String getType() {
-        return "compose";
+        return TYPE_NAME;
     }
 
-    // Enable later when issue above is fixed. In the meantime its declared in the components.xml, too
-    // @Requirement(role = MavenReaderFilter.class)
+    @Inject
     MavenReaderFilter readerFilter;
 
     @Override

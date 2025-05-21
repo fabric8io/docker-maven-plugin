@@ -112,7 +112,7 @@ class DockerAssemblyManagerTest {
 
         assemblyManager.getAssemblyFiles("testImage", buildConfig.getAllAssemblyConfigurations().get(0), mojoParams, new AnsiLogger(new SystemStreamLog(), true, "build"));
         Mockito.verify(assemblyArchiver).createArchive(Mockito.eq(assembly), Mockito.eq("maven"), Mockito.eq("track"), Mockito.any(DockerAssemblyConfigurationSource.class),
-            Mockito.eq(false), Mockito.any());
+            Mockito.any());
     }
 
     @Test
@@ -140,7 +140,7 @@ class DockerAssemblyManagerTest {
         Mockito.doAnswer(i -> tmpDir.resolve( (String) i.getArguments()[1]).toFile())
             .when(assemblyArchiver)
             .createArchive(Mockito.any(Assembly.class), Mockito.anyString(), Mockito.anyString(),
-                Mockito.any(AssemblerConfigurationSource.class), Mockito.anyBoolean(), Mockito.any());
+                Mockito.any(AssemblerConfigurationSource.class), Mockito.any());
 
         Mockito.doReturn("target/").when(mojoParams).getOutputDirectory();
         Mockito.doReturn(project).when(mojoParams).getProject();
