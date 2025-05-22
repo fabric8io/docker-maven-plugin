@@ -279,27 +279,31 @@ public class BuildXService {
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
         String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
-        String nodeName = buildXConfiguration.getNodeName();
-        Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
-        if(Files.notExists(builderPath)) {
-            List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
-            if (nodeName != null) {
-                append(cmds, "--node", nodeName);
-            }
+        if ("default".equals(builderName)) {
+            logger.info("Using default builder with buildx - only single platforms will be supported");
+        } else {
+            String nodeName = buildXConfiguration.getNodeName();
+            Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
+            if(Files.notExists(builderPath)) {
+                List<String> cmds = new ArrayList<>(buildX);
+                append(cmds, "create", "--driver", "docker-container", "--name", builderName);
+                if (nodeName != null) {
+                    append(cmds, "--node", nodeName);
+                }
 
-            if (buildXConfiguration.getDriverOpts() != null && !buildXConfiguration.getDriverOpts().isEmpty()) {
-                buildXConfiguration.getDriverOpts().forEach((key, value) -> append(cmds, "--driver-opt", key + '=' + value));
-            }
+                if (buildXConfiguration.getDriverOpts() != null && !buildXConfiguration.getDriverOpts().isEmpty()) {
+                    buildXConfiguration.getDriverOpts().forEach((key, value) -> append(cmds, "--driver-opt", key + '=' + value));
+                }
 
-            String buildConfig = buildXConfiguration.getConfigFile();
-            if(buildConfig != null) {
-                append(cmds, "--config",
-                buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString());
-            }
-            int rc = exec.process(cmds);
-            if (rc != 0) {
-                throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
+                String buildConfig = buildXConfiguration.getConfigFile();
+                if (buildConfig != null) {
+                    append(cmds, "--config",
+                            buildDirs.getProjectPath(EnvUtil.resolveHomeReference(buildConfig)).toString());
+                }
+                int rc = exec.process(cmds);
+                if (rc != 0) {
+                    throw new MojoExecutionException("Error status (" + rc + ") while creating builder " + builderName);
+                }
             }
         }
         return builderName;
