@@ -197,7 +197,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
     }
 
-    public String initAndValidate(ConfigHelper.NameFormatter nameFormatter, Logger log) {
+    public String initAndValidate(ConfigHelper.NameFormatter nameFormatter, Logger log) throws IllegalArgumentException {
         name = nameFormatter.format(name);
         String minimalApiVersion = null;
         if (build != null) {
