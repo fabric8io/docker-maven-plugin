@@ -62,7 +62,10 @@ element defaults to `min` and the `<sbom>` element defaults to `false`.
 | *cacheTo*
 | A value to be passed through to the `--cache-to` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to[docker buildx reference docs].
 | *secret*
-| Two Maps, under `envs` and `files` of `<ID>VALUE</id>` elements specifying the values of https://docs.docker.com/reference/cli/docker/buildx/build/#secret[Docker Buildx secret] to give to the build as `--secret id=ID[,[env\|src]=VALUE]`.
+|This option enables to https://docs.docker.com/reference/cli/docker/buildx/build/#secret[pass secrets to buildx build] as `--secret id=ID[,[env\|src]=VALUE]`.
+For environment variables add a `<env>` element with a list of variables in the form `<secret name>env variable name</secret name>` (whereas the `secret name` can then be referenced in your Dockerfile.
+For files, add a `<files>` component with a list of paths to the files in the form `<secret name>path to file</secret name>`.
+Examples can be found in the https://github.com/kevinleturc/docker-maven-plugin/blob/bd805724111f7744a38d0b67f80f3e2d2a3e46d2/it/buildx-dockerfile-secret/pom.xml#L26[integration tests].
 |===
 
 .Examples
