@@ -70,7 +70,7 @@
 
   <properties>
     <byte-buddy.version>1.12.10</byte-buddy.version>
-    <central-publishing-maven-plugin>0.7.0</central-publishing-maven-plugin>
+    <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
     <httpclient.version>4.5.13</httpclient.version>
     <jib-core.version>0.24.0</jib-core.version>
     <jnr-jffi.version>1.3.11</jnr-jffi.version>
