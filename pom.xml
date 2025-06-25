@@ -62,14 +62,15 @@
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
     <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <id>central-portal-snapshots</id>
+      <name>Central Portal (Snapshots)</name>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
   <properties>
     <byte-buddy.version>1.12.10</byte-buddy.version>
+    <central-publishing-maven-plugin>0.7.0</central-publishing-maven-plugin>
     <httpclient.version>4.5.13</httpclient.version>
     <jib-core.version>0.24.0</jib-core.version>
     <jnr-jffi.version>1.3.11</jnr-jffi.version>
@@ -609,12 +610,12 @@
           </plugin>
 
           <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>${central-publishing-maven-plugin.version}</version>
             <configuration>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <serverId>oss-sonatype-staging</serverId>
+              <publishingServerId>central-portal</publishingServerId>
+              <autoPublish>false</autoPublish>
             </configuration>
             <executions>
               <execution>
