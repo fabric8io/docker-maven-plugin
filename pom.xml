@@ -84,7 +84,7 @@
     <surefire.version>3.5.2</surefire.version>
     <system-stubs.version>2.0.1</system-stubs.version>
     <version.assertj-core>3.25.3</version.assertj-core>
-    <version.sonar-maven-plugin>3.11.0.3922</version.sonar-maven-plugin>
+    <version.sonar-maven-plugin>4.0.0.4121</version.sonar-maven-plugin>
   </properties>
 
   <dependencies>
