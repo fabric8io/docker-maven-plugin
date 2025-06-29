@@ -621,7 +621,7 @@
               <execution>
                 <id>default-deploy</id>
                 <goals>
-                  <goal>deploy</goal>
+                  <goal>publish</goal>
                 </goals>
                 <phase>deploy</phase>
               </execution>
