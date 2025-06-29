@@ -1,10 +1,13 @@
-name: Sonar PR Scanner
+name: Sonar PR Analysis Publish
 
 env:
   MAVEN_ARGS: -B -C -V -ntp -Dhttp.keepAlive=false -e
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: [Sonar PR Analysis Request]
+    types:
+      - completed
 
 concurrency:
   # Only run once for latest commit per ref and cancel other (previous) runs.
@@ -20,25 +23,25 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.number }}
-      SONAR_LOGIN_TOKEN: ${{ secrets.SONAR_LOGIN_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
       - name: Setup Java 17 # Move Sonar analysis to Java 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Maven Sonar
+      - name: Publish analysis on PR
         run: |
           ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install \
              -Dsonar.projectKey=fabric8io_docker-maven-plugin \
              -Dsonar.organization=fabric8io \
-             -Dsonar.login=${SONAR_LOGIN_TOKEN} \
+             -Dsonar.login=${SONAR_TOKEN} \
              -Dsonar.host.url=https://sonarcloud.io \
              -Dsonar.pullrequest.base=master \
              -Dsonar.pullrequest.branch=${GITHUB_BASE_REF} \
