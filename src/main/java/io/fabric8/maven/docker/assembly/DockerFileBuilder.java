@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 
 import org.codehaus.plexus.util.FileUtils;
@@ -134,20 +135,24 @@ public class DockerFileBuilder {
     private void addHealthCheck(StringBuilder b) {
         if (healthCheck != null) {
             StringBuilder healthString = new StringBuilder();
-
+            
+            // Context is image building, thus default to Dockerfile CMD mode (unequal to runtime version!)
+            // Note: usually done via BuildImageConfiguration.initAndValidate(), but not with low-level unit tests.
+            healthCheck.setModeIfNotPresent(BuildImageConfiguration.HC_BUILDTIME_DEFAULT);
+            
             switch (healthCheck.getMode()) {
-            case cmd:
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
-                buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
-                buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
-                break;
-            case none:
-                DockerFileKeyword.NONE.addTo(healthString, false);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported health check mode: " + healthCheck.getMode());
+                case cmd:
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
+                    buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
+                    buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
+                    break;
+                case none:
+                    DockerFileKeyword.NONE.addTo(healthString, false);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported build time health check mode: " + healthCheck.getMode() + " - use 'cmd' or 'none'");
             }
 
             DockerFileKeyword.HEALTHCHECK.addTo(b, healthString.toString());

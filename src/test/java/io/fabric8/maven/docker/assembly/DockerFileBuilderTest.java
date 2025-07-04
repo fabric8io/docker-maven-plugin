@@ -195,6 +195,13 @@ import org.junit.jupiter.api.Assertions;
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
         Assertions.assertEquals("NONE", dockerfileToMap(dockerfileContent).get("HEALTHCHECK"));
     }
+     
+     @Test
+     void testHealthCheckShell() {
+         HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().mode(HealthCheckMode.shell).build();
+         DockerFileBuilder dfb = new DockerFileBuilder().healthCheck(hc);
+         Assertions.assertThrows(IllegalArgumentException.class, dfb::content);
+     }
 
     @Test
     void testNoRootExport() {

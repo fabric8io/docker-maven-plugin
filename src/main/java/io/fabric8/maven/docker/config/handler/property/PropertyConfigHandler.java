@@ -318,7 +318,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return config;
         }
         if (config == null) {
-            config = new HealthCheckConfiguration();
+            // Create empty config to allow null safe fallback value requests during extraction
+            config = new HealthCheckConfiguration.Builder().build();
         }
 
         return new HealthCheckConfiguration.Builder()

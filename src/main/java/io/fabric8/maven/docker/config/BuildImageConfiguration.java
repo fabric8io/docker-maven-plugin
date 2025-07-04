@@ -765,6 +765,8 @@ public class BuildImageConfiguration implements Serializable {
             return config;
         }
     }
+    
+    public static final HealthCheckMode HC_BUILDTIME_DEFAULT = HealthCheckMode.cmd;
 
     public String initAndValidate(Logger log) throws IllegalArgumentException {
         if (entryPoint != null) {
@@ -774,6 +776,8 @@ public class BuildImageConfiguration implements Serializable {
             cmd.validate();
         }
         if (healthCheck != null) {
+            // Context is image building, thus default to Dockerfile CMD mode (unequal to runtime version!)
+            healthCheck.setModeIfNotPresent(HC_BUILDTIME_DEFAULT);
             healthCheck.validate();
         }
 

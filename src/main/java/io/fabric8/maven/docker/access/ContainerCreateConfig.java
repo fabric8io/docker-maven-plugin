@@ -180,6 +180,10 @@ public class ContainerCreateConfig {
     public ContainerCreateConfig networkingConfig(ContainerNetworkingConfig networkingConfig) {
         return add("NetworkingConfig", networkingConfig.toJsonObject());
     }
+    
+    public ContainerCreateConfig healthCheck(ContainerHealthCheckConfig healthCheckConfig) {
+        return add("Healthcheck", healthCheckConfig.toJsonObject());
+    }
 
     /**
      * Get JSON which is used for <em>creating</em> a container
