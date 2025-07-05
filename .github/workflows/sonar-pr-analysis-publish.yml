@@ -44,7 +44,7 @@ jobs:
         run: |
           PR_QUERY_RESULT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$BRANCH&state=open" | jq '.[0].number')
-          echo "PR_NUMER=$PR_QUERY_RESULT" >> $GITHUB_ENV
+          echo "PR_NUMBER=$PR_QUERY_RESULT" >> $GITHUB_ENV
       - name: Publish analysis on PR
         run: |
           ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install \
