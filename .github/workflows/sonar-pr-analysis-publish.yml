@@ -24,7 +24,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_BASE_REF: ${{ github.event.workflow_run.head_branch }}
-      PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+      GITHUB_PR_AUTHOR: ${{ github.event.sender.login }}
+      GITHUB_REPO: ${{ github.repository }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Checkout
@@ -39,6 +40,11 @@ jobs:
           distribution: 'temurin'
       - name: Dump GitHub context
         run: echo '${{ toJSON(github.event) }}'
+      - name: Get PR number
+        run: |
+          PR_QUERY_RESULT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$BRANCH&state=open" | jq '.[0].number')
+          echo "PR_NUMER=$PR_QUERY_RESULT" >> $GITHUB_ENV
       - name: Publish analysis on PR
         run: |
           ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install \
