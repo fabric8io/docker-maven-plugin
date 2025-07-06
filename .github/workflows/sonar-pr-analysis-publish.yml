@@ -43,7 +43,7 @@ jobs:
       - name: Get PR number
         run: |
           PR_QUERY_RESULT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$BRANCH&state=open" | jq '.[0].number')
+            "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$GITHUB_BASE_REF&state=open" | jq '.[0].number')
           echo "PR_NUMBER=$PR_QUERY_RESULT" >> $GITHUB_ENV
       - name: Publish analysis on PR
         run: |
