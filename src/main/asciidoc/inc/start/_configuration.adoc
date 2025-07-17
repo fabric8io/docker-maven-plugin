@@ -155,6 +155,9 @@ See below for an example.
 | *user*
 | User used inside the container
 
+| *userns*
+| User namespace mode; e.g. `keep-id:uid=185`
+
 | <<start-volumes, *volumes*>>
 | Volume configuration for binding to host directories and from other containers. See Volumes for details.
 

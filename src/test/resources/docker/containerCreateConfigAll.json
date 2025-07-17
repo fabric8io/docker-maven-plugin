@@ -73,6 +73,7 @@
     "CpusetCpus":"0,1",
     "ReadonlyRootfs":false,    
     "AutoRemove":false,    
+    "UsernsMode":"keep-id",
     "Binds":[
       "/host_tmp:/container_tmp"
     ],

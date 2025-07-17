@@ -67,6 +67,9 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private String user;
 
+    @Parameter
+    private String userns;
+
     // working directory
     @Parameter
     private String workingDir;
@@ -449,6 +452,10 @@ public class RunImageConfiguration implements Serializable {
         return autoRemove;
     }
 
+    public String getUserns() {
+        return userns;
+    }
+
     public StopMode getStopMode() {
         if (stopMode == null) {
             return StopMode.graceful;
@@ -736,6 +743,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder autoRemove(Boolean autoRemove) {
             config.autoRemove = autoRemove;
+            return this;
+        }
+        
+        public Builder userns(String userns) {
+            config.userns = userns;
             return this;
         }
 

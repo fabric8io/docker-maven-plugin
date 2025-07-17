@@ -246,6 +246,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .cpuSet(valueProvider.getString(CPUSET, config.getCpuSet()))
             .readOnly(valueProvider.getBoolean(READ_ONLY, config.getReadOnly()))
             .autoRemove(valueProvider.getBoolean(AUTO_REMOVE, config.getAutoRemove()))
+            .userns(valueProvider.getString(USERNS, config.getUserns()))
             .build();
     }
 

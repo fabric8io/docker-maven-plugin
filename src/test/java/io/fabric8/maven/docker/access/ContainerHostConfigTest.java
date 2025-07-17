@@ -138,6 +138,13 @@ class ContainerHostConfigTest {
     }
 
     @Test
+    void testUserns() {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        JsonObject result = hc.userns("keep-id").toJsonObject();
+        Assertions.assertEquals(JsonFactory.newJsonObject("{'UsernsMode':'keep-id'}"), result);
+    }
+
+    @Test
     void testLogConfig() {
         ContainerHostConfig hc = new ContainerHostConfig();
         Map<String,String> opts = new HashMap<>();

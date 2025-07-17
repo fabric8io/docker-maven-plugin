@@ -137,6 +137,7 @@ public enum ConfigKey {
     TMPFS,
     ULIMITS,
     USER,
+    USERNS,
     VOLUMES,
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),

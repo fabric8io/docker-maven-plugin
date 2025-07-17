@@ -408,6 +408,7 @@ class RunServiceTest {
                 .network(networkConfiguration())
                 .readOnly(false)
                 .autoRemove(false)
+                .userns("keep-id")
                 .build();
     }
 
