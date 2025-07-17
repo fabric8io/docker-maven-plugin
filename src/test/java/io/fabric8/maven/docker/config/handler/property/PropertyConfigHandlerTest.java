@@ -1107,6 +1107,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         Assertions.assertEquals("Never", runConfig.getImagePullPolicy());
         Assertions.assertEquals(true, runConfig.getReadOnly());
         Assertions.assertEquals(true, runConfig.getAutoRemove());
+        Assertions.assertEquals("keep-id", runConfig.getUserns());
         Assertions.assertEquals("linux/amd64", runConfig.getPlatform());
 
         validateEnv(runConfig.getEnv());
@@ -1249,6 +1250,7 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.PLATFORM), "linux/amd64",
             k(ConfigKey.READ_ONLY), "true",
             k(ConfigKey.AUTO_REMOVE), "true",
+            k(ConfigKey.USERNS), "keep-id",
         };
     }
 

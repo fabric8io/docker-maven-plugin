@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.47-SNAPSHOT**:
+  - Support for user namespace mode ([1881](https://github.com/fabric8io/docker-maven-plugin/pull/1881))
 
 * **0.46.0 (2025-04-06)**:
   - Docker-compose healthcheck configuration support ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))

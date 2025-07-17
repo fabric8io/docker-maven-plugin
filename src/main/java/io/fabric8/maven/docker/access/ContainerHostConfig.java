@@ -124,6 +124,10 @@ public class ContainerHostConfig {
         return this;
     }
 
+    public ContainerHostConfig userns(String userns) {
+        return add("UsernsMode", userns);
+    }
+
     private void addIfNotNull(JsonObject json, String key, Integer value) {
         if (value != null) {
             json.addProperty(key, value);
