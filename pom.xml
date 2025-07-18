@@ -76,15 +76,15 @@
     <jib-core.version>0.27.3</jib-core.version>
     <jnr-jffi.version>1.3.11</jnr-jffi.version>
     <jnr-unixsocket.version>0.38.23</jnr-unixsocket.version>
-    <junit.jupiter.version>5.8.2</junit.jupiter.version>
+    <junit.jupiter.version>5.10.0</junit.jupiter.version>
     <maven.version>3.8.8</maven.version>
     <minimum.maven.version>3.3.9</minimum.maven.version>
-    <mockito.version>4.5.1</mockito.version>
+    <mockito.version>4.11.0</mockito.version>
     <project.build.outputTimestamp>2025-04-06T16:04:56Z</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <surefire.version>3.5.2</surefire.version>
-    <system-stubs.version>2.0.1</system-stubs.version>
-    <version.assertj-core>3.25.3</version.assertj-core>
+    <surefire.version>3.5.3</surefire.version>
+    <system-stubs.version>2.0.3</system-stubs.version>
+    <version.assertj-core>3.27.3</version.assertj-core>
     <version.sonar-maven-plugin>4.0.0.4121</version.sonar-maven-plugin>
   </properties>
 
