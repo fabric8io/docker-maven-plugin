@@ -1,4 +1,5 @@
 # ChangeLog
+* **0.48-SNAPSHOT**:
 
 * **0.47.0 (2025-11-01)**:
   - Support for user namespace mode ([1881](https://github.com/fabric8io/docker-maven-plugin/pull/1881))
