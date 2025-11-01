@@ -1,7 +1,13 @@
 # ChangeLog
 
-* **0.47-SNAPSHOT**:
+* **0.47.0 (2025-11-01)**:
   - Support for user namespace mode ([1881](https://github.com/fabric8io/docker-maven-plugin/pull/1881))
+  - Bump Jib Core to v0.27.3 ([1879](https://github.com/fabric8io/docker-maven-plugin/pull/1879))
+  - Bump Jnr UnixSocket to v0.38.23 ([1880](https://github.com/fabric8io/docker-maven-plugin/pull/1880))
+  - Drop Plexus DI, switch to plexus-utils, update m-assembly-p and deps, verified with Maven 4 ([1851](https://github.com/fabric8io/docker-maven-plugin/pull/1851))
+  - `dmp:tag` should skip `<image>s` with no `<build>` ([1871](https://github.com/fabric8io/docker-maven-plugin/pull/1871))
+  - buildArchiveOnly with a path still builds the image ([1863](https://github.com/fabric8io/docker-maven-plugin/issues/1863))
+  - Add skip tag to the image level by `<skipTag>` ([1787](https://github.com/fabric8io/docker-maven-plugin/pull/1787))
 
 * **0.46.0 (2025-04-06)**:
   - Docker-compose healthcheck configuration support ([1825](https://github.com/fabric8io/docker-maven-plugin/pull/1825))
