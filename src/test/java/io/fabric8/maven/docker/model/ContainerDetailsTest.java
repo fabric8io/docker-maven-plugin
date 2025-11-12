@@ -234,5 +234,68 @@ class ContainerDetailsTest {
         container = new ContainerDetails(json);
     }
 
+    @Test
+    void testGetIPAddressLegacyFormat() {
+        // Legacy format: IPAddress directly under NetworkSettings (Docker < 29, API < 1.44)
+        JsonObject networkSettings = new JsonObject();
+        networkSettings.addProperty("IPAddress", "172.17.0.2");
+        json.add("NetworkSettings", networkSettings);
+        
+        whenCreateContainer();
+        
+        Assertions.assertEquals("172.17.0.2", container.getIPAddress());
+    }
+
+    @Test
+    void testGetIPAddressNewFormat() {
+        // New format: IPAddress under Networks (Docker 29+, API 1.44+)
+        JsonObject networkSettings = new JsonObject();
+        JsonObject networks = new JsonObject();
+        JsonObject bridgeNetwork = new JsonObject();
+        bridgeNetwork.addProperty("IPAddress", "172.17.0.3");
+        networks.add("bridge", bridgeNetwork);
+        networkSettings.add("Networks", networks);
+        json.add("NetworkSettings", networkSettings);
+        
+        whenCreateContainer();
+        
+        Assertions.assertEquals("172.17.0.3", container.getIPAddress());
+    }
+
+    @Test
+    void testGetIPAddressNewFormatMultipleNetworks() {
+        // New format with multiple networks - should return first available IP
+        JsonObject networkSettings = new JsonObject();
+        JsonObject networks = new JsonObject();
+        
+        JsonObject customNetwork = new JsonObject();
+        customNetwork.addProperty("IPAddress", "192.168.1.10");
+        networks.add("custom", customNetwork);
+        
+        JsonObject bridgeNetwork = new JsonObject();
+        bridgeNetwork.addProperty("IPAddress", "172.17.0.4");
+        networks.add("bridge", bridgeNetwork);
+        
+        networkSettings.add("Networks", networks);
+        json.add("NetworkSettings", networkSettings);
+        
+        whenCreateContainer();
+        
+        // Should return one of the IP addresses (order depends on key iteration)
+        String ip = container.getIPAddress();
+        Assertions.assertTrue("192.168.1.10".equals(ip) || "172.17.0.4".equals(ip));
+    }
+
+    @Test
+    void testGetIPAddressNoNetwork() {
+        // Test case with no IP address available
+        JsonObject networkSettings = new JsonObject();
+        json.add("NetworkSettings", networkSettings);
+        
+        whenCreateContainer();
+        
+        Assertions.assertNull(container.getIPAddress());
+    }
+
 
 }

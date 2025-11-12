@@ -41,6 +41,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
 #### Docker API Support
 
+* Docker 29+ (**v1.44**) is the minimal required version for compatibility with Docker 29+ daemon
 * Docker 1.6 (**v1.18**) is the minimal required version
 * Docker 1.8.1 (**v1.20**) is required for `docker:watch`
 * Docker 1.9 (**v1.21**) is required for using custom networks and build args.
