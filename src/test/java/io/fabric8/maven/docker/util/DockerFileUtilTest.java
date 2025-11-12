@@ -110,7 +110,7 @@ class DockerFileUtilTest {
 
         Assertions.assertEquals("fabric8/s2i-java:latest", fromClauses.next());
         Assertions.assertEquals("busybox:latest", fromClauses.next());
-        Assertions.assertEquals("docker.io/library/openjdk:latest", fromClauses.next());
+        Assertions.assertEquals("docker.io/library/eclipse-temurin:latest", fromClauses.next());
         Assertions.assertFalse(fromClauses.hasNext());
     }
 

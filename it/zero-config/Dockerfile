@@ -1,4 +1,4 @@
-FROM openjdk:jre
+FROM eclipse-temurin:21-jre-alpine
 
 #RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
 ARG jar_file=target/dmp-it-zero-config-${project.version}.jar

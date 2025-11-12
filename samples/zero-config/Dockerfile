@@ -1,4 +1,4 @@
-FROM openjdk:jre
+FROM eclipse-temurin:21-jre-alpine
 
 ARG jar_file=target/dmp-sample-zero-config.jar
 
