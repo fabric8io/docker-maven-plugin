@@ -1,4 +1,4 @@
-FROM openjdk:jre
+FROM eclipse-temurin:21-jre-alpine
 
 ADD target/${project.build.finalName}.jar /opt/hello-world.jar
 ADD target/docker-extra/run-java/run-java.sh /opt

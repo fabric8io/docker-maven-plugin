@@ -38,7 +38,7 @@
               <name>hello/sub/project/java:${project.version}</name>
               <alias>hello-world</alias>
               <build>
-                <from>openjdk:latest</from>
+                <from>eclipse-temurin:21-jre-alpine</from>
                 <assembly>
                   <descriptorRef>artifact</descriptorRef>
                 </assembly>
