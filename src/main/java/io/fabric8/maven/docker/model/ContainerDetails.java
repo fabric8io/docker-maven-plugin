@@ -84,8 +84,23 @@ public class ContainerDetails implements Container {
     public String getIPAddress() {
         if (json.has(NETWORK_SETTINGS) && !json.get(NETWORK_SETTINGS).isJsonNull()) {
             JsonObject networkSettings = json.getAsJsonObject(NETWORK_SETTINGS);
-            if (!networkSettings.get(IP).isJsonNull()) {
+            
+            // Try legacy API format first (Docker < 29, API < 1.44)
+            if (networkSettings.has(IP) && !networkSettings.get(IP).isJsonNull()) {
                 return networkSettings.get(IP).getAsString();
+            }
+            
+            // Fall back to new API format (Docker 29+, API 1.44+)
+            // IPAddress is now located in Networks object
+            if (networkSettings.has(NETWORKS) && !networkSettings.get(NETWORKS).isJsonNull()) {
+                JsonObject networks = networkSettings.getAsJsonObject(NETWORKS);
+                // Get IP from the first available network
+                for (String networkName : networks.keySet()) {
+                    JsonObject network = networks.getAsJsonObject(networkName);
+                    if (network.has(IP) && !network.get(IP).isJsonNull()) {
+                        return network.get(IP).getAsString();
+                    }
+                }
             }
         }
         return null;
