@@ -25,7 +25,7 @@
               <build>
                 <dockerFile>Dockerfile</dockerFile>
                 <args>
-                  <FROM_IMAGE>openjdk:21-slim</FROM_IMAGE>
+                  <FROM_IMAGE>eclipse-temurin:21-jre-alpine</FROM_IMAGE>
                 </args>
               </build>
             </image>
