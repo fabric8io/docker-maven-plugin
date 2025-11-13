@@ -1,8 +1,10 @@
 package io.fabric8.maven.docker;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.ArchiveCompression;
-import io.fabric8.maven.docker.config.ImageConfiguration;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -12,9 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 
 @ExtendWith(MockitoExtension.class)
 class SaveMojoTest extends MojoTestBase {
@@ -107,25 +109,92 @@ class SaveMojoTest extends MojoTestBase {
         thenImageIsSaved("example:latest", "destination/archive-name.tar.bz2", ArchiveCompression.bzip2);
         thenArtifactAttached("tar.bz", "archive", "destination/archive-name.tar.bz2");
     }
-
+    
     @Test
     void saveWithAlias() throws DockerAccessException, MojoExecutionException {
         givenProjectWithResolvedImages(twoImagesWithBuild());
         givenQueryServiceHasImage("example2:latest");
-
+        
         saveMojo.saveAlias = "example2";
+        
+        whenMojoExecutes();
+        
+        thenImageIsSaved("example2:latest", "mock-target/example2-1.0.0-MOCK.tar.gz", ArchiveCompression.gzip);
+    }
+    
+    @Test
+    void failureWithSaveAliasesAndNoSaveFile() throws DockerAccessException, MojoExecutionException {
+        givenProjectWithResolvedImages(twoImagesWithBuild());
+        
+        saveMojo.saveAliases = Arrays.asList("example1","example2");
+        
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+        // fails
+    }
+    
+    @Test
+    void failureWithSaveAliasesAndSaveNames() throws DockerAccessException, MojoExecutionException {
+        givenProjectWithResolvedImages(twoImagesWithBuild());
+        
+        saveMojo.saveAliases = Arrays.asList("example1","example2");
+        saveMojo.saveNames = Arrays.asList("example1:latest","example2:latest");
+        
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+        // fails
+    }
+    
+    @Test
+    void saveWithAliasesAndSaveFile() throws DockerAccessException, MojoExecutionException {
+        givenProjectWithResolvedImages(twoImagesWithBuild());
+        givenQueryServiceHasImage("example1:latest");
+        givenQueryServiceHasImage("example2:latest");
+        
+        saveMojo.saveAliases = Arrays.asList("example1", "example2");
+        saveMojo.saveFile = "destination/archive-name.tar.gz";
+        
+        whenMojoExecutes();
+        
+        thenImagesAreSaved(Arrays.asList("example1:latest", "example2:latest"), "destination/archive-name.tar.gz", ArchiveCompression.gzip);
+    }
+    
+    @Test
+    void saveWithAliasesAndAttachWithFile() throws DockerAccessException, MojoExecutionException {
+        givenProjectWithResolvedImages(twoImagesWithBuild());
+        givenQueryServiceHasImage("example1:latest");
+        givenQueryServiceHasImage("example2:latest");
+
+        saveMojo.saveAliases = Arrays.asList("example1", "example2");
+        saveMojo.saveFile = "destination/archive-name.tar.bz2";
+        saveMojo.saveClassifier = "archive";
 
         whenMojoExecutes();
 
-        thenImageIsSaved("example2:latest", "mock-target/example2-1.0.0-MOCK.tar.gz", ArchiveCompression.gzip);
+        thenImagesAreSaved(Arrays.asList("example1:latest", "example2:latest"), "destination/archive-name.tar.bz2", ArchiveCompression.bzip2);
+        thenArtifactAttached("tar.bz", "archive", "destination/archive-name.tar.bz2");
     }
 
     @Test
+    void saveWithNamesAndAttachWithFile() throws DockerAccessException, MojoExecutionException {
+        givenProjectWithResolvedImages(twoImagesWithBuild());
+        givenQueryServiceHasImage("example1:latest");
+        givenQueryServiceHasImage("example2:latest");
+
+        saveMojo.saveNames = Arrays.asList("example1:latest", "example2:latest");
+        saveMojo.saveFile = "destination/archive-name.tar.bz2";
+        saveMojo.saveClassifier = "archive";
+
+        whenMojoExecutes();
+
+        thenImagesAreSaved(Arrays.asList("example1:latest", "example2:latest"), "destination/archive-name.tar.bz2", ArchiveCompression.bzip2);
+        thenArtifactAttached("tar.bz", "archive", "destination/archive-name.tar.bz2");
+    }
+    
+    @Test
     void saveWithNonExistentAlias() throws DockerAccessException, MojoExecutionException {
         givenProjectWithResolvedImage(singleImageWithBuild());
-
+        
         saveMojo.saveAlias = "example3";
-
+        
         Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
 
         thenHasImageNotCalled();
@@ -236,6 +305,12 @@ class SaveMojoTest extends MojoTestBase {
     private void thenImageIsSaved(String name, String fileName, ArchiveCompression compression) throws DockerAccessException {
         ArgumentCaptor<String> savedImage = ArgumentCaptor.forClass(String.class);
         Mockito.verify(dockerAccess).saveImage(Mockito.eq(name), savedImage.capture(), Mockito.eq(compression));
+        assertAbsolutePathEquals(resolveMavenProjectPath(fileName), resolveMavenProjectPath(savedImage.getValue()));
+    }
+
+    private void thenImagesAreSaved(List<String> names, String fileName, ArchiveCompression compression) throws DockerAccessException {
+        ArgumentCaptor<String> savedImage = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(dockerAccess).saveImages(Mockito.eq(names), savedImage.capture(), Mockito.eq(compression));
         assertAbsolutePathEquals(resolveMavenProjectPath(fileName), resolveMavenProjectPath(savedImage.getValue()));
     }
 

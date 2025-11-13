@@ -577,6 +577,21 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+    @Override
+    public void saveImages(List<String> images, String filename, ArchiveCompression compression) throws DockerAccessException {
+         List<ImageName> names = new ArrayList<>();
+        for(String image : images){
+            names.add(new ImageName(image));
+        }
+        String url = urlBuilder.getImages(names);
+        log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_GET, url);
+        try {
+            delegate.get(url, getImageResponseHandler(filename, compression), HTTP_OK);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to save '%s' to '%s'", images.toArray(), filename);
+        }
+    }
+
     private ResponseHandler<Object> getImageResponseHandler(final String filename, final ArchiveCompression compression) throws FileNotFoundException {
         return new ResponseHandler<Object>() {
             @Override

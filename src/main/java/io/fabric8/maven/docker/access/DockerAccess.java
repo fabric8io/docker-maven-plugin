@@ -300,6 +300,16 @@ public interface DockerAccess {
     void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException;
 
     /**
+     * Save several images to a tar file
+     *
+     * @param images image to save
+     * @param filename target filename
+     * @param compression compression to use for the archive
+     * @throws DockerAccessException if an image cannot be removed
+     */
+    void saveImages(List<String> images, String filename, ArchiveCompression compression) throws DockerAccessException;
+
+    /**
      * List all networks
      *
      * @return list of <code>Network<code> objects

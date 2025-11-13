@@ -41,11 +41,19 @@ Note that using overriding the default to use `docker` or `docker-%a` may lead t
 | Element | Description | Property
 
 | *saveName*
-| The name of the image configuration to save. Must not be used together with `alias`.
+| The name of the image configuration to save. Must not be used together with `alias`, `aliases` or `names`.
 | `docker.save.name`
 
+| *saveNames*
+| The name list of the image configurations to save. Must not be used together with `alias`, `aliases` or `name`.
+| `docker.save.names`
+
 | *saveAlias*
-| The alias of the image configuration to save. Must not be used together with `name`.
+| The alias of the image configuration to save. Must not be used together with `name`, `names` or `aliases`.
+| `docker.save.alias`
+
+| *saveAliases*
+| The alias list of the image configurations to save. Must not be used together with `name`, `names` or `alias`.
 | `docker.save.alias`
 
 | *saveFile*
