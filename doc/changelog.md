@@ -1,5 +1,6 @@
 # ChangeLog
-* **0.48-SNAPSHOT**:
+* **0.48.0 (2025-11-17)**:
+  - Allow saving multiple images in docker:save using new parameters saveNames and saveAliases.
   - Fixed compatibility with Docker 29+ which requires minimum API version 1.44
   - Fixed IP address parsing to support both legacy and new Docker API schema formats ([#1887](https://github.com/fabric8io/docker-maven-plugin/issues/1887))
 
