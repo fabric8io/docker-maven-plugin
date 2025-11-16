@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.49-SNAPSHOT**:
+
 * **0.48.0 (2025-11-17)**:
   - Allow saving multiple images in docker:save using new parameters saveNames and saveAliases.
   - Fixed compatibility with Docker 29+ which requires minimum API version 1.44
