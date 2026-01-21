@@ -227,6 +227,22 @@ class DockerComposeConfigHandlerTest {
 
     }
 
+    @Test
+    void testWaitConfig() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose_2.4.yml");
+        WaitConfiguration wait = new WaitConfiguration.Builder()
+            .url("http://localhost:8080/health")
+            .method("GET")
+            .status("200..399")
+            .build();
+        Mockito.when(unresolved.getRunConfiguration()).thenReturn(new RunImageConfiguration.Builder().wait(wait).build());
+
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        RunImageConfiguration runConfig = findRunConfigurationByAlias(configs, "service");
+        Assertions.assertNotNull(runConfig.getWaitConfiguration());
+        Assertions.assertSame(wait, runConfig.getWaitConfiguration());
+    }
+
     private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {
         final File input = getAsFile("/compose/" + file);
 

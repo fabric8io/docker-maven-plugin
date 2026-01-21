@@ -305,7 +305,8 @@ class DockerComposeServiceWrapper {
         } else if (successExitWaitRequested) {
             return new WaitConfiguration.Builder().exit(0).build();
         }
-        return null;
+        return enclosingImageConfig.getRunConfiguration() == null ? null :
+            enclosingImageConfig.getRunConfiguration().getWaitConfiguration();
     }
 
     List<String> getDns() {
