@@ -70,7 +70,9 @@ jobs:
   macos-build:
     name: MacOS
     needs: buildWithoutTests
-    runs-on: macos-14
+    # Using macos-15-intel (not macos-14) because ARM64 runners don't support nested virtualization
+    # required for Docker/QEMU. See: https://github.com/actions/runner-images/issues/9460
+    runs-on: macos-15-intel
     strategy:
       fail-fast: false
       matrix:
