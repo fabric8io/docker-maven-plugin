@@ -1,4 +1,5 @@
-# ChangeLog
+* **0.49-SNAPSHOT**:
+
 * **0.48.1 (2026-02-07)**:
   - Use wait config if no Docker Compose healthcheck ([1771](https://github.com/fabric8io/docker-maven-plugin/issues/1771))
 
