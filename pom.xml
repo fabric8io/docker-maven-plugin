@@ -4,7 +4,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.48.1</version>
+  <version>0.49-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>docker-maven-plugin</name>
@@ -80,7 +80,7 @@
     <maven.version>3.8.8</maven.version>
     <minimum.maven.version>3.3.9</minimum.maven.version>
     <mockito.version>4.11.0</mockito.version>
-    <project.build.outputTimestamp>2026-02-07T16:06:24Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-02-07T16:06:37Z</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.version>3.5.3</surefire.version>
     <system-stubs.version>2.0.3</system-stubs.version>
