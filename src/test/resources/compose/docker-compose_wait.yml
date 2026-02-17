@@ -1,0 +1,14 @@
+version: 2.4
+services:
+
+  service:
+    image: image
+    platform: linux/amd64
+
+  supportingService1:
+    image: image
+    platform: linux/amd64
+
+  supportingService2:
+    image: image
+    platform: linux/amd64
