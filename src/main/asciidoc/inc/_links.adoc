@@ -7,9 +7,6 @@ are below `samples/` and contain example
 setups which you can use as blueprints for your own projects.
 ** A https://github.com/fabric8io/shootout-docker-maven[Shootout] for
 comparing docker maven plugins
-** Another
-https://github.com/fabric8io/docker-maven-sample[sample project]
-with a Microservice and a Database.
 * https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/changelog.md[ChangeLog]
 has the release history of this plugin.
 * https://github.com/fabric8io/docker-maven-plugin/blob/master/CONTRIBUTING.md[Contributing]
