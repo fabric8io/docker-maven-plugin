@@ -229,18 +229,26 @@ class DockerComposeConfigHandlerTest {
 
     @Test
     void testWaitConfig() throws IOException, MavenFilteringException {
-        setupComposeExpectations("docker-compose_2.4.yml");
-        WaitConfiguration wait = new WaitConfiguration.Builder()
+        setupComposeExpectations("docker-compose_wait.yml");
+        final String serviceAlias = "service";
+        final WaitConfiguration wait = new WaitConfiguration.Builder()
             .url("http://localhost:8080/health")
             .method("GET")
             .status("200..399")
             .build();
+
+        Mockito.when(unresolved.getAlias()).thenReturn(serviceAlias);
         Mockito.when(unresolved.getRunConfiguration()).thenReturn(new RunImageConfiguration.Builder().wait(wait).build());
 
         List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
-        RunImageConfiguration runConfig = findRunConfigurationByAlias(configs, "service");
-        Assertions.assertNotNull(runConfig.getWaitConfiguration());
-        Assertions.assertSame(wait, runConfig.getWaitConfiguration());
+        WaitConfiguration waitConfiguration = findRunConfigurationByAlias(configs, serviceAlias).getWaitConfiguration();
+        Assertions.assertNotNull(waitConfiguration);
+        Assertions.assertSame(wait, waitConfiguration);
+
+        configs.stream()
+            .filter(config -> !config.getAlias().equals(serviceAlias))
+            .forEach(config -> Assertions.assertNull(config.getRunConfiguration().getWaitConfiguration(),
+                "Expected no wait configuration for service '" + config.getAlias() + "'"));
     }
 
     private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {

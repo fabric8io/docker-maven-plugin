@@ -304,9 +304,11 @@ class DockerComposeServiceWrapper {
             return new WaitConfiguration.Builder().healthy(healthyWaitRequested).build();
         } else if (successExitWaitRequested) {
             return new WaitConfiguration.Builder().exit(0).build();
+        } else if (getAlias().equals(enclosingImageConfig.getAlias())) {
+            return enclosingImageConfig.getRunConfiguration() == null ? null :
+                enclosingImageConfig.getRunConfiguration().getWaitConfiguration();
         }
-        return enclosingImageConfig.getRunConfiguration() == null ? null :
-            enclosingImageConfig.getRunConfiguration().getWaitConfiguration();
+        return null;
     }
 
     List<String> getDns() {
