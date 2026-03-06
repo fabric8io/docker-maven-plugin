@@ -178,6 +178,7 @@ public class BuildService {
                         .squash(squash)
                         .cacheFrom(buildConfig.getCacheFrom())
                         .network(buildConfig.getNetwork())
+                        .target(buildConfig.getTarget())
                         .buildArgs(mergedBuildMap);
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);
