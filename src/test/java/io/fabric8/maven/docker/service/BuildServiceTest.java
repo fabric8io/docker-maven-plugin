@@ -399,6 +399,54 @@ class BuildServiceTest {
         }
     }
 
+    @Test
+    void testTargetIsPropagatedToBuildOptions() throws DockerAccessException, MojoExecutionException {
+        // Given
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+            .target("my-stage")
+            .build();
+
+        imageConfig = new ImageConfiguration.Builder()
+            .name("build-image")
+            .buildConfig(buildConfig)
+            .build();
+
+        BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+            .mojoParameters(mojoParameters)
+            .build();
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+
+        // When
+        buildService.buildImage(imageConfig, null, false, false, Collections.emptyMap(), buildArchive);
+
+        // Then
+        Mockito.verify(docker).buildImage(Mockito.any(), Mockito.any(),
+            Mockito.argThat((BuildOptions options) -> "my-stage".equals(options.getOptions().get("target"))));
+    }
+
+    @Test
+    void testTargetAbsentFromBuildOptionsWhenNotConfigured() throws DockerAccessException, MojoExecutionException {
+        // Given
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder().build();
+
+        imageConfig = new ImageConfiguration.Builder()
+            .name("build-image")
+            .buildConfig(buildConfig)
+            .build();
+
+        BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+            .mojoParameters(mojoParameters)
+            .build();
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+
+        // When
+        buildService.buildImage(imageConfig, null, false, false, Collections.emptyMap(), buildArchive);
+
+        // Then
+        Mockito.verify(docker).buildImage(Mockito.any(), Mockito.any(),
+            Mockito.argThat((BuildOptions options) -> !options.getOptions().containsKey("target")));
+    }
+
     private void givenAnImageConfiguration(String cleanup) {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
             .cleanup(cleanup)

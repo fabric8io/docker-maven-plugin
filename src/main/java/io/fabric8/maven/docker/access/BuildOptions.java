@@ -90,6 +90,13 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions target(String target) {
+        if (target != null && !target.isEmpty()) {
+            options.put("target", target);
+        }
+        return this;
+    }
+
     public Map<String, String> getOptions() {
         return options;
     }

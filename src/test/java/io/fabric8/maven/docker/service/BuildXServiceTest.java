@@ -204,6 +204,32 @@ class BuildXServiceTest {
         verifyBuildXArgumentPresentInExec("--cache-to=cacheToSpec");
     }
 
+    @Test
+    void testBuildXTargetIsNotPresentIfNotProvided() throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> {});
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentNotPresentInExec("--target");
+    }
+
+    @Test
+    void testBuildXTargetIsPresentIfProvided() throws Exception {
+
+        //Given
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.target("my-stage"));
+
+        // When
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        //Then
+        verifyBuildXArgumentPresentInExec("--target=my-stage");
+    }
+
     private void buildConfigUsingBuildx(File temporaryFolder, BiConsumer<BuildXConfiguration.Builder, BuildImageConfiguration.Builder> spec) {
         final BuildXConfiguration.Builder buildXConfigurationBuilder = new BuildXConfiguration.Builder()
                 .dockerStateDir(temporaryFolder.getAbsolutePath())
