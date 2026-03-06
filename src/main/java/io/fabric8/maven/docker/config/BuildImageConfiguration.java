@@ -199,6 +199,13 @@ public class BuildImageConfiguration implements Serializable {
     @Parameter
     private Map<String,String> buildOptions;
 
+    /**
+     * Target build stage in a multi-stage Dockerfile.
+     * Passed as {@code --target} to {@code docker build} and {@code docker buildx build}.
+     */
+    @Parameter
+    private String target;
+
     //Default file exclusions
     @Parameter
     private Boolean useDefaultExcludes;
@@ -454,6 +461,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public Map<String, String> getBuildOptions() {
         return buildOptions;
+    }
+
+    public String getTarget() {
+        return target;
     }
 
     public Map<String, String> getCreateImageOptions() {
@@ -747,6 +758,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder buildOptions(Map<String,String> buildOptions) {
             config.buildOptions = buildOptions;
+            return this;
+        }
+
+        public Builder target(String target) {
+            config.target = target;
             return this;
         }
 

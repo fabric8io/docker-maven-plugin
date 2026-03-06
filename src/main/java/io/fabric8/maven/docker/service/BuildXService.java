@@ -204,6 +204,11 @@ public class BuildXService {
         if (buildXConfiguration.getCacheTo() != null) {
             cmdLine.add("--cache-to=" + buildXConfiguration.getCacheTo());
         }
+
+        if (buildConfiguration.getTarget() != null) {
+            cmdLine.add("--target=" + buildConfiguration.getTarget());
+        }
+
         SecretConfiguration secret = buildXConfiguration.getSecret();
         if (secret != null) {
             if (secret.getEnvs() != null) {

@@ -66,6 +66,8 @@ element defaults to `min` and the `<sbom>` element defaults to `false`.
 For environment variables add a `<env>` element with a list of variables in the form `<secret name>env variable name</secret name>` (whereas the `secret name` can then be referenced in your Dockerfile.
 For files, add a `<files>` component with a list of paths to the files in the form `<secret name>path to file</secret name>`.
 Examples can be found in the https://github.com/kevinleturc/docker-maven-plugin/blob/bd805724111f7744a38d0b67f80f3e2d2a3e46d2/it/buildx-dockerfile-secret/pom.xml#L26[integration tests].
+NOTE: The `--target` option for multi-stage Dockerfiles is configured via the `<target>` element in the parent `<build>` section, not inside `<buildx>`. It applies to both the regular build path and buildx.
+
 |===
 
 .Examples
