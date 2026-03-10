@@ -174,6 +174,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .tags(valueProvider.getList(TAGS, config.getTags()))
             .maintainer(valueProvider.getString(MAINTAINER, config.getMaintainer()))
             .network(valueProvider.getString(BUILD_NETWORK, config.getNetwork()))
+            .target(valueProvider.getString(BUILD_TARGET, config.getTarget()))
             .workdir(valueProvider.getString(WORKDIR, config.getWorkdir()))
             .skip(valueProvider.getBoolean(SKIP_BUILD, config.getSkip()))
             .skipPush(valueProvider.getBoolean(SKIP_PUSH, config.getSkipPush()))

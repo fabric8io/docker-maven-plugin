@@ -73,6 +73,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.build.network*
 | Set the networking mode for the RUN instructions during build
 
+| *docker.buildTarget*
+| Target build stage in a multi-stage Dockerfile. Passed as `--target` to `docker build` and `docker buildx build`.
+
 | *docker.buildArg.VARIABLE*
 | Set a ARG to be available during build of image. *Note*: this is handled separately from external configuration, and is always available. See <<property-buildargs,Build Args>> for more details.
 

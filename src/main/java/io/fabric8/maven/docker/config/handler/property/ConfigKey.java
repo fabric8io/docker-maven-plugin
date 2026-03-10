@@ -41,6 +41,7 @@ public enum ConfigKey {
     AUTO_REMOVE,
     BIND,
     BUILD_OPTIONS,
+    BUILD_TARGET,
     BUILDX_PLATFORMS("buildx.platforms", ValueCombinePolicy.Merge),
     BUILDX_BUILDERNAME("buildx.builderName"),
     BUILDX_NODENAME("buildx.nodeName"),
