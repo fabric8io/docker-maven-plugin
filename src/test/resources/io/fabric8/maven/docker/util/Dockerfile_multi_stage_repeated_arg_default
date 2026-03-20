@@ -1,0 +1,9 @@
+ARG BASE_IMAGE=ubuntu:noble
+
+FROM ${BASE_IMAGE} AS builder
+ARG BASE_IMAGE
+RUN echo builder
+
+FROM ${BASE_IMAGE}
+ARG BASE_IMAGE
+RUN echo final
