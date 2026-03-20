@@ -277,7 +277,14 @@ public class DockerFileUtil {
             result.put(argStringKey, argStringValue);
         } else {
             validateArgValue(argString);
-            result.putAll(fetchArgsFromBuildConfiguration(argString, args));
+            Map<String, String> argFromBuildConfig = fetchArgsFromBuildConfiguration(argString, args);
+            if (argFromBuildConfig.isEmpty()) {
+                // Keep earlier/default values for repeated ARG declarations with no value.
+                // If no value is known yet, represent it as empty string.
+                result.putIfAbsent(argString, "");
+            } else {
+                result.putAll(argFromBuildConfig);
+            }
         }
     }
 
@@ -291,8 +298,8 @@ public class DockerFileUtil {
 
     private static Map<String, String> fetchArgsFromBuildConfiguration(String argString, Map<String, String> args) {
         Map<String, String> argFromBuildConfig = new HashMap<>();
-        if (args != null) {
-            argFromBuildConfig.put(argString, args.getOrDefault(argString, ""));
+        if (args != null && args.containsKey(argString) && args.get(argString) != null) {
+            argFromBuildConfig.put(argString, args.get(argString));
         }
         return argFromBuildConfig;
     }

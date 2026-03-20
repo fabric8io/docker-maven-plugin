@@ -115,6 +115,15 @@ class DockerFileUtilTest {
     }
 
     @Test
+    void testMultiStageRepeatedArgKeepsDefault() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_repeated_arg_default");
+        List<String> fromClauses = DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap());
+
+        Assertions.assertEquals(Collections.singletonList("ubuntu:noble"), fromClauses);
+    }
+
+    @Test
     void testExtractArgsFromDockerfile() {
         Assertions.assertEquals("{VERSION=latest, FULL_IMAGE=busybox:latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "VERSION:latest"}, new String[] {"ARG", "FULL_IMAGE=busybox:latest"}), Collections.emptyMap()).toString());
         Assertions.assertEquals("{user1=someuser, buildno=1}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "user1=someuser"}, new String[]{"ARG", "buildno=1"}), Collections.emptyMap()).toString());
