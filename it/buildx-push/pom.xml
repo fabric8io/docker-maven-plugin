@@ -22,7 +22,7 @@
         <configuration>
           <images>
             <image>
-              <name>ttl.sh/%a:1h</name>
+              <name>ttl.sh/%a:30m</name>
               <build>
                 <dockerFileDir>${project.basedir}</dockerFileDir>
                 <buildx>
