@@ -132,6 +132,9 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images. Property: `docker.skip.tag`
 
+| *target*
+| Target build stage to build in a multi-stage Dockerfile. Passed as `--target` to `docker build` and `docker buildx build`. Can be overridden with the property `docker.buildTarget`.
+
 | *tags*
 | List of additional `tag` elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.
 
