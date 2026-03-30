@@ -23,6 +23,7 @@
     <module>builder</module>
     <module>buildx</module>
     <module>buildx-contextdir</module>
+    <module>buildx-target</module>
     <module>buildx-dependencyset</module>
     <module>buildx-dockerfile</module>
     <module>buildx-dockerfile-secret</module>
@@ -31,6 +32,7 @@
     <module>docker-compose</module>
     <module>docker-compose-dependon</module>
     <module>dockerfile</module>
+    <module>dockerfile-target</module>
     <module>dockerfile-base-as-arg</module>
     <module>dockerfile-base-as-arg-buildconfig</module>
     <module>dockerfile-push-build-arg-from</module>
