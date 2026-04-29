@@ -162,7 +162,7 @@ public class AuthConfigFactory {
      * @throws MojoExecutionException
      */
     private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException {
-        EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
+        EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry, System.getProperty(EcrExtendedAuth.ECR_ENDPOINT_PROPERTY));
         if (ecr.isAwsRegistry()) {
             return ecr.extendedAuth(standardAuthConfig);
         }
