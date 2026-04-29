@@ -32,6 +32,8 @@ import io.fabric8.maven.docker.util.Logger;
  */
 public class EcrExtendedAuth {
 
+    public static final String ECR_ENDPOINT_PROPERTY = "docker.ecr.endpoint";
+
     private static final Pattern AWS_REGISTRY =
             Pattern.compile("^(\\d{12})\\.dkr\\.ecr\\.([a-z\\-0-9]+)\\.amazonaws\\.com$");
 
@@ -39,6 +41,7 @@ public class EcrExtendedAuth {
     private final boolean isAwsRegistry;
     private final String accountId;
     private final String region;
+    private final String endpoint;
 
     /**
      * Is given the registry an ecr registry?
@@ -56,7 +59,18 @@ public class EcrExtendedAuth {
      * @param registry The registry, we may or may not be an ecr registry.
      */
     public EcrExtendedAuth(Logger logger, String registry) {
+        this(logger, registry, null);
+    }
+
+    /**
+     * Initialize an extended authentication for ecr registry with an optional custom endpoint (e.g. VPC endpoint).
+     *
+     * @param registry The registry, we may or may not be an ecr registry.
+     * @param endpoint Custom ECR API endpoint host (e.g. "vpce-xxx.api.ecr.eu-south-1.vpce.amazonaws.com"), or null for default.
+     */
+    public EcrExtendedAuth(Logger logger, String registry, String endpoint) {
         this.logger = logger;
+        this.endpoint = endpoint;
         Matcher matcher = AWS_REGISTRY.matcher(registry);
         isAwsRegistry = matcher.matches();
         if (isAwsRegistry) {
@@ -124,7 +138,8 @@ public class EcrExtendedAuth {
     }
 
     HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
-        String host = "api.ecr." + region + ".amazonaws.com";
+        String defaultHost = "api.ecr." + region + ".amazonaws.com";
+        String host = endpoint != null ? endpoint : System.getProperty(ECR_ENDPOINT_PROPERTY, defaultHost);
 
         logger.debug("Get ECR AuthorizationToken from %s", host);
 

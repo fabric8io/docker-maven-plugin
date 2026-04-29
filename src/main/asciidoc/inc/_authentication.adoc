@@ -221,3 +221,14 @@ This extra dependency allows the usage of all link:https://docs.aws.amazon.com/s
 
 If the AWS SDK is found in the classpath, it takes precedence over the custom AWS credentials lookup mechanisms listed above.
 ====
+
+==== Custom ECR API Endpoint (VPC Endpoint)
+
+By default, the plugin contacts the ECR API at `api.ecr.<region>.amazonaws.com`.
+If your environment requires routing through a VPC Endpoint (e.g. in private subnets without internet access), you can override the ECR API endpoint using the system property `docker.ecr.endpoint`:
+
+.Example
+[source, sh, subs="+attributes"]
+----
+mvn -Ddocker.ecr.endpoint=vpce-0123456789abcdef.api.ecr.eu-south-1.vpce.amazonaws.com {plugin}:build
+----

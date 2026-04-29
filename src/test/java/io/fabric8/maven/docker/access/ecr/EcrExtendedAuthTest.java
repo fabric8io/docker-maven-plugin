@@ -55,6 +55,32 @@ class EcrExtendedAuthTest {
     }
 
     @Test
+    void testHeadersWithCustomEndpoint() throws ParseException {
+        String customEndpoint = "vpce-abc123.api.ecr.eu-west-1.vpce.amazonaws.com";
+        EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com", customEndpoint);
+        AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
+        Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+        HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
+        Assertions.assertEquals(customEndpoint, request.getFirstHeader("host").getValue());
+        Assertions.assertEquals("https://" + customEndpoint + "/", request.getRequestLine().getUri());
+    }
+
+    @Test
+    void testHeadersWithSystemPropertyEndpoint() throws ParseException {
+        String customEndpoint = "vpce-sys.api.ecr.eu-west-1.vpce.amazonaws.com";
+        System.setProperty(EcrExtendedAuth.ECR_ENDPOINT_PROPERTY, customEndpoint);
+        try {
+            EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com");
+            AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
+            Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+            HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
+            Assertions.assertEquals(customEndpoint, request.getFirstHeader("host").getValue());
+        } finally {
+            System.clearProperty(EcrExtendedAuth.ECR_ENDPOINT_PROPERTY);
+        }
+    }
+
+    @Test
     void testClientClosedAndCredentialsDecoded(@Mock final CloseableHttpClient closeableHttpClient,
             @Mock final CloseableHttpResponse closeableHttpResponse,
             @Mock final StatusLine statusLine)
