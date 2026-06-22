@@ -51,6 +51,7 @@ public enum ConfigKey {
     BUILDX_ATTESTATION_SBOM("buildx.attestations.sbom"),
     BUILDX_CACHE_FROM("buildx.cacheFrom"),
     BUILDX_CACHE_TO("buildx.cacheTo"),
+    BUILDX_BUILD_ALL_PLATFORMS("buildx.buildAllPlatforms"),
     BUILDX_SECRET_ENVS("buildx.secret.envs", ValueCombinePolicy.Merge),
     BUILDX_SECRET_FILES("buildx.secret.files", ValueCombinePolicy.Merge),
     CAP_ADD,

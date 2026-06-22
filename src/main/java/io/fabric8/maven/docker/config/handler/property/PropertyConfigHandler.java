@@ -347,6 +347,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .attestations(extractAttestations(config.getAttestations(), valueProvider))
             .cacheFrom(valueProvider.getString(BUILDX_CACHE_FROM, config.getCacheFrom()))
             .cacheTo(valueProvider.getString(BUILDX_CACHE_TO, config.getCacheTo()))
+            .buildAllPlatforms(valueProvider.getBoolean(BUILDX_BUILD_ALL_PLATFORMS, config.getBuildAllPlatforms()))
             .secret(extractSecret(config.getSecret(), valueProvider))
             .build();
     }

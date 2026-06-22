@@ -67,6 +67,16 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private SecretConfiguration secret;
 
+    /**
+     * Whether to build all configured {@link #platforms} already during the {@code docker:build}
+     * goal (populating the builder cache), instead of building only the native platform. Since
+     * multi-platform images cannot be loaded into the docker daemon, this extra build produces no
+     * output and only warms the build cache; the native platform is still built with {@code --load}
+     * so the image is available locally for integration tests. Defaults to {@code false}.
+     */
+    @Parameter
+    private Boolean buildAllPlatforms;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -114,6 +124,14 @@ public class BuildXConfiguration implements Serializable {
 
     public SecretConfiguration getSecret() {
         return secret;
+    }
+
+    public Boolean getBuildAllPlatforms() {
+        return buildAllPlatforms;
+    }
+
+    public boolean isBuildAllPlatforms() {
+        return Boolean.TRUE.equals(buildAllPlatforms);
     }
 
     public static class Builder {
@@ -200,6 +218,14 @@ public class BuildXConfiguration implements Serializable {
         public Builder secret(SecretConfiguration secret) {
             config.secret = secret;
             if (secret != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder buildAllPlatforms(Boolean buildAllPlatforms) {
+            config.buildAllPlatforms = buildAllPlatforms;
+            if (buildAllPlatforms != null) {
                 isEmpty = false;
             }
             return this;
