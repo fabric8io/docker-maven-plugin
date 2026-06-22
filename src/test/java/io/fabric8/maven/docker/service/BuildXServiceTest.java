@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -244,6 +245,37 @@ class BuildXServiceTest {
                 .name("build-image")
                 .buildConfig(buildImageConfig)
                 .build();
+    }
+
+    @Test
+    void testBuildAllPlatformsBuildsAllThenLoadsNative() throws Exception {
+        givenAnImageConfiguration(new BuildXConfiguration.Builder()
+            .platforms(Arrays.asList(NATIVE, FOREIGN1))
+            .buildAllPlatforms(true)
+            .build());
+        mockBuildX();
+
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        // first: all platforms are built with no output (neither --load nor --push) to warm the cache
+        Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.argThat(l -> Arrays.asList(NATIVE, FOREIGN1).equals(l)), Mockito.any(), Mockito.isNull());
+        // then: the native platform is (re)built and loaded for local use / integration tests
+        Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.argThat(l -> Collections.singletonList(NATIVE).equals(l)), Mockito.any(), Mockito.eq("--load"));
+    }
+
+    @Test
+    void testBuildAllPlatformsDisabledOnlyBuildsNative() throws Exception {
+        // buildAllPlatforms defaults to false -> only the native platform is built at build time
+        givenAnImageConfiguration(NATIVE, FOREIGN1);
+        mockBuildX();
+
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+
+        Mockito.verify(buildx, Mockito.times(1)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        verifyBuildXPlatforms(NATIVE);
     }
 
     @Test

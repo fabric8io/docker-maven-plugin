@@ -97,6 +97,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.buildx.cacheTo*
 | Cache destination for buildx builder
 
+| *docker.buildx.buildAllPlatforms*
+| When `true`, build all configured platforms already during `docker:build` (warming the cache) instead of only the native platform
+
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container. See <<list-properties>>.
 

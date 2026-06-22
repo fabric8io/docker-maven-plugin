@@ -122,8 +122,18 @@ public class BuildXService {
 
     protected void buildAndLoadSinglePlatform(List<String> buildX, String builderName, BuildDirs buildDirs, ImageConfiguration imageConfig, String configuredRegistry, File buildArchive) throws MojoExecutionException {
         List<String> platforms = imageConfig.getBuildConfiguration().getBuildX().getPlatforms();
-        // build and load the single-platform image by re-building, image should be cached and build should be quick
         String nativePlatform = dockerAccess.getNativePlatform();
+
+        // Optionally build ALL configured platforms already here so the cross-platform layers are
+        // computed and cached in the builder ahead of the push goal. Multi-platform images cannot be
+        // loaded into the docker daemon, so this build specifies no output (neither --load nor --push)
+        // and only warms the build cache; the native platform is then (re)built with --load below.
+        if (imageConfig.getBuildConfiguration().getBuildX().isBuildAllPlatforms() && platforms.size() > 1) {
+            logger.info("Building all configured platforms %s to populate the build cache", String.join(",", platforms));
+            buildX(buildX, builderName, buildDirs, imageConfig, configuredRegistry, platforms, buildArchive, null);
+        }
+
+        // build and load the single-platform image by re-building, image should be cached and build should be quick
         if (platforms.size() == 1) {
             buildX(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, platforms, buildArchive, "--load");
         } else if (platforms.isEmpty() || platforms.contains(nativePlatform)) {

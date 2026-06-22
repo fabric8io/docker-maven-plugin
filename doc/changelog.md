@@ -1,4 +1,5 @@
 * **0.49-SNAPSHOT**:
+  - Add opt-in `<buildAllPlatforms>` buildx option to build all platforms during docker:build, warming the builder cache so a later docker:push reuses it ([#1866](https://github.com/fabric8io/docker-maven-plugin/issues/1866))
 
 * **0.48.1 (2026-02-07)**:
   - Use wait config if no Docker Compose healthcheck ([1771](https://github.com/fabric8io/docker-maven-plugin/issues/1771))
