@@ -28,6 +28,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.fabric8.maven.docker.config.ArchiveCompression.gzip;
 import static io.fabric8.maven.docker.config.ArchiveCompression.none;
@@ -48,6 +50,22 @@ class BuildImageConfigurationTest {
         BuildImageConfiguration config = new BuildImageConfiguration();
         config.initAndValidate(logger);
         Assertions.assertFalse(config.isDockerFileMode());
+    }
+
+    @Test
+    // Tests fix for #1858: a build arg whose value resolves to an empty/undefined property is
+    // injected as null and must be normalized to an empty string instead of failing the build
+    void buildArgWithNullValueIsNormalizedToEmptyString() {
+        Map<String, String> args = new HashMap<>();
+        args.put("EMPTY_ARG", null);
+        args.put("REAL_ARG", "value");
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().args(args).build();
+
+        config.initAndValidate(logger);
+
+        Assertions.assertEquals("", config.getArgs().get("EMPTY_ARG"));
+        Assertions.assertEquals("value", config.getArgs().get("REAL_ARG"));
     }
 
     @Test
