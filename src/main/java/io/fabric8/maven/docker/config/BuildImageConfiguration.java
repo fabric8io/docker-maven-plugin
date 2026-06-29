@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -793,6 +794,8 @@ public class BuildImageConfiguration implements Serializable {
             healthCheck.validate();
         }
 
+        normalizeBuildArgs();
+
         ensureUniqueAssemblyNames(log);
 
         if (command != null) {
@@ -836,6 +839,21 @@ public class BuildImageConfiguration implements Serializable {
                 throw new IllegalArgumentException("Assembly names must be unique");
             }
         }
+    }
+
+    /**
+     * Build args coming from a Maven property that resolves to an empty or undefined value are injected
+     * as {@code null} (e.g. {@code <FOO>${someEmptyProperty}</FOO>}). Docker treats a build arg without a
+     * value as an empty string, so normalize {@code null} values to {@code ""} instead of letting the build
+     * fail later when the args are collected into a map that rejects null values. See #1858.
+     */
+    private void normalizeBuildArgs() {
+        if (args == null || !args.containsValue(null)) {
+            return;
+        }
+        Map<String, String> normalizedArgs = new LinkedHashMap<>();
+        args.forEach((key, value) -> normalizedArgs.put(key, value == null ? "" : value));
+        args = normalizedArgs;
     }
 
     // Initialize the dockerfile location and the build mode
