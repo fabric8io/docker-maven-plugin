@@ -19,9 +19,9 @@ jobs:
         java: [11]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
@@ -29,7 +29,7 @@ jobs:
         run: |
           mvn -Pdoc-html && mvn -Pdoc-pdf
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3    
+        uses: actions/upload-pages-artifact@v5    
         with:
           path: ./target/generated-docs
   deploy:
@@ -41,4 +41,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
