@@ -1,6 +1,6 @@
 # docker-maven-plugin
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.fabric8/docker-maven-plugin.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.fabric8/docker-maven-plugin)
 [![Test](https://github.com/fabric8io/docker-maven-plugin/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/fabric8io/docker-maven-plugin/actions/workflows/test.yml)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=fabric8io_docker-maven-plugin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=fabric8io_docker-maven-plugin)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=fabric8io_docker-maven-plugin&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=fabric8io_docker-maven-plugin)
