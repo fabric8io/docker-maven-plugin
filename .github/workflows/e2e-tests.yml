@@ -72,9 +72,9 @@ jobs:
   macos-build:
     name: MacOS
     needs: buildWithoutTests
-    # Using macos-15-intel (not macos-14) because ARM64 runners don't support nested virtualization
+    # Using an Intel runner because ARM64 macOS runners don't support nested virtualization
     # required for Docker/QEMU. See: https://github.com/actions/runner-images/issues/9460
-    runs-on: macos-15-intel
+    runs-on: macos-26-intel
     strategy:
       fail-fast: false
       matrix:
@@ -92,9 +92,6 @@ jobs:
         with:
           path: ~/.m2/repository
           key: cache-e2e-${{ github.sha }}-${{ github.run_id }}
-      - # https://github.com/crazy-max/ghaction-setup-docker/issues/108
-        name: Install QEMU 9.0.2
-        uses: docker/actions-toolkit/.github/actions/macos-setup-qemu@19ca9ade20f5da695f76a10988d6532058575f82
       - name: Set up Docker
         uses: docker/setup-docker-action@v5
         with:
