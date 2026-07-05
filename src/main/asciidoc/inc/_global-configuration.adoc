@@ -62,8 +62,20 @@ a| The URL of the Docker Daemon. If this configuration option is not given, then
 depending on whether plain HTTP communication is enabled or SSL should
 be used. Alternatively the scheme could be `tcp` in which case the
 protocol is determined via the IANA assigned port: 2375 for `http`
-and 2376 for `https`. Finally, Unix sockets are supported by using
+and 2376 for `https`. Unix sockets are supported by using
 the scheme `unix` together with the filesystem path to the unix socket.
+Windows named pipes are supported with the scheme `npipe`. Finally,
+https://learn.microsoft.com/windows/wsl/wsl-container[WSL Containers (wslc)]
+are supported with the scheme `wslc`: since wslc exposes neither a Windows
+named pipe nor a TCP port, the plugin reaches the Docker daemon running inside
+the wslc virtual machine through a stdio bridge
+(`wslc system session run docker system dial-stdio`). The URL path, if given,
+is the wslc executable to invoke, e.g. `wslc:///wslc.exe` (defaults to `wslc.exe`
+on the `PATH`; can also be overridden with the `WSLC_EXECUTABLE` environment
+variable). This requires a WSL installation that provides `wslc` (WSL 2.9.x or
+later) with an available session. Note that auto-detection only checks that the
+`wslc` CLI is present, so if `wslc` is installed but no session/daemon is ready
+it is still selected and the failure surfaces as a connection error at build time.
 The discovery sequence used by the docker-maven-plugin to determine
 the URL is:
 
@@ -72,6 +84,7 @@ the URL is:
 . the value of the environment variable `DOCKER_HOST`.
 . `/var/run/docker.sock` if it is a readable socket (Unix & OS X).
 . `//./pipe/docker_engine` if it is a readable named pipe (Windows)
+. `wslc://localhost` if `wslc` (WSL Containers) is installed and available (Windows)
 | `docker.host`
 
 | *filter*
