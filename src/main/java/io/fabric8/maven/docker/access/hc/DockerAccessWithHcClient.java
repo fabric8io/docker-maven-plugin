@@ -42,6 +42,7 @@ import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
 import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
+import io.fabric8.maven.docker.access.hc.wslc.WslcClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.access.log.LogRequestor;
@@ -93,6 +94,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // Base URL which is given through when using NamedPipe communication but is not really used
     private static final String NPIPE_URL = "npipe://127.0.0.1:1/";
 
+    // Base URL which is given through when using wslc (WSL Containers) communication but is not really used
+    private static final String WSLC_URL = "wslc://127.0.0.1:1/";
+
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
 
@@ -137,6 +141,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
         } else if (uri.getScheme().equalsIgnoreCase("npipe")) {
             this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
             baseUrl = NPIPE_URL;
+        } else if (uri.getScheme().equalsIgnoreCase("wslc")) {
+            this.delegate = createHttpClient(new WslcClientBuilder(uri.getPath(), maxConnections, log), false);
+            baseUrl = WSLC_URL;
         } else {
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
         }

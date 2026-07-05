@@ -6,42 +6,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import io.fabric8.maven.docker.access.hc.util.AbstractPlainSocket;
 import io.fabric8.maven.docker.util.Logger;
 
 import static com.google.common.base.CharMatcher.ascii;
 
-final class NamedPipe extends Socket {
+final class NamedPipe extends AbstractPlainSocket {
 
 	// Logging
     private final Logger log;
-	//for development purposes
-	private final static boolean DEBUG = false;
 
     private final Object connectLock = new Object();
-    private volatile boolean inputShutdown, outputShutdown;
 
     private String socketPath;
-    private volatile SocketAddress socketAddress;
     private RandomAccessFile namedPipe;
 
     private FileChannel channel;
 
     NamedPipe(Logger log) throws IOException {
     	this.log = log;
-    }
-
-    @Override
-    public void connect(SocketAddress endpoint) throws IOException {
-        connect(endpoint, 0);
     }
 
     @Override
@@ -61,46 +50,6 @@ final class NamedPipe extends Socket {
         	this.namedPipe = new RandomAccessFile(socketPath, "rw");
         	this.channel = this.namedPipe.getChannel();
         }
-    }
-
-    @Override
-    public void bind(SocketAddress bindpoint) throws IOException {
-        throw new SocketException("Bind is not supported");
-    }
-
-    @Override
-    public InetAddress getInetAddress() {
-        return null;
-    }
-
-    @Override
-    public InetAddress getLocalAddress() {
-        return null;
-    }
-
-    @Override
-    public int getPort() {
-        return -1;
-    }
-
-    @Override
-    public int getLocalPort() {
-        return -1;
-    }
-
-    @Override
-    public SocketAddress getRemoteSocketAddress() {
-        return socketAddress;
-    }
-
-    @Override
-    public SocketAddress getLocalSocketAddress() {
-        return null;
-    }
-
-    @Override
-    public SocketChannel getChannel() {
-        return null;
     }
 
     @Override
@@ -158,20 +107,6 @@ final class NamedPipe extends Socket {
     }
 
     @Override
-    public void sendUrgentData(int data) throws IOException {
-        throw new SocketException("Urgent data not supported");
-    }
-
-    @Override
-    public void setSoTimeout(int timeout) {
-    }
-
-    @Override
-    public int getSoTimeout() throws SocketException {
-    	return 0;
-    }
-
-    @Override
     public void setSendBufferSize(int size) throws SocketException {
         if (size <= 0) {
             throw new IllegalArgumentException("Send buffer size must be positive: " + size);
@@ -216,15 +151,6 @@ final class NamedPipe extends Socket {
     }
 
     @Override
-    public void setKeepAlive(boolean on) throws SocketException {
-    }
-
-    @Override
-    public boolean getKeepAlive() throws SocketException {
-    	return true;
-    }
-
-    @Override
     public void setTrafficClass(int tc) throws SocketException {
         if (tc < 0 || tc > 255) {
             throw new IllegalArgumentException("Traffic class is not in range 0 -- 255: " + tc);
@@ -238,21 +164,6 @@ final class NamedPipe extends Socket {
     }
 
     @Override
-    public int getTrafficClass() throws SocketException {
-        throw new UnsupportedOperationException("Getting the traffic class is not supported");
-    }
-
-    @Override
-    public void setReuseAddress(boolean on) throws SocketException {
-        // just ignore
-    }
-
-    @Override
-    public boolean getReuseAddress() throws SocketException {
-        throw new UnsupportedOperationException("Getting the SO_REUSEADDR option is not supported");
-    }
-
-    @Override
     public void close() throws IOException {
         if (isClosed()) {
             return;
@@ -261,16 +172,6 @@ final class NamedPipe extends Socket {
             channel.close();
         }
         inputShutdown = true;
-        outputShutdown = true;
-    }
-
-    @Override
-    public void shutdownInput() throws IOException {
-        inputShutdown = true;
-    }
-
-    @Override
-    public void shutdownOutput() throws IOException {
         outputShutdown = true;
     }
 
@@ -289,27 +190,7 @@ final class NamedPipe extends Socket {
     }
 
     @Override
-    public boolean isBound() {
-        return false;
-    }
-
-    @Override
     public boolean isClosed() {
         return channel != null && !channel.isOpen();
-    }
-
-    @Override
-    public boolean isInputShutdown() {
-        return inputShutdown;
-    }
-
-    @Override
-    public boolean isOutputShutdown() {
-        return outputShutdown;
-    }
-
-    @Override
-    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
-        // no-op
     }
 }
