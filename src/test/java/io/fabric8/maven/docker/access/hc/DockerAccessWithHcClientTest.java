@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -210,6 +211,23 @@ class DockerAccessWithHcClientTest {
         givenCompression(ArchiveCompression.none);
         givenTheGetWillFail();
         whenSaveImage();
+        thenImageWasNotSaved();
+    }
+
+    @Test
+    void testSaveImages() {
+        givenFilename("images.tar");
+        givenCompression(ArchiveCompression.none);
+        whenSaveImages();
+        thenNoException();
+    }
+
+    @Test
+    void testSaveImagesFail() throws IOException {
+        givenFilename("images.tar");
+        givenCompression(ArchiveCompression.none);
+        givenTheGetWillFail();
+        whenSaveImages();
         thenImageWasNotSaved();
     }
 
@@ -453,6 +471,14 @@ class DockerAccessWithHcClientTest {
     private void whenSaveImage() {
         try {
             client.saveImage(imageName, filename, compression);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    private void whenSaveImages() {
+        try {
+            client.saveImages(Arrays.asList("image1", "image2"), filename, compression);
         } catch (Exception e) {
             thrownException = e;
         }

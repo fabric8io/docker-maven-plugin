@@ -266,6 +266,76 @@ class SaveMojoTest extends MojoTestBase {
         // fails
     }
 
+    @Test
+    void failureWithSaveNameAndSaveNames() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveName = "not-null";
+        saveMojo.saveNames = Arrays.asList("example1:latest");
+
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+    }
+
+    @Test
+    void failureWithSaveNameAndSaveAliases() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveName = "not-null";
+        saveMojo.saveAliases = Arrays.asList("example1");
+
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+    }
+
+    @Test
+    void failureWithSaveAliasAndSaveNames() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveAlias = "not-null";
+        saveMojo.saveNames = Arrays.asList("example1:latest");
+
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+    }
+
+    @Test
+    void failureWithSaveAliasAndSaveAliases() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveAlias = "not-null";
+        saveMojo.saveAliases = Arrays.asList("example1");
+
+        Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+    }
+
+    @Test
+    void saveWithNonExistentName() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveName = "nonexistent:latest";
+
+        MojoExecutionException ex = Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+        Assertions.assertTrue(ex.getMessage().contains("Can not find image with name"));
+    }
+
+    @Test
+    void saveWithNonExistentNames() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveNames = Arrays.asList("nonexistent1:latest", "nonexistent2:latest");
+
+        MojoExecutionException ex = Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+        Assertions.assertTrue(ex.getMessage().contains("Can not find images with name"));
+    }
+
+    @Test
+    void saveWithNonExistentAliases() {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        saveMojo.saveAliases = Arrays.asList("nonexistent1", "nonexistent2");
+
+        MojoExecutionException ex = Assertions.assertThrows(MojoExecutionException.class, this::whenMojoExecutes);
+        Assertions.assertTrue(ex.getMessage().contains("Can not find images with alias"));
+    }
+
     @Override
     protected void givenMavenProject(AbstractDockerMojo mojo) {
         super.givenMavenProject(mojo);

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.model;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -291,9 +292,27 @@ class ContainerDetailsTest {
         // Test case with no IP address available
         JsonObject networkSettings = new JsonObject();
         json.add("NetworkSettings", networkSettings);
-        
+
         whenCreateContainer();
-        
+
+        Assertions.assertNull(container.getIPAddress());
+    }
+
+    @Test
+    void testGetIPAddressNewFormatWithoutIp() {
+        // New format where the Networks entries carry no usable IPAddress: the loop completes
+        // without returning and getIPAddress() falls through to null.
+        JsonObject networkSettings = new JsonObject();
+        JsonObject networks = new JsonObject();
+        networks.add("bridge", new JsonObject());        // network without an IPAddress property
+        JsonObject custom = new JsonObject();
+        custom.add("IPAddress", JsonNull.INSTANCE);      // network with an explicit null IPAddress
+        networks.add("custom", custom);
+        networkSettings.add("Networks", networks);
+        json.add("NetworkSettings", networkSettings);
+
+        whenCreateContainer();
+
         Assertions.assertNull(container.getIPAddress());
     }
 

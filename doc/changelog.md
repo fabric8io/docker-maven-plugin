@@ -1,4 +1,5 @@
 * **0.49-SNAPSHOT**:
+  - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error
   - Add opt-in `<buildAllPlatforms>` buildx option to build all platforms during docker:build, warming the builder cache so a later docker:push reuses it ([#1866](https://github.com/fabric8io/docker-maven-plugin/issues/1866))
   - Normalize empty `<args>` build argument values (e.g. from a property that resolves to an empty value) to an empty string instead of failing the build ([#1858](https://github.com/fabric8io/docker-maven-plugin/issues/1858))
 
