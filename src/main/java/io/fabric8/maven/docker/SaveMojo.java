@@ -225,7 +225,7 @@ public class SaveMojo extends AbstractDockerMojo {
 			exit.add(saveAlias);
 		}
 		if (saveAliases != null && !saveAliases.isEmpty()) {
-			return exit;
+			exit.addAll(saveAliases);
 		}
 		return exit;
 	}
