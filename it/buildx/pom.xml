@@ -48,7 +48,7 @@
                   <log>Hello World</log>
                   <kill>5000</kill>
                   <shutdown>1000</shutdown>
-                  <time>5000</time>
+                  <time>30000</time>
                 </wait>
               </run>
             </image>
