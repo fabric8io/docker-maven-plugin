@@ -73,7 +73,8 @@ class UrlBuilderTest {
         UrlBuilder builder = new UrlBuilder("", "1.0");
         Assertions.assertEquals(new URI("/1.0/containers/cid/logs?follow=0&stderr=1&stdout=1&timestamps=1"),
             new URI(builder.containerLogs("cid", false)));
-
+        Assertions.assertEquals(new URI("/1.0/containers/cid/logs?follow=1&since=1620000000.500000000&stderr=1&stdout=1&timestamps=1"),
+            new URI(builder.containerLogs("cid", true, "1620000000.500000000")));
     }
 
     @Test

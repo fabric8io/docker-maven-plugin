@@ -53,12 +53,19 @@ public final class UrlBuilder {
     }
 
     public String containerLogs(String containerId, boolean follow) {
-        return u("containers/%s/logs", containerId)
+        return containerLogs(containerId, follow, null);
+    }
+
+    public String containerLogs(String containerId, boolean follow, String since) {
+        Builder builder = u("containers/%s/logs", containerId)
                 .p("stdout",true)
                 .p("stderr",true)
                 .p("timestamps", true)
-                .p("follow", follow)
-                .build();
+                .p("follow", follow);
+        if (since != null) {
+            builder.p("since", since);
+        }
+        return builder.build();
     }
 
     public String createContainer(String name, String platform) {

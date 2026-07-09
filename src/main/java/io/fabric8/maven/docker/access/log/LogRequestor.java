@@ -54,10 +54,21 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     private DockerAccessException exception;
 
-    // Remember for asynchronous handling so that the request can be aborted from the outside
-    private HttpUriRequest request;
+    // Remember for asynchronous handling so that the request can be aborted from the outside.
+    // Volatile because finish() reads/aborts it from another thread while run() reassigns it on each reconnect.
+    private volatile HttpUriRequest request;
 
     private final UrlBuilder urlBuilder;
+
+    // Set to true once finish() has been called so that an aborted request is not treated as a retryable error.
+    private volatile boolean stopped;
+
+    // Timestamp of the last received log line; used to resume the stream (docker "since") after a reconnect.
+    private ZonedDateTime lastTimestamp;
+
+    // Reconnect policy for the asynchronous follow stream (run()): retry transient IO errors instead of aborting.
+    private int maxReconnectAttempts = 5;
+    private long reconnectBackoffMillis = 1000L;
 
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
@@ -83,7 +94,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     public void fetchLogs() {
         try {
             callback.open();
-            this.request = getLogRequest(false);
+            this.request = getLogRequest(false, null);
             final HttpResponse response = client.execute(request);
             parseResponse(response);
         } catch (LogCallback.DoneException e) {
@@ -95,19 +106,83 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
     }
 
-    // Fetch log asynchronously as stream and follow stream
+    // Visible for testing: tune the reconnect behaviour of the asynchronous follow stream.
+    LogRequestor reconnectPolicy(int maxAttempts, long backoffMillis) {
+        this.maxReconnectAttempts = maxAttempts;
+        this.reconnectBackoffMillis = backoffMillis;
+        return this;
+    }
+
+    // Fetch log asynchronously as stream and follow stream. Transient stream errors (e.g. a dropped
+    // Docker socket connection) are retried by reconnecting rather than aborting the wait; the stream
+    // is resumed from the last received timestamp so already-consumed lines are (largely) not repeated.
     public void run() {
         try {
             callback.open();
-            this.request = getLogRequest(true);
-            final HttpResponse response = client.execute(request);
-            parseResponse(response);
+            int attempt = 0;
+            // lastTimestamp as observed at the previous failure; used to tell genuine forward progress
+            // from a connection that merely replayed already-seen lines out of the "since" window.
+            ZonedDateTime progressMark = null;
+            while (!stopped) {
+                try {
+                    this.request = getLogRequest(true, resumeSince());
+                    // finish() may have run between the while-check and here; don't open a fresh
+                    // connection that nobody will abort.
+                    if (stopped) {
+                        return;
+                    }
+                    parseResponse(client.execute(request));
+                    return;
+                } catch (IOException e) {
+                    if (stopped) {
+                        // finish() aborted the request on purpose; not an error.
+                        return;
+                    }
+                    // Reset the reconnect budget only when the stream actually advanced past the point
+                    // of the previous failure. A socket that keeps replaying the same boundary line (or a
+                    // persistently malformed frame) makes no progress and must not refill the budget, or a
+                    // permanently broken stream would reconnect forever on the untimed log-following path.
+                    boolean advanced = lastTimestamp != null && (progressMark == null || lastTimestamp.isAfter(progressMark));
+                    if (advanced) {
+                        attempt = 0;
+                    }
+                    progressMark = lastTimestamp;
+                    if (attempt++ >= maxReconnectAttempts) {
+                        callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
+                        return;
+                    }
+                    sleepBeforeReconnect(reconnectBackoffMillis);
+                }
+            }
         } catch (LogCallback.DoneException e) {
             // Signifies we're finished with the log stream.
         } catch (IOException e) {
+            // Only reached if callback.open() itself fails; stream errors are handled inside the loop above.
             callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
         } finally {
             callback.close();
+        }
+    }
+
+    // Docker "since" value for resuming the follow stream after a reconnect, at nanosecond precision so
+    // that at most the single line at the exact resume instant can be re-delivered (docker's "since" is an
+    // inclusive lower bound) rather than every line sharing the same whole second. Returns null before any
+    // line has been received, which streams from the beginning.
+    private String resumeSince() {
+        if (lastTimestamp == null) {
+            return null;
+        }
+        return lastTimestamp.toEpochSecond() + "." + String.format("%09d", lastTimestamp.getNano());
+    }
+
+    private void sleepBeforeReconnect(long millis) {
+        if (millis <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -199,15 +274,17 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
         ZonedDateTime ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
         String logTxt = matcher.group("entry");
+        this.lastTimestamp = ts;
         callback.log(type, ts, logTxt);
     }
 
-    private HttpUriRequest getLogRequest(boolean follow) {
-        return RequestUtil.newGet(urlBuilder.containerLogs(containerId, follow));
+    private HttpUriRequest getLogRequest(boolean follow, String since) {
+        return RequestUtil.newGet(urlBuilder.containerLogs(containerId, follow, since));
     }
 
     @Override
     public void finish() {
+        this.stopped = true;
         if (request != null) {
             request.abort();
             request = null;
