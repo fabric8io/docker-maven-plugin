@@ -33,7 +33,7 @@
               <run>
                 <wait>
                   <log>base</log>
-                  <time>5000</time>
+                  <time>30000</time>
                 </wait>
               </run>
             </image>
