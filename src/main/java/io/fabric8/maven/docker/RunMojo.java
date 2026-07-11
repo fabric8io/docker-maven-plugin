@@ -29,8 +29,8 @@ public class RunMojo extends StartMojo {
 
     @Override
     protected Boolean followLogs() {
-        // Follow logs by default
-        return Boolean.valueOf(System.getProperty("docker.follow", "true"));
+        // Follow logs by default for docker:run
+        return follow != null ? follow : Boolean.TRUE;
     }
 }
 
