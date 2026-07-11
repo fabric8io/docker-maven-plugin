@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -272,7 +273,12 @@ public class LogRequestor extends Thread implements LogGetHandle {
                                          txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
-        ZonedDateTime ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
+        ZonedDateTime ts;
+        try {
+            ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
+        } catch (DateTimeParseException ex) {
+            ts = TimestampFactory.createTimestamp();
+        }
         String logTxt = matcher.group("entry");
         this.lastTimestamp = ts;
         callback.log(type, ts, logTxt);

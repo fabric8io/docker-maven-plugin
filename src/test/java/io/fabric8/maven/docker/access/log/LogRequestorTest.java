@@ -256,6 +256,26 @@ class LogRequestorTest {
     }
 
     @Test
+    void testUnparseableTimestampFallsBackAndDoesNotKillStream() throws Exception {
+        final Streams type = Streams.STDERR;
+        final String entry = "the build failed";
+        // Docker can emit a line whose timestamp position is not an ISO-8601 value (e.g. "Error" on stderr).
+        // frameToBuffer injects the line verbatim, so the LOG_LINE timestamp group ("Error") cannot be parsed.
+        final ByteBuffer buf = frameToBuffer(type, "Error " + entry);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        final LogRequestor logRequestor = new LogRequestor(client, urlBuilder, containerId, callback);
+
+        // The unparseable timestamp must not kill the log-follow thread (#1428): run() completes normally and
+        // the line is still delivered, with the current timestamp substituted for the one that failed to parse.
+        Assertions.assertDoesNotThrow(logRequestor::run);
+
+        Mockito.verify(callback).log(Mockito.eq(type.type), Mockito.any(ZonedDateTime.class), Mockito.eq(entry));
+        Mockito.verify(callback, Mockito.never()).error(Mockito.anyString());
+    }
+
+    @Test
     void runCanHandleIOException() throws Exception {
         final IOExceptionStream stream = new IOExceptionStream();
         setupMocks(stream);
@@ -396,10 +416,16 @@ class LogRequestorTest {
      * Create a bytebuffer for a single string message. A timestamp will be added.
      */
     private static ByteBuffer messageToBuffer(Streams stream, String message) throws IOException {
-        String logMessage = logMessage(message);
+        return frameToBuffer(stream, logMessage(message));
+    }
 
+    /**
+     * Frame an already-complete log line (timestamp prefix included) into a docker stream frame,
+     * without prepending a timestamp. Used to inject a line whose timestamp cannot be parsed.
+     */
+    private static ByteBuffer frameToBuffer(Streams stream, String logLine) throws IOException {
         CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
-        ByteBuffer payload = encoder.encode(CharBuffer.wrap(logMessage.toCharArray()));
+        ByteBuffer payload = encoder.encode(CharBuffer.wrap(logLine.toCharArray()));
         assert payload.order() == ByteOrder.BIG_ENDIAN;
         int length = payload.limit();
 

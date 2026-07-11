@@ -3,6 +3,7 @@
   - Make container log streaming (`<wait><log>` and log following) resilient to transient stream disconnects by reconnecting and resuming instead of aborting, fixing flaky log-wait timeouts (e.g. `jnr ... Bad file descriptor` on macOS CI)
   - Add opt-in `<buildAllPlatforms>` buildx option to build all platforms during docker:build, warming the builder cache so a later docker:push reuses it ([#1866](https://github.com/fabric8io/docker-maven-plugin/issues/1866))
   - Normalize empty `<args>` build argument values (e.g. from a property that resolves to an empty value) to an empty string instead of failing the build ([#1858](https://github.com/fabric8io/docker-maven-plugin/issues/1858))
+  - Fall back to the current timestamp instead of crashing the log-follow thread when a container log line has an unparseable timestamp (e.g. `Error` written on stderr) ([#1428](https://github.com/fabric8io/docker-maven-plugin/issues/1428))
 
 * **0.48.1 (2026-02-07)**:
   - Use wait config if no Docker Compose healthcheck ([1771](https://github.com/fabric8io/docker-maven-plugin/issues/1771))
