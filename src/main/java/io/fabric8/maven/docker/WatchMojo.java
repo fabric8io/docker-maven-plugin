@@ -61,6 +61,10 @@ public class WatchMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.watchPostExec")
     private String watchPostExec;
 
+    // Whether to follow (stream) the container logs until interrupted. Also settable via docker.follow.
+    @Parameter(property = "docker.follow", defaultValue = "false")
+    private boolean follow;
+
     /**
      * Naming pattern for how to name containers when started
      */
@@ -97,7 +101,7 @@ public class WatchMojo extends AbstractDockerMojo {
                 .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getGavLabel())
                 .mojoParameters(createMojoParameters())
-                .follow(follow())
+                .follow(follow)
                 .showLogs(showLogs())
                 .serviceHubFactory(serviceHubFactory)
                 .hub(hub)
@@ -107,9 +111,5 @@ public class WatchMojo extends AbstractDockerMojo {
 
     private String showLogs() {
         return System.getProperty("docker.showLogs");
-    }
-
-    private boolean follow() {
-        return Boolean.valueOf(System.getProperty("docker.follow", "false"));
     }
 }
