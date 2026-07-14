@@ -76,6 +76,9 @@ public class JibBuildService {
             JibServiceUtil.buildContainer(containerBuilder,
                     TarImage.at(dockerTarArchive.toPath()).named(imageConfig.getName()), log);
             log.info(" %s successfully built", dockerTarArchive.getAbsolutePath());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new MojoExecutionException("Error when building JIB image", ex);
         } catch (Exception ex) {
             throw new MojoExecutionException("Error when building JIB image", ex);
         }

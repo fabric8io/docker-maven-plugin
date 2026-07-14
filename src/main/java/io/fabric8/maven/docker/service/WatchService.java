@@ -107,6 +107,7 @@ public class WatchService {
             }
             wait();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.warn("Interrupted");
         } finally {
             if (executor != null) {
