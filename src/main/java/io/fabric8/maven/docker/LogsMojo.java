@@ -69,11 +69,15 @@ public class LogsMojo extends AbstractDockerMojo {
     }
 
     private synchronized void waitForEver() {
-        while (true) {
+        // Intentionally blocks forever so that "docker:logs" keeps following the container logs until
+        // the JVM is terminated; the log lines are delivered from other (dispatcher) threads. There is
+        // deliberately no end condition and interrupts must not stop the follow, so both SonarCloud
+        // findings on this loop (S2189 / S2142) are suppressed rather than "fixed" by changing behaviour.
+        while (true) { // NOSONAR - deliberate: follow logs until the process is killed
             try {
                 this.wait();
-            } catch (InterruptedException e) {
-                // sleep again
+            } catch (InterruptedException e) { // NOSONAR - keep following logs; do not stop on interrupt
+                // wait again
             }
         }
     }
