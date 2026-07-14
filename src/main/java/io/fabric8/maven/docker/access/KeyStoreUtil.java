@@ -21,6 +21,11 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
  */
 public class KeyStoreUtil {
 
+    // Alias and protection password for the private key entry of the KeyStore built below. This
+    // KeyStore is created in memory and never persisted, so this fixed value is not a secret; it is
+    // only used to store and immediately read back the key within the same JVM. Not a credential.
+    private static final String DOCKER_KEY_ENTRY = "docker"; // NOSONAR - not a secret, in-memory KeyStore only
+
     static {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
@@ -43,7 +48,7 @@ public class KeyStoreUtil {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null);
 
-        keyStore.setKeyEntry("docker", privKey, "docker".toCharArray(), certs);
+        keyStore.setKeyEntry(DOCKER_KEY_ENTRY, privKey, DOCKER_KEY_ENTRY.toCharArray(), certs);
         addCA(keyStore, certPath + "/ca.pem");
         return keyStore;
     }
