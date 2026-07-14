@@ -39,10 +39,8 @@ public class TcpPortChecker implements WaitChecker {
         while (iter.hasNext()) {
             InetSocketAddress address = iter.next();
 
-            try {
-                Socket s = new Socket();
+            try (Socket s = new Socket()) {
                 s.connect(address, TCP_PING_TIMEOUT);
-                s.close();
                 iter.remove();
             } catch (IOException e) {
                 // Ports isn't opened, yet. So don't remove from queue.

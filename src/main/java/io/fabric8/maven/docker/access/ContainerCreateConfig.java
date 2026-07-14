@@ -233,8 +233,7 @@ public class ContainerCreateConfig {
 
     private void addPropertiesFromFile(String envPropsFile, Properties envProps) {
         // External properties override internally specified properties
-        try {
-            FileReader reader = new FileReader(envPropsFile);
+        try (FileReader reader = new FileReader(envPropsFile)) {
             envProps.load(reader);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(String.format("Cannot find environment property file '%s'", envPropsFile));
