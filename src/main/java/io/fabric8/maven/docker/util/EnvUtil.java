@@ -470,8 +470,8 @@ public class EnvUtil {
     // create a timestamp file holding time in epoch seconds
     public static void storeTimestamp(File tsFile, Date buildDate) throws MojoExecutionException {
         try {
-            if (tsFile.exists()) {
-                tsFile.delete();
+            if (tsFile.exists() && !tsFile.delete()) {
+                throw new MojoExecutionException("Cannot delete existing timestamp file " + tsFile);
             }
             File dir = tsFile.getParentFile();
             if (!dir.exists()) {

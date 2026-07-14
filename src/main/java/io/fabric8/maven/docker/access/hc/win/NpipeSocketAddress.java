@@ -25,4 +25,9 @@ class NpipeSocketAddress extends java.net.SocketAddress {
     public boolean equals(Object _other) {
         return _other instanceof NpipeSocketAddress && path.equals(((NpipeSocketAddress) _other).path);
     }
+
+    @Override
+    public int hashCode() {
+        return path.hashCode();
+    }
 }

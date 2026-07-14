@@ -273,8 +273,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigH
             File output = null;
             if (outputFile != null) {
                 output = new File(outputFile);
-                if (output.exists()) {
-                    output.delete();
+                if (output.exists() && !output.delete()) {
+                    getLog().warn("Failed to delete existing output file " + output);
                 }
             }
             log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix(), output);
