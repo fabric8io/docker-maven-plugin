@@ -105,7 +105,7 @@ final class UnixSocket extends AbstractPlainSocket {
     }
 
     @Override
-    public void setSoTimeout(int timeout) throws SocketException {
+    public synchronized void setSoTimeout(int timeout) throws SocketException {
         try {
             channel.setOption(UnixSocketOptions.SO_RCVTIMEO, Integer.valueOf(timeout));
         } catch (IOException e) {
@@ -114,7 +114,7 @@ final class UnixSocket extends AbstractPlainSocket {
     }
 
     @Override
-    public int getSoTimeout() throws SocketException {
+    public synchronized int getSoTimeout() throws SocketException {
         try {
             return channel.getOption(UnixSocketOptions.SO_RCVTIMEO).intValue();
         } catch (IOException e) {
@@ -123,7 +123,7 @@ final class UnixSocket extends AbstractPlainSocket {
     }
 
     @Override
-    public void setSendBufferSize(int size) throws SocketException {
+    public synchronized void setSendBufferSize(int size) throws SocketException {
         if (size <= 0) {
             throw new IllegalArgumentException("Send buffer size must be positive: " + size);
         }
@@ -207,7 +207,7 @@ final class UnixSocket extends AbstractPlainSocket {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         channel.close();
         inputShutdown = true;
         outputShutdown = true;
