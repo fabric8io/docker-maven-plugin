@@ -39,6 +39,15 @@ class AuthConfigTest {
     }
 
     @Test
+    void dockerLoginConstructorWithoutColonThrows() {
+        // credentials without a ':' separator must fail with a clear error instead of an
+        // ArrayIndexOutOfBoundsException (Sonar S6466)
+        String malformed = Base64.encodeBase64String("no-colon-here".getBytes());
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new AuthConfig(malformed, "roland@jolokia.org"));
+    }
+
+    @Test
     void toJsonConfig() {
         AuthConfig config = new AuthConfig("king.roland", "12345", "king_roland@druidia.com", null);
         config.setRegistry("druidia.com/registry");

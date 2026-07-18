@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 import org.apache.http.Header;
@@ -27,12 +27,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class AwsSigner4Request {
 
-    static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-    static {
-        TimeZone utc = TimeZone.getTimeZone("GMT");
-        TIME_FORMAT.setTimeZone(utc);
-    }
+    // Immutable and thread-safe, unlike SimpleDateFormat which must not be shared in a static field.
+    static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'", Locale.US).withZone(ZoneOffset.UTC);
 
     private static final byte[] EMPTY_BYTES = new byte[0];
 
@@ -106,9 +103,7 @@ public class AwsSigner4Request {
         if (dateHeader != null) {
             return dateHeader.getValue();
         }
-        synchronized (TIME_FORMAT) {
-            return TIME_FORMAT.format(signingTime);
-        }
+        return TIME_FORMAT.format(signingTime.toInstant());
     }
 
     private static URI getUri(HttpRequest request) {

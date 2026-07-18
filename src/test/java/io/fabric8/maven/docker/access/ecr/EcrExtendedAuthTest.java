@@ -18,7 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
-import java.text.ParseException;
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -44,10 +44,10 @@ class EcrExtendedAuthTest {
     }
 
     @Test
-    void testHeaders() throws ParseException {
+    void testHeaders() {
         EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com");
         AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
-        Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+        Date signingTime = Date.from(AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z", Instant::from));
         HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
         Assertions.assertEquals("api.ecr.eu-west-1.amazonaws.com", request.getFirstHeader("host").getValue());
         Assertions.assertEquals("20161217T211058Z", request.getFirstHeader("X-Amz-Date").getValue());
@@ -55,24 +55,24 @@ class EcrExtendedAuthTest {
     }
 
     @Test
-    void testHeadersWithCustomEndpoint() throws ParseException {
+    void testHeadersWithCustomEndpoint() {
         String customEndpoint = "vpce-abc123.api.ecr.eu-west-1.vpce.amazonaws.com";
         EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com", customEndpoint);
         AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
-        Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+        Date signingTime = Date.from(AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z", Instant::from));
         HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
         Assertions.assertEquals(customEndpoint, request.getFirstHeader("host").getValue());
         Assertions.assertEquals("https://" + customEndpoint + "/", request.getRequestLine().getUri());
     }
 
     @Test
-    void testHeadersWithSystemPropertyEndpoint() throws ParseException {
+    void testHeadersWithSystemPropertyEndpoint() {
         String customEndpoint = "vpce-sys.api.ecr.eu-west-1.vpce.amazonaws.com";
         System.setProperty(EcrExtendedAuth.ECR_ENDPOINT_PROPERTY, customEndpoint);
         try {
             EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com");
             AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
-            Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+            Date signingTime = Date.from(AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z", Instant::from));
             HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
             Assertions.assertEquals(customEndpoint, request.getFirstHeader("host").getValue());
         } finally {
