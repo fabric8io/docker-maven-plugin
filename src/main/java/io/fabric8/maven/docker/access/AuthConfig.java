@@ -78,6 +78,9 @@ public class AuthConfig {
     public AuthConfig(String credentialsEncoded, String email, String identityToken) {
         String credentials = new String(Base64.decodeBase64(credentialsEncoded));
         String[] parsedCreds = credentials.split(":", 2);
+        if (parsedCreds.length != 2) {
+            throw new IllegalArgumentException("Invalid credentials: expected base64 encoded 'username:password'");
+        }
         username = parsedCreds[0];
         password = parsedCreds[1];
         this.email = email;
