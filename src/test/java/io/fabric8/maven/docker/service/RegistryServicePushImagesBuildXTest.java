@@ -128,7 +128,7 @@ class RegistryServicePushImagesBuildXTest {
 
   private void verifyBuildXServiceInvokedWithAuthConfigListSize(int expectedSize) throws MojoExecutionException {
     ArgumentCaptor<AuthConfigList> authConfigListArgumentCaptor = ArgumentCaptor.forClass(AuthConfigList.class);
-    verify(buildXService).push(any(), any(), anyString(), authConfigListArgumentCaptor.capture());
+    verify(buildXService).push(any(), any(), anyString(), authConfigListArgumentCaptor.capture(), any());
     assertEquals(expectedSize, authConfigListArgumentCaptor.getValue().size());
   }
 

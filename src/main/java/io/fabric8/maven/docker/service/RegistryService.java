@@ -81,7 +81,7 @@ public class RegistryService {
             AuthConfigList authConfigListForBuildXPush = createCompleteAuthConfigList(true, imageConfig, registryConfig, buildContext.getMojoParameters(), buildArgsFromExternalSources);
 
             if (imageConfig.isBuildX()) {
-                buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfigListForBuildXPush);
+                buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfigListForBuildXPush, buildArgsFromExternalSources);
             } else {
                 dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfigForLegacyPush);
             }
