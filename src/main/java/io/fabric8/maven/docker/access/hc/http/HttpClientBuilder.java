@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.access.hc.http;/*
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
 
@@ -86,12 +87,15 @@ public class HttpClientBuilder implements ClientBuilder {
     private static Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {
         try
         {
-            KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
+            // Ephemeral, in-memory-only password shared between building the KeyStore and reading the
+            // key material back; never persisted, so a fresh random value avoids a hard-coded secret.
+            char[] keyStorePassword = UUID.randomUUID().toString().toCharArray();
+            KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath, keyStorePassword);
 
             SSLContext sslContext =
                     SSLContexts.custom()
                                .setProtocol(SSLConnectionSocketFactory.TLS)
-                               .loadKeyMaterial(keyStore, "docker".toCharArray())
+                               .loadKeyMaterial(keyStore, keyStorePassword)
                                .loadTrustMaterial(keyStore, null)
                                .build();
             String tlsVerify = System.getenv("DOCKER_TLS_VERIFY");

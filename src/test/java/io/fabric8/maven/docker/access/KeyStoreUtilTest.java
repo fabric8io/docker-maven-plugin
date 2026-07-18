@@ -17,9 +17,10 @@ class KeyStoreUtilTest {
 
     @Test
     void createKeyStore() throws Exception {
-        KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(getFile("certpath"));
+        char[] keyStorePassword = java.util.UUID.randomUUID().toString().toCharArray();
+        KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(getFile("certpath"), keyStorePassword);
         KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry("docker",
-                new KeyStore.PasswordProtection("docker".toCharArray()));
+                new KeyStore.PasswordProtection(keyStorePassword));
         Assertions.assertNotNull(pkEntry);
         Assertions.assertNotNull(pkEntry.getCertificate());
         Assertions.assertNotNull(keyStore.getCertificate("cn=ca-test,o=internet widgits pty ltd,st=some-state,c=cr"));
