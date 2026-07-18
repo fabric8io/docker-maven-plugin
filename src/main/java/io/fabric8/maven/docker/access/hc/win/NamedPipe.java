@@ -107,7 +107,7 @@ final class NamedPipe extends AbstractPlainSocket {
     }
 
     @Override
-    public void setSendBufferSize(int size) throws SocketException {
+    public synchronized void setSendBufferSize(int size) throws SocketException {
         if (size <= 0) {
             throw new IllegalArgumentException("Send buffer size must be positive: " + size);
         }
@@ -164,7 +164,7 @@ final class NamedPipe extends AbstractPlainSocket {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (isClosed()) {
             return;
         }
