@@ -269,8 +269,9 @@ public class DockerFileUtil {
             String argStringKey = argStringParts[0];
             String argStringValue = determineFinalArgValue(argString, argStringParts, args);
             if (argStringValue.startsWith("\"") || argStringValue.startsWith("'")) {
-                // Replaces surrounding quotes
-                argStringValue = argStringValue.replaceAll("^\"|\"|'|'$", "");
+                // Strip any single or double quote characters (the anchored ^ and $ alternatives in the
+                // previous "^\"|\"|'|'$" were redundant since the bare " and ' already match anywhere).
+                argStringValue = argStringValue.replaceAll("[\"']", "");
             } else {
                 validateArgValue(argStringValue);
             }
