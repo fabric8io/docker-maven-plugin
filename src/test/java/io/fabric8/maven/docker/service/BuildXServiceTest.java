@@ -107,7 +107,7 @@ class BuildXServiceTest {
     void testBuildNativePlatform() throws Exception {
         givenAnImageConfiguration(NATIVE);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
         verifyBuildXPlatforms(NATIVE);
     }
 
@@ -115,7 +115,7 @@ class BuildXServiceTest {
     void testBuildForeignPlatform() throws Exception {
         givenAnImageConfiguration(FOREIGN1);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
         verifyBuildXPlatforms(FOREIGN1);
     }
 
@@ -123,7 +123,7 @@ class BuildXServiceTest {
     void testBuildNativePlatformWithForeign() throws Exception {
         givenAnImageConfiguration(NATIVE, FOREIGN1);
         mockBuildX();
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
         verifyBuildXPlatforms(NATIVE);
     }
 
@@ -134,7 +134,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.network("host"));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentPresentInExec("--network=host");
@@ -147,7 +147,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.noCache(true));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentPresentInExec("--no-cache");
@@ -160,7 +160,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheFrom(null));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentNotPresentInExec("--cache-from");
@@ -173,7 +173,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheFrom("cacheFromSpec"));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentPresentInExec("--cache-from=cacheFromSpec");
@@ -186,7 +186,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo(null));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentNotPresentInExec("--cache-to");
@@ -199,7 +199,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildX.cacheTo("cacheToSpec"));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentPresentInExec("--cache-to=cacheToSpec");
@@ -212,7 +212,7 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> {});
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentNotPresentInExec("--target");
@@ -225,10 +225,34 @@ class BuildXServiceTest {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.target("my-stage"));
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         //Then
         verifyBuildXArgumentPresentInExec("--target=my-stage");
+    }
+
+    @Test
+    void testBuildXPassesExternalBuildArgs() throws Exception {
+        // #1901: build args resolved from external sources (docker.buildArg.* / Maven properties, proxy settings, ...)
+        // must reach buildx, not only <build><args>. Here the config has no <args>; the arg comes solely via the map.
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> { });
+
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive,
+            Collections.singletonMap("MY_FILE_NAME", "myfile"));
+
+        verifyBuildXArgumentPresentInExec("--build-arg", "MY_FILE_NAME=myfile");
+    }
+
+    @Test
+    void testBuildXMergesExternalAndConfigBuildArgs() throws Exception {
+        // Config <args> and externally-resolved args must both reach buildx, mirroring the classic (non-buildx) path.
+        buildConfigUsingBuildx(temporaryFolder,
+            (buildX, buildImage) -> buildImage.args(Collections.singletonMap("FOO", "bar")));
+
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive,
+            Collections.singletonMap("MY_FILE_NAME", "myfile"));
+
+        verifyBuildXArgumentPresentInExec("FOO=bar", "MY_FILE_NAME=myfile");
     }
 
     private void buildConfigUsingBuildx(File temporaryFolder, BiConsumer<BuildXConfiguration.Builder, BuildImageConfiguration.Builder> spec) {
@@ -255,14 +279,14 @@ class BuildXServiceTest {
             .build());
         mockBuildX();
 
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         // first: all platforms are built with no output (neither --load nor --push) to warm the cache
         Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
-            Mockito.argThat(l -> Arrays.asList(NATIVE, FOREIGN1).equals(l)), Mockito.any(), Mockito.isNull());
+            Mockito.any(), Mockito.argThat(l -> Arrays.asList(NATIVE, FOREIGN1).equals(l)), Mockito.any(), Mockito.isNull());
         // then: the native platform is (re)built and loaded for local use / integration tests
         Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
-            Mockito.argThat(l -> Collections.singletonList(NATIVE).equals(l)), Mockito.any(), Mockito.eq("--load"));
+            Mockito.any(), Mockito.argThat(l -> Collections.singletonList(NATIVE).equals(l)), Mockito.any(), Mockito.eq("--load"));
     }
 
     @Test
@@ -271,9 +295,9 @@ class BuildXServiceTest {
         givenAnImageConfiguration(NATIVE, FOREIGN1);
         mockBuildX();
 
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
-        Mockito.verify(buildx, Mockito.times(1)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+        Mockito.verify(buildx, Mockito.times(1)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
             Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         verifyBuildXPlatforms(NATIVE);
     }
@@ -281,8 +305,8 @@ class BuildXServiceTest {
     @Test
     void testBuildForeignPlatforms() throws Exception {
         givenAnImageConfiguration(FOREIGN1, FOREIGN2);
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
-        Mockito.verify(buildx, Mockito.times(0)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
+        Mockito.verify(buildx, Mockito.times(0)).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                                                         Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
@@ -298,11 +322,11 @@ class BuildXServiceTest {
             .build());
 
         // When
-        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, builder);
+        buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, Collections.emptyMap(), buildArchive, builder);
 
         // Then
         ArgumentCaptor<List<String>> buildXArgCaptor = ArgumentCaptor.forClass(List.class);
-        Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), eq(buildArchive));
+        Mockito.verify(builder).useBuilder(buildXArgCaptor.capture(), anyString(), any(), eq(imageConfig), eq(configuredRegistry), any(), eq(buildArchive));
         assertEquals(Arrays.asList("docker", "--config", temporaryFolder.getAbsolutePath(), "buildx"), buildXArgCaptor.getValue());
     }
 
@@ -327,7 +351,7 @@ class BuildXServiceTest {
             givenAnImageConfiguration("linux/arm46", "linux/amd64");
 
             // When
-            buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, builder);
+            buildx.useBuilder(projectPaths, imageConfig, configuredRegistry, authConfigList, Collections.emptyMap(), buildArchive, builder);
 
             // Then
             assertTrue(configDirPath.resolve("cli-plugins").toFile().exists());
@@ -352,7 +376,7 @@ class BuildXServiceTest {
         });
 
         // When
-        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive);
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
 
         String[] fullTags = tags.stream()
                 .map(tag -> new ImageName(imageConfig.getName(), tag).getFullName(configuredRegistry))
@@ -384,14 +408,14 @@ class BuildXServiceTest {
     }
 
     private void mockBuildX() throws Exception {
-        Mockito.doNothing().when(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+        Mockito.doNothing().when(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                                                 Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     private void verifyBuildXPlatforms(String... platforms) throws Exception {
         final List<String> expect = Arrays.asList(platforms);
         Mockito.verify(buildx).buildX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
-                                      Mockito.argThat(l -> expect.equals(l)), Mockito.any(), Mockito.any());
+                                      Mockito.any(), Mockito.argThat(l -> expect.equals(l)), Mockito.any(), Mockito.any());
     }
 
     private void verifyBuildXArgumentPresentInExec(String... args) throws Exception{

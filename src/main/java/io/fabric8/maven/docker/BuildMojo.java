@@ -105,7 +105,7 @@ public class BuildMojo extends AbstractDockerMojo {
             if (imageConfig.isBuildX()) {
                 BuildArgResolver buildArgResolver = new BuildArgResolver(log);
                 Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
-                hub.getBuildXService().build(createProjectPaths(), imageConfig, null, createCompleteAuthConfigList(false, imageConfig, getRegistryConfig(pullRegistry), createMojoParameters(), buildArgsFromExternalSources), buildArchiveFile);
+                hub.getBuildXService().build(createProjectPaths(), imageConfig, null, createCompleteAuthConfigList(false, imageConfig, getRegistryConfig(pullRegistry), createMojoParameters(), buildArgsFromExternalSources), buildArchiveFile, buildArgsFromExternalSources);
             } else {
                 buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
                 if (!skipTag && !imageConfig.getBuildConfiguration().skipTag()) {
