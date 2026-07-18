@@ -250,6 +250,7 @@ public class StartMojo extends AbstractDockerMojo {
             try {
                 executorService.awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 log.warn("ExecutorService did not shutdown normally.");
                 executorService.shutdownNow();
             }

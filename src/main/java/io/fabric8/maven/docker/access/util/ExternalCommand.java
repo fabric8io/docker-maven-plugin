@@ -80,6 +80,9 @@ public abstract class ExternalCommand {
             executor.shutdown();
             executor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (IllegalThreadStateException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             process.destroy();
             statusCode = -1;
         }
