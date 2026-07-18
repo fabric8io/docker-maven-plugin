@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.access.ecr;
 
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 import org.apache.http.client.methods.HttpPost;
@@ -52,7 +53,7 @@ class AwsSigner4RequestTest {
 
         AwsSigner4 signer = new AwsSigner4("us-east-1", "ecr");
 
-        Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20150830T123600Z");
+        Date signingTime = Date.from(AwsSigner4Request.TIME_FORMAT.parse("20150830T123600Z", Instant::from));
         AwsSigner4Request sr = new AwsSigner4Request("us-east-1", "service", request, signingTime);
         AuthConfig credentials = new AuthConfig("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", null, null);
  
