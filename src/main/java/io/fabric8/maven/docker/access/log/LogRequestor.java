@@ -34,6 +34,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,8 +57,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
     private DockerAccessException exception;
 
     // Remember for asynchronous handling so that the request can be aborted from the outside.
-    // Volatile because finish() reads/aborts it from another thread while run() reassigns it on each reconnect.
-    private volatile HttpUriRequest request;
+    // Held in an AtomicReference because finish() reads/aborts it from another thread while run()
+    // reassigns it on each reconnect; a volatile reference alone would not make that access thread-safe.
+    private final AtomicReference<HttpUriRequest> request = new AtomicReference<>();
 
     private final UrlBuilder urlBuilder;
 
@@ -95,8 +97,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
     public void fetchLogs() {
         try {
             callback.open();
-            this.request = getLogRequest(false, null);
-            final HttpResponse response = client.execute(request);
+            this.request.set(getLogRequest(false, null));
+            final HttpResponse response = client.execute(this.request.get());
             parseResponse(response);
         } catch (LogCallback.DoneException e) {
             // Signifies we're finished with the log stream.
@@ -126,13 +128,13 @@ public class LogRequestor extends Thread implements LogGetHandle {
             ZonedDateTime progressMark = null;
             while (!stopped) {
                 try {
-                    this.request = getLogRequest(true, resumeSince());
+                    this.request.set(getLogRequest(true, resumeSince()));
                     // finish() may have run between the while-check and here; don't open a fresh
                     // connection that nobody will abort.
                     if (stopped) {
                         return;
                     }
-                    parseResponse(client.execute(request));
+                    parseResponse(client.execute(this.request.get()));
                     return;
                 } catch (IOException e) {
                     if (stopped) {
@@ -291,9 +293,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
     @Override
     public void finish() {
         this.stopped = true;
-        if (request != null) {
-            request.abort();
-            request = null;
+        HttpUriRequest current = request.getAndSet(null);
+        if (current != null) {
+            current.abort();
         }
     }
 
