@@ -337,10 +337,11 @@ class RegistryServiceTest {
     @Test
     void pushImageWithoutBuildConfig() throws DockerAccessException {
         givenAnImageConfigurationWithoutBuildConfig("user/test:1.0.1");
+        givenBuildContext();
 
         whenPushImage();
 
-        thenImageHasNotBeenPushed();
+        thenImageHasBeenPushed();
         thenNoExceptionThrown();
     }
 
