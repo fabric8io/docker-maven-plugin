@@ -637,7 +637,7 @@
       <id>jacoco</id>
 
       <properties>
-        <jacoco.version>0.7.9</jacoco.version>
+        <jacoco.version>0.8.15</jacoco.version>
       </properties>
 
       <dependencies>
