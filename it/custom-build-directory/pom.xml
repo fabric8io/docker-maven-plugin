@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.49-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-custom-build-directory</artifactId>
+  <version>0.49-SNAPSHOT</version>
+
+  <build>
+    <directory>${project.basedir}/target/custom-build</directory>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>dmp/custom-build-directory:latest</name>
+              <build>
+                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+              </build>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-docker-source</id>
+            <goals>
+              <goal>source</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>verify-custom-build-directory</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <tasks>
+                <fail message="Docker source archive was not created below the custom Maven build directory">
+                  <condition>
+                    <not>
+                      <available file="${project.build.directory}/docker/dmp/custom-build-directory/latest/tmp/docker-build.tar"></available>
+                    </not>
+                  </condition>
+                </fail>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

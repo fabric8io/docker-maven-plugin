@@ -1,4 +1,5 @@
 * **0.49-SNAPSHOT**:
+  - Respect a custom Maven build directory when selecting the default Docker output directory ([#1855](https://github.com/fabric8io/docker-maven-plugin/pull/1855))
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error
   - Make container log streaming (`<wait><log>` and log following) resilient to transient stream disconnects by reconnecting and resuming instead of aborting, fixing flaky log-wait timeouts (e.g. `jnr ... Bad file descriptor` on macOS CI)
   - Honour the `<follow>` configuration element (in addition to the `docker.follow` system property) for `docker:start`, `docker:run` and `docker:watch` ([#1797](https://github.com/fabric8io/docker-maven-plugin/issues/1797))
