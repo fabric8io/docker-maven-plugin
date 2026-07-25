@@ -29,10 +29,10 @@ jobs:
         with:
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
-      - name: Setup Java 17 # Move Sonar analysis to Java 17
+      - name: Setup Java 21 # SonarQube Cloud requires Java 21+ to run the analysis
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Maven Sonar
         run: ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install
