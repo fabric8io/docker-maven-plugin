@@ -28,10 +28,10 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - name: Setup Java 17 # Move Sonar analysis to Java 17
+      - name: Setup Java 21 # SonarQube Cloud requires Java 21+ to run the analysis
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Dump GitHub context
         run: echo '${{ toJSON(github.event) }}'
