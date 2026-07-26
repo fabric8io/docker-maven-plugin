@@ -10,7 +10,7 @@ You can compile project as usual by issuing a simple `mvn clean install` command
 You can build images with multiple layers by adding multiple assemblies. Replace the existing assembly configuration:
 ```xml
 <build>
-    <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
+    <from>eclipse-temurin:17-jre-alpine</from>
     <assembly>
         <descriptorRef>artifact-with-dependencies</descriptorRef>
         <targetDir>/app</targetDir>
@@ -21,7 +21,7 @@ You can build images with multiple layers by adding multiple assemblies. Replace
 with multiple assemblies:
 ```xml
 <build>
-    <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
+    <from>eclipse-temurin:17-jre-alpine</from>
     <assemblies>
         <assembly>
             <descriptorRef>dependencies</descriptorRef>
