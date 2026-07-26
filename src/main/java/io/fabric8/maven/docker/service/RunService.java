@@ -145,7 +145,7 @@ public class RunService {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
 
-        Collection<Container> existingContainers = queryService.getContainersForImage(imageName, true);
+        Collection<Container> existingContainers = queryService.listContainers(true);
         String containerName = ContainerNamingUtil
                 .formatContainerName(imageConfig, defaultContainerNamePattern, buildTimestamp, existingContainers);
 

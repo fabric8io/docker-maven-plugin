@@ -262,6 +262,30 @@ class RunServiceTest {
     }
 
     @Test
+    void createContainerUsesNamesFromAllExistingContainers(@Mock Container existingContainer, @Mock PortMapping portMapping)
+        throws DockerAccessException {
+
+        Mockito.doReturn("reproduce-container-name-conflict-1").when(existingContainer).getName();
+        Mockito.doReturn(Collections.singletonList(existingContainer)).when(queryService).listContainers(true);
+        Mockito.doReturn("containerId")
+            .when(docker).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
+
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+            .name("localhost/reproduce-container-name-conflict:latest")
+            .runConfig(new RunImageConfiguration())
+            .build();
+
+        String containerId = runService.createContainer(imageConfiguration, portMapping, null, properties,
+            getBaseDirectory(), "%n-%i", new Date());
+
+        Assertions.assertEquals("containerId", containerId);
+        Mockito.verify(docker).createContainer(Mockito.any(ContainerCreateConfig.class),
+            Mockito.eq("reproduce-container-name-conflict-2"));
+        Mockito.verify(queryService).listContainers(true);
+        Mockito.verify(queryService, Mockito.never()).getContainersForImage(Mockito.anyString(), Mockito.anyBoolean());
+    }
+
+    @Test
     void testStopModeWithKill() throws DockerAccessException, ExecException {
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfigWithStopMode(), false, false);
