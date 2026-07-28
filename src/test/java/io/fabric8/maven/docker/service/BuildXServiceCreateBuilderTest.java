@@ -25,6 +25,7 @@ import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -91,6 +92,60 @@ class BuildXServiceCreateBuilderTest {
 
     //Then
     verifyBuildXArgumentDoesNotContain("--driver-opt", "network=foonet");
+  }
+
+  @Test
+  void builderNameOverriddenBySystemProperty() throws Exception {
+    System.setProperty("docker.buildx.builderName", "myorg/default");
+    System.setProperty("docker.buildx.driver", "cloud");
+    try {
+      buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> {});
+
+      String builderName = buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+      assertEquals("cloud-myorg-default", builderName);
+    } finally {
+      System.clearProperty("docker.buildx.builderName");
+      System.clearProperty("docker.buildx.driver");
+    }
+  }
+
+  @Test
+  void driverOverriddenBySystemProperty() throws Exception {
+    System.setProperty("docker.buildx.driver", "cloud");
+    try {
+      buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX.builderName("myorg/default"));
+
+      String builderName = buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+      assertEquals("cloud-myorg-default", builderName);
+    } finally {
+      System.clearProperty("docker.buildx.driver");
+    }
+  }
+
+  @Test
+  void driverOptOverriddenBySystemProperty() throws Exception {
+    System.setProperty("docker.buildx.driverOpts.network", "host");
+    try {
+      buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> {});
+
+      buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+      verifyBuildXArgumentContains("--driver-opt", "network=host");
+    } finally {
+      System.clearProperty("docker.buildx.driverOpts.network");
+    }
+  }
+
+  @Test
+  void cloudDriverRequiresOrgSlashNameFormat() {
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("cloud")
+        .builderName("invalid-no-slash"));
+
+    assertThrows(MojoExecutionException.class, () ->
+        buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs));
   }
 
   @Test
