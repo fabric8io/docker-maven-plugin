@@ -77,6 +77,15 @@ public class BuildXConfiguration implements Serializable {
     @Parameter
     private Boolean buildAllPlatforms;
 
+    /**
+     * BuildX driver to use when creating the builder. Defaults to {@code docker-container}.
+     * Use {@code cloud} to create a Docker Cloud builder; in that case {@link #builderName}
+     * must be the cloud endpoint in {@code <org>/<name>} form and is passed as a positional
+     * argument to {@code docker buildx create} rather than via {@code --name}.
+     */
+    @Parameter
+    private String driver;
+
     public String getBuilderName() {
         return builderName;
     }
@@ -132,6 +141,10 @@ public class BuildXConfiguration implements Serializable {
 
     public boolean isBuildAllPlatforms() {
         return Boolean.TRUE.equals(buildAllPlatforms);
+    }
+
+    public String getDriver() {
+        return driver;
     }
 
     public static class Builder {
@@ -226,6 +239,14 @@ public class BuildXConfiguration implements Serializable {
         public Builder buildAllPlatforms(Boolean buildAllPlatforms) {
             config.buildAllPlatforms = buildAllPlatforms;
             if (buildAllPlatforms != null) {
+                isEmpty = false;
+            }
+            return this;
+        }
+
+        public Builder driver(String driver) {
+            config.driver = driver;
+            if (driver != null) {
                 isEmpty = false;
             }
             return this;
