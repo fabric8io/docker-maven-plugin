@@ -78,10 +78,10 @@ public class BuildXService {
             copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(configPath);
         }
 
-        String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
         Path configJson = configPath.resolve("config.json");
         try {
             createConfigJson(configJson, authConfig);
+            String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
             builder.useBuilder(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, buildArgs, context);
         } finally {
             removeConfigJson(configJson);
@@ -293,30 +293,46 @@ public class BuildXService {
 
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
-        String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+        String builderEndpoint = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+        String driver = buildXConfiguration.getDriver();
+
+        // For the cloud driver Docker derives the local builder name as "cloud-<org>-<name>"
+        String builderName = isCloudDriver(driver)
+            ? "cloud-" + builderEndpoint.replace("/", "-").toLowerCase()
+            : builderEndpoint;
 
         if ("default".equals(builderName)) {
             logger.info("Using default builder with buildx - only single platforms will be supported");
         } else {
-            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, buildDirs);
+            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, builderEndpoint, buildDirs);
         }
         return builderName;
     }
 
-    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, BuildDirs buildDirs) throws MojoExecutionException {
-        String nodeName = buildXConfiguration.getNodeName();
+    private static boolean isCloudDriver(String driver) {
+        return "cloud".equals(driver);
+    }
+
+    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, String builderEndpoint, BuildDirs buildDirs) throws MojoExecutionException {
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
 
         if (Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
+            String driver = buildXConfiguration.getDriver();
 
-            if (nodeName != null) {
-                append(cmds, "--node", nodeName);
+            if (isCloudDriver(driver)) {
+                // Cloud driver: endpoint is a positional argument; --name and --node are not used
+                append(cmds, "create", "--driver", driver, builderEndpoint);
+                addDriverOptions(cmds, buildXConfiguration);
+            } else {
+                append(cmds, "create", "--driver", driver != null ? driver : "docker-container", "--name", builderEndpoint);
+                String nodeName = buildXConfiguration.getNodeName();
+                if (nodeName != null) {
+                    append(cmds, "--node", nodeName);
+                }
+                addDriverOptions(cmds, buildXConfiguration);
+                addBuildConfig(cmds, buildXConfiguration, buildDirs);
             }
-
-            addDriverOptions(cmds, buildXConfiguration);
-            addBuildConfig(cmds, buildXConfiguration, buildDirs);
 
             int rc = exec.process(cmds);
             if (rc != 0) {

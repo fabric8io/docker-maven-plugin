@@ -348,6 +348,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .cacheFrom(valueProvider.getString(BUILDX_CACHE_FROM, config.getCacheFrom()))
             .cacheTo(valueProvider.getString(BUILDX_CACHE_TO, config.getCacheTo()))
             .buildAllPlatforms(valueProvider.getBoolean(BUILDX_BUILD_ALL_PLATFORMS, config.getBuildAllPlatforms()))
+            .driver(valueProvider.getString(BUILDX_DRIVER, config.getDriver()))
             .secret(extractSecret(config.getSecret(), valueProvider))
             .build();
     }
