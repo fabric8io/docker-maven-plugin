@@ -15,6 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -293,8 +294,8 @@ public class BuildXService {
 
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
-        String builderEndpoint = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
-        String driver = buildXConfiguration.getDriver();
+        String builderEndpoint = resolveBuilderName(buildXConfiguration);
+        String driver = resolveDriver(buildXConfiguration);
 
         // For the cloud driver Docker derives the local builder name as "cloud-<org>-<name>"
         String builderName = isCloudDriver(driver)
@@ -304,21 +305,35 @@ public class BuildXService {
         if ("default".equals(builderName)) {
             logger.info("Using default builder with buildx - only single platforms will be supported");
         } else {
-            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, builderEndpoint, buildDirs);
+            if (isCloudDriver(driver) && !builderEndpoint.contains("/")) {
+                throw new MojoExecutionException(
+                    "Cloud builder identifier must be in <org>/<name> form, got: " + builderEndpoint);
+            }
+            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, builderEndpoint, driver, buildDirs);
         }
         return builderName;
+    }
+
+    private static String resolveBuilderName(BuildXConfiguration buildXConfiguration) {
+        String sysProp = System.getProperty("docker.buildx.builderName");
+        return sysProp != null ? sysProp : Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+    }
+
+    // System property takes priority over XML config, matching the pattern used by ConfigHelper.isNoCache / getNetwork
+    private static String resolveDriver(BuildXConfiguration buildXConfiguration) {
+        String sysProp = System.getProperty("docker.buildx.driver");
+        return sysProp != null ? sysProp : buildXConfiguration.getDriver();
     }
 
     private static boolean isCloudDriver(String driver) {
         return "cloud".equals(driver);
     }
 
-    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, String builderEndpoint, BuildDirs buildDirs) throws MojoExecutionException {
+    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, String builderEndpoint, String driver, BuildDirs buildDirs) throws MojoExecutionException {
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
 
         if (Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            String driver = buildXConfiguration.getDriver();
 
             if (isCloudDriver(driver)) {
                 // Cloud driver: endpoint is a positional argument; --name and --node are not used
@@ -342,9 +357,16 @@ public class BuildXService {
     }
 
     private void addDriverOptions(List<String> cmds, BuildXConfiguration buildXConfiguration) {
-        if (buildXConfiguration.getDriverOpts() != null && !buildXConfiguration.getDriverOpts().isEmpty()) {
-            buildXConfiguration.getDriverOpts().forEach((key, value) -> append(cmds, "--driver-opt", key + '=' + value));
+        Map<String, String> opts = new LinkedHashMap<>();
+        if (buildXConfiguration.getDriverOpts() != null) {
+            opts.putAll(buildXConfiguration.getDriverOpts());
         }
+        // -Ddocker.buildx.driverOpts.<key>=<value> overrides individual XML-configured entries
+        Map<String, String> sysOpts = EnvUtil.extractFromPropertiesAsMap("docker.buildx.driverOpts", System.getProperties());
+        if (sysOpts != null) {
+            opts.putAll(sysOpts);
+        }
+        opts.forEach((key, value) -> append(cmds, "--driver-opt", key + '=' + value));
     }
 
     private void addBuildConfig(List<String> cmds, BuildXConfiguration buildXConfiguration, BuildDirs buildDirs) {
