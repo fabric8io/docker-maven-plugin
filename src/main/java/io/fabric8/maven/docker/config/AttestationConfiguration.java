@@ -1,8 +1,6 @@
 package io.fabric8.maven.docker.config;
 
-import io.fabric8.maven.docker.util.EnvUtil;
 import java.io.Serializable;
-import java.util.List;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
