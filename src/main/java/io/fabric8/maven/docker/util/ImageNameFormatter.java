@@ -20,12 +20,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import io.fabric8.maven.docker.config.ConfigHelper;
 import org.apache.maven.project.MavenProject;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Replace placeholders in an image name with certain properties found in the

@@ -29,7 +29,6 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
-import io.fabric8.maven.docker.util.Logger;
 
 import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.assembly.model.DependencySet;

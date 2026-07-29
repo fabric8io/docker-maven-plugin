@@ -3,7 +3,6 @@ package io.fabric8.maven.docker;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

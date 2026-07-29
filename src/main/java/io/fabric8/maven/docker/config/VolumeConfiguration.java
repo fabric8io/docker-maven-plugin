@@ -4,7 +4,6 @@ package io.fabric8.maven.docker.config;
 import io.fabric8.maven.docker.util.DeepCopy;
 
 import java.io.Serializable;
-import java.lang.String;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
