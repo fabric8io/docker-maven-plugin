@@ -22,6 +22,9 @@ on:
         required: true
         default: 'temurin'
 
+permissions:
+  contents: read
+
 jobs:
   release:
     name: Release to maven central

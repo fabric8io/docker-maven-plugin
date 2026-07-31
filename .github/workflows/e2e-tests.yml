@@ -17,6 +17,9 @@ concurrency:
   group: ci-e2e-docker-maven-plugin-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   buildWithoutTests:
     name: BuildWithoutTests
