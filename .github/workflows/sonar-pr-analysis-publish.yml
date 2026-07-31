@@ -29,7 +29,7 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Setup Java 21 # SonarQube Cloud requires Java 21+ to run the analysis
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -41,7 +41,7 @@ jobs:
             "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$GITHUB_BASE_REF&state=open" | jq '.[0].number')
           echo "PR_NUMBER=$PR_QUERY_RESULT" >> $GITHUB_ENV
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/pull/${{ env.PR_NUMBER }}/head
           # Shallow clones should be disabled for a better relevancy of analysis
