@@ -360,16 +360,6 @@ public class AnsiLogger implements Logger, Closeable {
         this.isVerbose = true;
     }
 
-    private Boolean checkBackwardVersionValues(String verbose) {
-        if (verbose.isEmpty()) {
-            return Boolean.TRUE;
-        }
-        if (verbose.equalsIgnoreCase("true") || verbose.equalsIgnoreCase("false")) {
-            return Boolean.parseBoolean(verbose.toLowerCase());
-        }
-        return null;
-    }
-
     private List<LogVerboseCategory> getVerboseModesFromString(String groups) {
         List<LogVerboseCategory> ret = new ArrayList<>();
         for (String group : groups.split(",")) {

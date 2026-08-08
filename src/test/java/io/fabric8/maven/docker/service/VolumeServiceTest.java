@@ -24,7 +24,6 @@ import java.util.Map;
  */
 @ExtendWith(MockitoExtension.class)
 class VolumeServiceTest {
-   private VolumeCreateConfig volumeConfig;
 
    @Mock
    private DockerAccess docker;

@@ -307,9 +307,6 @@ class BuildServiceTest {
     void testTagImage() throws DockerAccessException, MojoExecutionException {
         // Given
         givenAnImageConfiguration(Boolean.FALSE.toString());
-        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
-            .mojoParameters(mojoParameters)
-            .build();
 
         // When
         whenBuildImage(false, true);

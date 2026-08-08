@@ -55,7 +55,7 @@ class ContainerTrackerTest {
             { "2", "name2", "alias2", null, null, null, "label2", "true" }
         };
 
-        List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
+        registerAtTracker(data);
 
         ContainerTracker.ContainerShutdownDescriptor desc = tracker.removeContainer("1");
         verifyDescriptor(data[0], desc);
@@ -76,7 +76,7 @@ class ContainerTrackerTest {
             { "3", "name3", null, null, null, null, "label2", "true" }
         };
 
-        List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
+        registerAtTracker(data);
 
         Collection<ContainerTracker.ContainerShutdownDescriptor> removed = tracker.removeShutdownDescriptors(getPomLabel("label1"));
         Assertions.assertEquals(2, removed.size());
@@ -100,7 +100,7 @@ class ContainerTrackerTest {
             { "3", "name3", null, null, null, null, "label2", "false" }
         };
 
-        List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
+        registerAtTracker(data);
         Collection<ContainerTracker.ContainerShutdownDescriptor> removed = tracker.removeShutdownDescriptors(null);
 
         Assertions.assertEquals(3, removed.size());
