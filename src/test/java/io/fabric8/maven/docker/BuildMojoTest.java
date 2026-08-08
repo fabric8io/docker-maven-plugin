@@ -515,13 +515,6 @@ class BuildMojoTest extends MojoTestBase {
             .platforms(Arrays.asList(platforms));
     }
 
-    private BuildXConfiguration getBuildXConfiguration(String configFile, String... platforms) {
-        return new BuildXConfiguration.Builder()
-            .configFile(configFile)
-            .platforms(Arrays.asList(platforms))
-            .build();
-    }
-
     private ImageConfiguration singleBuildXImageWithConfiguration(String configFile) {
         return singleImageConfiguration(
             getBuildXPlatforms(TWO_BUILDX_PLATFORMS).configFile(configFile).build(), null);
