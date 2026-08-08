@@ -21,25 +21,17 @@ public class HcChunkedResponseHandlerWrapper implements ResponseHandler<Object> 
     @Override
     public Object handleResponse(HttpResponse response) throws IOException {
         try (InputStream stream = response.getEntity().getContent()) {
-            // In the previous version of this file the following if() was as follows. The methode isJson() checks
-            // by header (not by body):
-            //      if(isJson(response)) {
-            //          EntityStreamReaderUtil.processJsonStream(handler, stream);
-            //      }
+            // A previous version of this file only detected JSON by the Content-Type header, which is not enough:
+            // when the Podman daemon is used, the POST /build response is JSON with HTTP status 200 as expected, but
+            // carries no "Content-Type: application/json" header - no Content-Type header at all. Seen in Podman 3.4.2.
             //
-            // In case the Podman daemon is used, the POST /build response is JSON and the HTTP status code is 200
-            // as expected, but there is no header "Content-Type = application/json" nor "Content-Type" at all. Seen in
-            // Podman 3.4.2. But the docker-maven-plugin relies on that JSON-body. In BuildJsonResponseHandler.process():
-            //      if (json.has("error")) {
-            //          ...
-            //          throw new DockerAccessException();
-            //      ...
+            // The plugin relies on that JSON body: BuildJsonResponseHandler.process() raises a DockerAccessException
+            // for an "error" entry. Missing the body means no error is detected and the Maven build carries on even
+            // though the image failed to build.
             //
-            // If no error is detected, the Maven-build goes on despite there was a problem building the
-            // image!
-            // If the header indicates application/json Content-Type, stream the response to the handler.
-            // If there is no Content-Type header it tries to detect if the body is JSON. If so, the handler is called
-            // with a buffered response.
+            // Hence: if the header indicates application/json, stream the response to the handler. If there is no
+            // Content-Type header at all, detect whether the body is JSON and, if so, call the handler with a
+            // buffered response.
             if (isJsonCheckedByHeader(response)) {
                 EntityStreamReaderUtil.processJsonStream(handler, stream);
             } else if (isMissingContentType(response)) {

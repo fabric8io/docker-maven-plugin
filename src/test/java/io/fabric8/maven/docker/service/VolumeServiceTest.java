@@ -29,13 +29,6 @@ class VolumeServiceTest {
    @Mock
    private DockerAccess docker;
 
-   /*
-    * methods to test
-    *
-    * volumeService.createVolumeConfig(volumeName, driver, driverOpts, labels);
-    * volumeService.removeVolume(volumeName);
-    */
-
    private Map<String, String > withMap(String what) {
       Map<String, String> map = new HashMap<>();
       map.put(what + "Key1", "value1");

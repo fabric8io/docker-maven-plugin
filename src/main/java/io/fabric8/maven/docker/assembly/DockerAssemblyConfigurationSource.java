@@ -90,7 +90,8 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public String getFinalName() {
-        //return params.getProject().getBuild().getFinalName();
+        // Deliberately not the project's build finalName: the assembly has to be rooted at the
+        // build context root so that its entries end up at the top level of the Docker build archive.
         return ".";
     }
 

@@ -348,7 +348,6 @@ public class StartMojo extends AbstractDockerMojo {
             final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
             // Still to check: How to work with linking, volumes, etc ....
-            //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
             RegistryService registryService = hub.getRegistryService();
 
             pullImage(registryService, imageConfig, pullRegistry);

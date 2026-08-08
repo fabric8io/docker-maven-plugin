@@ -1002,9 +1002,6 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private List<ImageConfiguration> resolveImage(ImageConfiguration image, final Properties properties) {
-        //MavenProject project = mock(MavenProject.class);
-        //when(project.getProperties()).thenReturn(properties);
-
         Mockito.doReturn(properties).when(project).getProperties();
         Mockito.lenient().doReturn(new File("./")).when(project).getBasedir();
 
