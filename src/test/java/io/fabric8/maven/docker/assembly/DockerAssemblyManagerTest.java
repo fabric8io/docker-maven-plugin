@@ -375,12 +375,6 @@ class DockerAssemblyManagerTest {
         File tarArchive = assemblyManager.createDockerTarArchive("test_image", mojoParams, buildImageConfiguration, logger, null);
         Assertions.assertNotNull(tarArchive);
 
-        /*
-            tarArchiver.addFile(new File("target/test_image/build/Dockerfile").getAbsoluteFile(), "Dockerfile");
-
-            List<ArchivedFileSet> archivedFileSets = new ArrayList<>();
-            tarArchiver.addArchivedFileSet(withCapture(archivedFileSets));
-         */
         List<ArchivedFileSet> archivedFileSets = getArchivedFileSetsToVerify( "target/test_image/build/Dockerfile", "Dockerfile", 2);
         Assertions.assertEquals(new File("target/test_image/build/first.tar").getAbsoluteFile(), archivedFileSets.get(0).getArchive());
         Assertions.assertEquals("first/", archivedFileSets.get(0).getPrefix());

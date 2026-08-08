@@ -60,7 +60,7 @@ public class ContainerDetails implements Container {
 
     @Override
     public String getImage() {
-        // ID: json.getString("Image");
+        // The top level "Image" holds the image id, Config.Image the image name
         return json.getAsJsonObject(CONFIG).get(IMAGE).getAsString();
     }
 

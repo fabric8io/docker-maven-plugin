@@ -221,7 +221,6 @@ class WaitUtilTest {
             return true;
         } catch (IOException exp) {
             System.err.println("Port " + port + " already in use, tying next ...");
-            // exp.printStackTrace();
             // next try ....
         }
         return false;

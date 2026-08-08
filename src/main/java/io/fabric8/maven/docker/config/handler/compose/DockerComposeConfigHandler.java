@@ -158,7 +158,6 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 false,
                 session,
                 null);
-        //request.setEscapeString("$");
         return readerFilter.filter(request);
     }
 
