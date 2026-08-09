@@ -1,3 +1,5 @@
+* **0.50-SNAPSHOT**:
+
 * **0.49.0 (2026-08-09)**:
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error
   - Make container log streaming (`<wait><log>` and log following) resilient to transient stream disconnects by reconnecting and resuming instead of aborting, fixing flaky log-wait timeouts (e.g. `jnr ... Bad file descriptor` on macOS CI)
