@@ -12,6 +12,9 @@ on:
   schedule:
     - cron: '0 2 * * *' # Every day at 2am
 
+permissions:
+  contents: read
+
 jobs:
   release-snapshots:
     name: Release SNAPSHOT
@@ -21,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: 11
           distribution: temurin
