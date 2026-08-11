@@ -133,17 +133,6 @@ class PushMojoBuildXTest {
     }
   }
 
-  private void verifyNoDockerConfigAddedToBuildX() throws MojoExecutionException {
-    assertEquals(1, defaultExecMockedConstruction.constructed().size());
-    BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);
-    verify(defaultExec).process(Arrays.asList("docker", "buildx", "create",
-        "--driver", "docker-container", "--name", "testbuilder", "--node", "testnode"));
-    verify(defaultExec).process(Arrays.asList("docker", "buildx", "build",
-        "--progress=plain", "--builder", "testbuilder", "--platform", "linux/amd64,linux/arm64",
-        "--tag", "test.example.org/testuser/sample-test-image:latest",
-        expectedDockerStateDir.resolve("build").toFile().getAbsolutePath(), "--push"));
-  }
-
   private void verifyDockerConfigOptionAddedToBuildX() throws MojoExecutionException {
     assertEquals(1, defaultExecMockedConstruction.constructed().size());
     BuildXService.DefaultExec defaultExec = defaultExecMockedConstruction.constructed().get(0);

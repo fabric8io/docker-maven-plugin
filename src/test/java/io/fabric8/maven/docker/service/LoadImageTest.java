@@ -47,13 +47,10 @@ class LoadImageTest {
     @Mock
     private RegistryService registryService;
 
-    private String dockerArchive;
-
     @Test
     void testLoadImage() throws DockerAccessException, MojoExecutionException {
         givenMojoParameters();
         givenAnImageConfiguration();
-        givenDockerArchive("test.tar");
         whenBuildImage();
         thenImageIsBuilt();
     }
@@ -62,10 +59,6 @@ class LoadImageTest {
         Mockito.doReturn(project).when(params).getProject();
         Mockito.doReturn(new File("/maven-project")).when(project).getBasedir();
         Mockito.doReturn("src/main/docker").when(params).getSourceDirectory();
-    }
-
-    private void givenDockerArchive(String s) {
-        dockerArchive = s;
     }
 
     private void givenAnImageConfiguration() {
