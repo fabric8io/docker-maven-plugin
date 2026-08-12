@@ -191,7 +191,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigH
     @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
     public String sourceDirectory;
 
-    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    @Parameter(property = "docker.target.dir", defaultValue="${project.build.directory}/docker")
     public String outputDirectory;
 
     // Authentication information
