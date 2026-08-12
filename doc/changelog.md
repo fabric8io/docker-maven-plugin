@@ -1,4 +1,5 @@
 * **0.50-SNAPSHOT**:
+  - Respect a custom Maven build directory when selecting the default Docker output directory ([#1855](https://github.com/fabric8io/docker-maven-plugin/pull/1855))
 
 * **0.49.0 (2026-08-09)**:
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error
