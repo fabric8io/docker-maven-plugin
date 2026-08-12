@@ -23,12 +23,26 @@ import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.fusesource.jansi.Ansi;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
 
 /**
  * @author roland
  * @since 07/10/16
  */
 class AnsiLoggerTest {
+
+    @Test
+    void logOutputInitializationFailureUsesMavenLogger(@TempDir Path temporaryDirectory) {
+        TestLog testLog = new TestLog();
+
+        new AnsiLogger(testLog, false, null, false, "T>", temporaryDirectory.toFile());
+
+        Assertions.assertEquals("T>Cannot write log output to " + temporaryDirectory, testLog.getMessage());
+        Assertions.assertInstanceOf(FileNotFoundException.class, testLog.getThrowable());
+    }
 
     @Test
     void emphasizeDebug() {
@@ -198,6 +212,7 @@ class AnsiLoggerTest {
 
     private class TestLog extends DefaultLog {
         private String message;
+        private Throwable throwable;
 
         public TestLog() {
             super(new ConsoleLogger());
@@ -227,12 +242,24 @@ class AnsiLoggerTest {
             super.error(content);
         }
 
+        @Override
+        public void error(CharSequence content, Throwable error) {
+            this.message = content.toString();
+            this.throwable = error;
+            super.error(content, error);
+        }
+
         void reset() {
             message = null;
+            throwable = null;
         }
 
         public String getMessage() {
             return message;
+        }
+
+        public Throwable getThrowable() {
+            return throwable;
         }
     }
 
