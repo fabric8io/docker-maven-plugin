@@ -1,4 +1,5 @@
 * **0.50-SNAPSHOT**:
+  - Apply `<labels>` when building from a provided Dockerfile (`<dockerFile>`/`<dockerFileDir>`/`<contextDir>`), where they were previously dropped: buildx now receives them as `--label` and the classic build passes them as build options ([#1914](https://github.com/fabric8io/docker-maven-plugin/issues/1914))
 
 * **0.49.0 (2026-08-09)**:
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error

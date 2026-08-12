@@ -83,6 +83,13 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions labels(Map<String, String> labels) {
+        if (labels != null && !labels.isEmpty()) {
+            options.put("labels", JsonFactory.newJsonObject(labels).toString());
+        }
+        return this;
+    }
+
     public BuildOptions network(String network) {
         if (network != null && !network.isEmpty()) {
             options.put("networkmode", network);
