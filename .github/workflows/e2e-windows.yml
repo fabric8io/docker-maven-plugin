@@ -30,6 +30,32 @@ jobs:
           java-version: '11'
       - name: Install DMP
         run: mvn ${MAVEN_ARGS} clean install -DskipTests
+      # Nothing on this runner guarantees that the preinstalled Docker daemon is already accepting
+      # requests by the time the integration tests start. When it is not, the very first docker:build
+      # aborts with "No <dockerHost> given, ... no read/writable '//./pipe/docker_engine'" and the job
+      # fails within a minute, even though a plain re-run passes.
+      - name: Wait for Docker to be ready
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $service = Get-Service docker -ErrorAction SilentlyContinue
+          if ($service -and $service.Status -ne 'Running') {
+            Write-Host "The docker service is $($service.Status), starting it"
+            Start-Service docker
+          }
+          $timeoutMinutes = 5
+          $deadline = (Get-Date).AddMinutes($timeoutMinutes)
+          while ((Get-Date) -lt $deadline) {
+            $global:LASTEXITCODE = 1
+            docker info *> $null
+            if ($LASTEXITCODE -eq 0) {
+              docker version
+              exit 0
+            }
+            Start-Sleep -Seconds 5
+          }
+          Write-Host "::error::The Docker daemon did not become available within $timeoutMinutes minutes"
+          exit 1
       - name: Run Integration tests
         run: |
           cd it/windows-build
