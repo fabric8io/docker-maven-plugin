@@ -1,4 +1,5 @@
 * **0.50-SNAPSHOT**:
+  - Create the parent directory of `outputFile` and fail with an explicit message when it cannot be written, instead of swallowing the error and failing later with a `NullPointerException`; also make the progress bar usable without a preceding `progressStart()`
 
 * **0.49.0 (2026-08-09)**:
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error
