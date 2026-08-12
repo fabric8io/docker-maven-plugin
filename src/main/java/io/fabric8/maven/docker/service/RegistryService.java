@@ -51,7 +51,7 @@ public class RegistryService {
     /**
      * Push a set of images to a registry
      *
-     * @param imageConfigs images to push (but only if they have a build configuration)
+     * @param imageConfigs images to push
      * @param retries how often to retry
      * @param registryConfig a global registry configuration
      * @param skipTag flag to skip pushing tagged images
@@ -62,7 +62,10 @@ public class RegistryService {
                            int retries, RegistryConfig registryConfig, boolean skipTag, BuildService.BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            if (buildConfig == null || buildConfig.skipPush()) {
+            if (buildConfig == null) {
+                buildConfig = new BuildImageConfiguration.Builder().build();
+            }
+            if (buildConfig.skipPush()) {
                 log.info("%s : Skipped pushing", imageConfig.getDescription());
                 continue;
             }
@@ -78,9 +81,9 @@ public class RegistryService {
             BuildArgResolver buildArgResolver = new BuildArgResolver(log);
             Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
             AuthConfig authConfigForLegacyPush = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
-            AuthConfigList authConfigListForBuildXPush = createCompleteAuthConfigList(true, imageConfig, registryConfig, buildContext.getMojoParameters(), buildArgsFromExternalSources);
 
-            if (imageConfig.isBuildX()) {
+            if (buildConfig.isBuildX()) {
+                AuthConfigList authConfigListForBuildXPush = createCompleteAuthConfigList(true, imageConfig, registryConfig, buildContext.getMojoParameters(), buildArgsFromExternalSources);
                 buildXService.push(projectPaths, imageConfig, configuredRegistry, authConfigListForBuildXPush, buildArgsFromExternalSources);
             } else {
                 dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfigForLegacyPush);
