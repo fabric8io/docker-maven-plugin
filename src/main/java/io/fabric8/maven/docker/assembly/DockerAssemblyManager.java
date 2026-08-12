@@ -429,7 +429,6 @@ public class DockerAssemblyManager {
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot create archive " + archive, e);
         } catch (RuntimeException e) {
-            e.printStackTrace();
             throw e;
         }
     }
