@@ -60,6 +60,14 @@
             <phase>verify</phase>
             <configuration>
               <showLogs>true</showLogs>
+              <!--
+                The healthcheck below gives Postgres up to 21s to come up (start_period 1s plus
+                interval 2s times 10 retries), but nothing carries that budget over to the plugin,
+                which falls back to its 10s default and gives up first. Postgres needs more than that
+                on a slow container runtime, so state the timeout here rather than let the two
+                disagree.
+              -->
+              <startContainerWaitTimeout>60000</startContainerWaitTimeout>
             </configuration>
           </execution>
           <execution>
