@@ -243,6 +243,25 @@ class DockerAssemblyManagerTest {
         verifyArchiveManager();
     }
 
+    @Test
+    void archiveCreationPropagatesRuntimeException() throws IOException, NoSuchArchiverException {
+        MojoParameters mojoParams = mockMojoParams(mockMavenProject());
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+            .dockerFile(DockerAssemblyManagerTest.class.getResource("/docker/Dockerfile.test").getPath())
+            .build();
+        buildImageConfiguration.initAndValidate(logger);
+        RuntimeException failure = new IllegalStateException("Archive creation failed");
+
+        Mockito.doReturn(tarArchiver).when(archiverManager).getArchiver("tar");
+        Mockito.doThrow(failure).when(tarArchiver).createArchive();
+
+        RuntimeException thrown = Assertions.assertThrows(RuntimeException.class,
+            () -> assemblyManager.createDockerTarArchive(
+                "test_image", mojoParams, buildImageConfiguration, logger, null));
+
+        Assertions.assertSame(failure, thrown);
+    }
+
     private void verifyArchiveManager() {
         List<FileSet> fileSets = getFileSetsToVerify(2);
         Assertions.assertEquals("build", fileSets.get(0).getDirectory().getName());

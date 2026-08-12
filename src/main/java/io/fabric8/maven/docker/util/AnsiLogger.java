@@ -84,7 +84,7 @@ public class AnsiLogger implements Logger, Closeable {
         try {
             initializePrintWriter();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.error(prefix + "Cannot write log output to " + outputFile, e);
         }
     }
 
