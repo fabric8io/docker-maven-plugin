@@ -1,4 +1,5 @@
 * **0.50-SNAPSHOT**:
+  - Reject a registry or image name given as a URL (e.g. `https://registry:8443`) with an explicit message, instead of failing later with a `Moved Permanently: 301` on push or a validation error that never mentions the scheme ([#357](https://github.com/fabric8io/docker-maven-plugin/issues/357))
 
 * **0.49.0 (2026-08-09)**:
   - Fix `docker.save.aliases`: a non-existent alias in the list was silently ignored instead of failing the save with a clear error

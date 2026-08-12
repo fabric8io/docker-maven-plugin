@@ -38,6 +38,7 @@ import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.NamePatternUtil;
@@ -349,6 +350,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigH
     }
 
     protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) {
+        // Fail here rather than later with an unrelated-looking error from the daemon
+        ImageName.validateRegistry(specificRegistry);
+        ImageName.validateRegistry(registry);
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
                 .authConfig(authConfig != null ? authConfig.toMap() : null)
