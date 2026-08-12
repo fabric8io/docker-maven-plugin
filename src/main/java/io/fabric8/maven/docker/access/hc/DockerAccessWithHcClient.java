@@ -64,6 +64,7 @@ import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.TimestampFactory;
 
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -523,11 +524,32 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         String url = urlBuilder.removeContainer(containerId, removeVolumes);
         log.verbose(Logger.LogVerboseCategory.API, API_LOG_FORMAT_DELETE, url);
+        HttpBodyAndStatus response;
         try {
-            delegate.delete(url, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
+            response = delegate.delete(url, new BodyAndStatusResponseHandler(),
+                                       HTTP_NO_CONTENT, HTTP_NOT_FOUND, HTTP_CONFLICT);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
         }
+        if (response.getStatusCode() == HTTP_CONFLICT) {
+            if (!isRemovalAlreadyInProgress(response.getBody())) {
+                throw new DockerAccessException("Unable to remove container [%s] : %s", containerId, response.getBody());
+            }
+            log.debug("Container %s is already being removed by the daemon", containerId);
+        }
+    }
+
+    /**
+     * A removal that is already under way - which is what <code>&lt;autoRemove&gt;</code> starts as soon as the
+     * container stops - is answered with the very same 409 the daemon uses to refuse a removal outright, e.g.
+     * because the container is still running. The two can only be told apart by the message, and anything not
+     * recognised here keeps failing the way it always did.
+     *
+     * @param body the error message returned by the daemon, may be <code>null</code>
+     * @return whether the conflict means the container is on its way out anyway
+     */
+    private boolean isRemovalAlreadyInProgress(String body) {
+        return body != null && body.contains("is already in progress");
     }
 
     @Override
