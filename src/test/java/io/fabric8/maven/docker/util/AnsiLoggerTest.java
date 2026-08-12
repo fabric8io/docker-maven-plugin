@@ -20,6 +20,7 @@ package io.fabric8.maven.docker.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -345,6 +346,30 @@ class AnsiLoggerTest {
     }
 
     @Test
+    void progressUpdateWithoutAStartDoesNotFail() {
+        AnsiLogger ansi = new AnsiLogger(new QuietLog(), true, null, false, "T>");
+        AnsiLogger nonAnsi = new AnsiLogger(new QuietLog(), false, null, false, "T>");
+
+        // progressStart() is what used to populate the ThreadLocals, so skipping it used to NPE.
+        Assertions.assertDoesNotThrow(() -> ansi.progressUpdate("l1", "Downloading", "[===>   ]"));
+        Assertions.assertDoesNotThrow(() -> nonAnsi.progressUpdate("l1", "Downloading", "[===>   ]"));
+    }
+
+    @Test
+    void progressFinishedResetsTheUpdateCounter() {
+        AnsiLogger logger = new AnsiLogger(new QuietLog(), false, null, false, "T>");
+        logger.progressStart();
+        logger.progressUpdate("l1", "Downloading", "ignored");
+        logger.progressFinished();
+        systemOut.clear();
+
+        // The counter is back to zero, so this first update of the new run prints its hash again.
+        logger.progressUpdate("l1", "Downloading", "ignored");
+
+        Assertions.assertEquals("#", systemOut.getText());
+    }
+
+    @Test
     void progressIsSuppressedInBatchMode() {
         AnsiLogger logger = new AnsiLogger(new QuietLog(), true, null, true, "T>");
 
@@ -431,6 +456,40 @@ class AnsiLoggerTest {
         logger.close();
 
         Assertions.assertEquals(Collections.emptyList(), Files.readAllLines(outputFile.toPath()));
+    }
+
+    @Test
+    void aMissingParentDirectoryOfTheOutputFileIsCreated() throws IOException {
+        File outputFile = tempDir.resolve("logs").resolve("nested").resolve("build.log").toFile();
+        AnsiLogger logger = new AnsiLogger(new QuietLog(), true, null, false, "T>", outputFile);
+
+        logger.info("Info message");
+        logger.close();
+
+        Assertions.assertEquals(Collections.singletonList("Info message"), Files.readAllLines(outputFile.toPath()));
+    }
+
+    @Test
+    void anUnusableOutputFileIsReportedRatherThanSwallowed() {
+        // A directory can never be opened for writing, so this stands in for any unusable path.
+        File outputFile = tempDir.toFile();
+
+        UncheckedIOException exception = Assertions.assertThrows(UncheckedIOException.class,
+            () -> new AnsiLogger(new QuietLog(), true, null, false, "T>", outputFile));
+
+        Assertions.assertNotNull(exception.getCause(), "Expected the original IOException to be kept as the cause");
+    }
+
+    @Test
+    void anUnusableOutputFileLeavesTheGlobalAnsiStateAlone() {
+        Ansi.setEnabled(!Ansi.isEnabled());
+        boolean before = Ansi.isEnabled();
+
+        Assertions.assertThrows(UncheckedIOException.class,
+            () -> new AnsiLogger(new QuietLog(), true, null, false, "T>", tempDir.toFile()));
+
+        // The output file is opened before the colour setup, so a failure must not switch this global.
+        Assertions.assertEquals(before, Ansi.isEnabled());
     }
 
     @Test
