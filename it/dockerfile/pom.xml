@@ -34,9 +34,10 @@
       <version>2.7</version>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.1.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -65,8 +66,17 @@
               </build>
               <run>
                 <ports>
-                  <port>8080:8080</port>
+                  <port>jetty.port:8080</port>
                 </ports>
+                <wait>
+                  <!-- Fails with 404 unless the WAR is actually deployed and the servlet answers -->
+                  <http>
+                    <url>http://${docker.host.address}:${jetty.port}/</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                  <time>60000</time>
+                </wait>
               </run>
             </image>
           </images>
