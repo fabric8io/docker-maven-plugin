@@ -2,6 +2,7 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -277,7 +278,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements ConfigH
                     getLog().warn("Failed to delete existing output file " + output);
                 }
             }
-            log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix(), output);
+            try {
+                log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix(), output);
+            } catch (UncheckedIOException exp) {
+                // Leave a usable logger behind: error handling further up (e.g. the shutdown hook installed
+                // by docker:stop) logs through this field and would otherwise fail with a NullPointerException.
+                log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix());
+                throw new MojoExecutionException("Cannot write to output file " + output + ": " + exp.getCause().getMessage(), exp);
+            }
 
             try {
                 authConfigFactory.setLog(log);
