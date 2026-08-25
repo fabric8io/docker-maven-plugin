@@ -71,13 +71,13 @@ public class AnsiLogger implements Logger, Closeable {
     }
 
     /**
-     * @param outpufFile file to write the log to instead of the console, or <code>null</code> for the console
+     * @param outputFile file to write the log to instead of the console, or <code>null</code> for the console
      * @throws UncheckedIOException if the output file cannot be opened for writing
      */
-    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode, String prefix, File outpufFile) {
+    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode, String prefix, File outputFile) {
         this.log = log;
         this.prefix = prefix;
-        this.outputFile = outpufFile;
+        this.outputFile = outputFile;
         if (this.outputFile == null) {
             this.batchMode = batchMode;
         } else {
