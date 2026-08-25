@@ -64,9 +64,9 @@ In addition the new syntax support also waiting on a log outpbut
 
 The old version of the plugin combined some task: E.g. if you used
 `docker:start` or `docker:pull` a `docker:build` was done
-implicitely. In order to make stuff more explicite and easier to
+implicitly. In order to make stuff more explicite and easier to
 understand this is not the case anymore. So, when you bind to a
-lifecycle phase you have to add all steps explicitely:
+lifecycle phase you have to add all steps explicitly:
 
 ```xml
 <executions>
