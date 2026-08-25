@@ -294,6 +294,64 @@ class DockerAccessWithHcClientTest {
         Assertions.assertTrue(imageTags.isEmpty());
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Container removal
+    //
+    // A removal the daemon has already started itself - which is what <autoRemove> does as soon as the
+    // container stops - is answered with the very same 409 it uses to refuse a removal outright.
+
+    @Test
+    void removeContainerAcceptsThatTheContainerWasRemoved() throws IOException {
+        givenTheContainerRemovalAnswersWith(HTTP_NO_CONTENT, null);
+
+        Assertions.assertDoesNotThrow(() -> client.removeContainer("abc", false));
+
+        thenTheRemovalWasSentFor("abc", false);
+    }
+
+    @Test
+    void removeContainerAcceptsThatTheContainerIsAlreadyGone() throws IOException {
+        givenTheContainerRemovalAnswersWith(HTTP_NOT_FOUND, "{\"message\":\"No such container: abc\"}");
+
+        Assertions.assertDoesNotThrow(() -> client.removeContainer("abc", true));
+
+        thenTheRemovalWasSentFor("abc", true);
+    }
+
+    @Test
+    void removeContainerAcceptsThatTheDaemonIsAlreadyRemovingIt() throws IOException {
+        givenTheContainerRemovalAnswersWith(HTTP_CONFLICT,
+                "{\"message\":\"removal of container abc is already in progress\"}");
+
+        Assertions.assertDoesNotThrow(() -> client.removeContainer("abc", false));
+    }
+
+    @Test
+    void removeContainerFailsOnAConflictForAnyOtherReason() throws IOException {
+        givenTheContainerRemovalAnswersWith(HTTP_CONFLICT, "{\"message\":\"cannot remove container \\\"abc\\\": "
+                + "container is running: stop the container before removing or force remove\"}");
+
+        DockerAccessException exp =
+                Assertions.assertThrows(DockerAccessException.class, () -> client.removeContainer("abc", false));
+
+        Assertions.assertTrue(exp.getMessage().contains("Unable to remove container [abc]"), exp.getMessage());
+        Assertions.assertTrue(exp.getMessage().contains("container is running"), exp.getMessage());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void removeContainerFailsWhenTheRequestItselfFails() throws IOException {
+        Mockito.doThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
+                .when(mockDelegate)
+                .delete(Mockito.anyString(), Mockito.any(ResponseHandler.class),
+                        Mockito.eq(HTTP_NO_CONTENT), Mockito.eq(HTTP_NOT_FOUND), Mockito.eq(HTTP_CONFLICT));
+
+        DockerAccessException exp =
+                Assertions.assertThrows(DockerAccessException.class, () -> client.removeContainer("abc", false));
+
+        Assertions.assertTrue(exp.getMessage().contains("Unable to remove container [abc]"), exp.getMessage());
+    }
+
     private void givenAnImageName(String imageName) {
         this.imageName = imageName;
     }
@@ -399,6 +457,25 @@ class DockerAccessWithHcClientTest {
         Mockito.doReturn(new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, "body"))
                 .when(mockDelegate)
                 .delete(Mockito.anyString(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK), Mockito.eq(HTTP_NOT_FOUND));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void givenTheContainerRemovalAnswersWith(int statusCode, String body) throws IOException {
+        Mockito.doReturn(new ApacheHttpClientDelegate.HttpBodyAndStatus(statusCode, body))
+                .when(mockDelegate)
+                .delete(Mockito.anyString(), Mockito.any(ResponseHandler.class),
+                        Mockito.eq(HTTP_NO_CONTENT), Mockito.eq(HTTP_NOT_FOUND), Mockito.eq(HTTP_CONFLICT));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void thenTheRemovalWasSentFor(String containerId, boolean removeVolumes) throws IOException {
+        ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(mockDelegate)
+                .delete(urlCapture.capture(), Mockito.any(ResponseHandler.class),
+                        Mockito.eq(HTTP_NO_CONTENT), Mockito.eq(HTTP_NOT_FOUND), Mockito.eq(HTTP_CONFLICT));
+
+        String expectedUrl = String.format("%s/v1.40/containers/%s?v=%s", BASE_URL, containerId, removeVolumes ? "1" : "0");
+        Assertions.assertEquals(expectedUrl, urlCapture.getValue());
     }
 
     private void thenImageWasNotPushed() {
