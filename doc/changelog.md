@@ -1,4 +1,5 @@
 * **0.50-SNAPSHOT**:
+  - Respect a custom Maven build directory when selecting the default Docker output directory ([#1855](https://github.com/fabric8io/docker-maven-plugin/pull/1855))
   - Create the parent directory of `outputFile` and fail with an explicit message when it cannot be written, instead of swallowing the error and failing later with a `NullPointerException`; also make the progress bar usable without a preceding `progressStart()`
 
 * **0.49.0 (2026-08-09)**:
