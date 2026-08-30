@@ -262,6 +262,22 @@ class DockerAssemblyManagerTest {
         Assertions.assertSame(failure, thrown);
     }
 
+    @Test
+    void outputDirectoryExclusionIsRelativeToBuildContext(@TempDir Path projectBase) throws IOException {
+        Path outputDirectory = projectBase.resolve("custom-target/docker");
+
+        Assertions.assertEquals("custom-target/docker/**",
+            DockerAssemblyManager.getOutputDirectoryExclusion(projectBase.toFile(), outputDirectory.toString()));
+    }
+
+    @Test
+    void outputDirectoryOutsideBuildContextDoesNotNeedExclusion(@TempDir Path projectBase) throws IOException {
+        Path outputDirectory = projectBase.resolveSibling("custom-target/docker");
+
+        Assertions.assertNull(
+            DockerAssemblyManager.getOutputDirectoryExclusion(projectBase.toFile(), outputDirectory.toString()));
+    }
+
     private void verifyArchiveManager() {
         List<FileSet> fileSets = getFileSetsToVerify(2);
         Assertions.assertEquals("build", fileSets.get(0).getDirectory().getName());
