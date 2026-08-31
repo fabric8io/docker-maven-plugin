@@ -32,8 +32,18 @@ The `<buildx>` element within `<build>` defines how to build multi-architecture 
 The builder manages the build cache. Set to `default` to leverage the default buildx driver on local builds. This improves
 I/O performance, but will only work for the native platform.
 
+| *driver*
+| BuildX driver to use when the builder is created.  If not supplied, the `docker-container` driver is used.
+Set to `cloud` to build on a https://docs.docker.com/build-cloud/[Docker Cloud] builder; in that case *builderName*
+must be the cloud endpoint in `<org>/<name>` form, which is passed to `docker buildx create` as a positional
+argument instead of via `--name`, and the local builder is named `cloud-<org>-<name>` by Docker.  The `cloud`
+driver manages its own nodes and build configuration, so *nodeName* and *configFile* are not applied to it.
+Can be overridden on the command line with `-Ddocker.buildx.driver`.
+
 | *driverOpts*
-| Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created.
+| Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created
+as `--driver-opt <key>=<value>`.  Individual entries can be added or overridden on the command line with
+`-Ddocker.buildx.driverOpts.<key>=<value>`.
 
 | *nodeName*
 | Specify the name of the node to be created or modified.
