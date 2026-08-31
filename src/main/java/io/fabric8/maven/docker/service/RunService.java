@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.ContainerHostConfig;
@@ -66,6 +67,7 @@ import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
 import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.RetryPolicy;
 
 /**
@@ -187,15 +189,79 @@ public class RunService {
                                           File baseDir,
                                           String defaultContainerNamePattern,
                                           Date buildTimestamp) throws DockerAccessException {
-        String id = createContainer(imageConfig, portMapping, gavLabel, properties, baseDir,
-                defaultContainerNamePattern, buildTimestamp);
-        startContainer(imageConfig, id, gavLabel);
+        return createAndStartContainer(imageConfig, portMapping, gavLabel, properties, baseDir,
+                defaultContainerNamePattern, buildTimestamp, 0);
+    }
 
-        if (portMapping.needsPropertiesUpdate()) {
-            updateMappedPortsAndAddresses(id, portMapping);
+    /**
+     * Create and start a container with the given image configuration, retrying on transient failures.
+     *
+     * @param imageConfig image configuration holding the run information and the image name
+     * @param portMapping container port mapping
+     * @param gavLabel label to tag the started container with
+     * @param properties properties to fill in with dynamically assigned ports
+     * @param baseDir base dir of the project
+     * @param defaultContainerNamePattern pattern to use for naming containers. Can be null in which case a default pattern is used
+     * @param buildTimestamp date which should be used as the timestamp when calculating container names
+     * @param startRetries number of times to retry creating and starting the container when the Docker daemon
+     *                     cannot be reached. {@code 0} (the default) means no retry.
+     * @return the container id
+     *
+     * @throws DockerAccessException if access to the docker backend fails after all retries have been exhausted
+     */
+    public String createAndStartContainer(ImageConfiguration imageConfig,
+                                          PortMapping portMapping,
+                                          GavLabel gavLabel,
+                                          Properties properties,
+                                          File baseDir,
+                                          String defaultContainerNamePattern,
+                                          Date buildTimestamp,
+                                          int startRetries) throws DockerAccessException {
+        // Track the container created by the current attempt so it can be removed before retrying (avoids leaking it)
+        final AtomicReference<String> createdContainerId = new AtomicReference<>();
+        RetryPolicy<String> retryPolicy = new RetryPolicy<String>()
+                .withMaxRetries(startRetries)
+                .withBackoff(10, 100, ChronoUnit.MILLIS)
+                .handle(DockerAccessException.class)
+                .onFailedAttempt(f -> {
+                    removeContainerSilently(createdContainerId.getAndSet(null));
+                    log.warn("Failed to create and start container for image [%s] (attempt %d), retrying",
+                            imageConfig.getName(), f.getAttemptCount());
+                })
+                .onRetriesExceeded(f -> log.warn("Failed to create and start container for image [%s] after %d retries",
+                        imageConfig.getName(), f.getAttemptCount()));
+
+        try {
+            return Failsafe.with(retryPolicy).get(() -> {
+                String id = createContainer(imageConfig, portMapping, gavLabel, properties, baseDir,
+                        defaultContainerNamePattern, buildTimestamp);
+                createdContainerId.set(id);
+                startContainer(imageConfig, id, gavLabel);
+
+                if (portMapping.needsPropertiesUpdate()) {
+                    updateMappedPortsAndAddresses(id, portMapping);
+                }
+
+                return id;
+            });
+        } catch (FailsafeException e) {
+            // Failsafe wraps checked exceptions; unwrap to preserve the DockerAccessException contract
+            if (e.getCause() instanceof DockerAccessException) {
+                throw (DockerAccessException) e.getCause();
+            }
+            throw e;
         }
+    }
 
-        return id;
+    private void removeContainerSilently(String containerId) {
+        if (containerId == null) {
+            return;
+        }
+        try {
+            removeContainer(containerId, false);
+        } catch (DockerAccessException e) {
+            log.warn("Failed to remove container %s after a failed start: %s", containerId, e.getMessage());
+        }
     }
 
     /**

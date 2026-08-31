@@ -25,6 +25,10 @@ Overriding that property might become particularly useful when docker-compose co
 but the default wait timeout of 10000ms is too short for some containers to become healthy.
 | `docker.startContainerWaitTimeout`
 
+| *startRetries*
+| Number of times to retry creating and starting a container when the Docker daemon cannot be reached (e.g. a transient I/O error). The default is `0` which means no retry.
+| `docker.start.retries`
+
 |===
 
 The `<run>` configuration element knows the following sub elements:
