@@ -68,6 +68,13 @@ public class StartMojo extends AbstractDockerMojo {
     private boolean startParallel;
 
     /**
+     * Number of times to retry creating and starting a container when the Docker daemon cannot be reached
+     * (e.g. a transient I/O error). The default is {@code 0} which means no retry.
+     */
+    @Parameter(property = "docker.start.retries", defaultValue = "0")
+    private int startRetries;
+
+    /**
      * Whether to block and follow (stream) the container logs until interrupted. Can also be set
      * via the {@code docker.follow} system property. When unset, the default is {@code false} for
      * {@code docker:start} and {@code true} for {@code docker:run}.
@@ -309,6 +316,7 @@ public class StartMojo extends AbstractDockerMojo {
             .showLogs(showLogs)
             .containerNamePattern(containerNamePattern)
             .buildTimestamp(getBuildTimestamp())
+            .startupRetries(startRetries)
             .build();
 
         startingContainers.submit(() -> {

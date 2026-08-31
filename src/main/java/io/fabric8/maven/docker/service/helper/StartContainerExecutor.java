@@ -38,13 +38,14 @@ public class StartContainerExecutor {
     private GavLabel gavLabel;
     private PortMapping portMapping;
     private LogDispatcher dispatcher;
+    private int startupRetries;
 
     private StartContainerExecutor(){}
 
     public String startContainer() throws IOException, ExecException {
         final Properties projProperties = projectProperties;
 
-        final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
+        final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate, startupRetries);
 
         showLogsIfRequested(containerId);
         Properties exposedProps = queryContainerProperties(containerId);
@@ -215,6 +216,11 @@ public class StartContainerExecutor {
 
         public Builder imageConfig(ImageConfiguration imageConfig) {
             helper.imageConfig = imageConfig;
+            return this;
+        }
+
+        public Builder startupRetries(int startupRetries) {
+            helper.startupRetries = startupRetries;
             return this;
         }
 
