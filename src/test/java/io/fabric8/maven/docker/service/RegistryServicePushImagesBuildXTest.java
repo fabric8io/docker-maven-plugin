@@ -30,9 +30,11 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +48,7 @@ class RegistryServicePushImagesBuildXTest {
   private BuildService.BuildContext buildContext;
   private MojoParameters mojoParameters;
   private MavenProject mavenProject;
+  private DockerAccess dockerAccess;
 
   @TempDir
   private File temporaryFolder;
@@ -58,7 +61,7 @@ class RegistryServicePushImagesBuildXTest {
     authConfigFactory = mock(AuthConfigFactory.class);
     mojoParameters = mock(MojoParameters.class);
     mavenProject = mock(MavenProject.class);
-    DockerAccess dockerAccess = mock(DockerAccess.class);
+    dockerAccess = mock(DockerAccess.class);
     QueryService queryService = new QueryService(dockerAccess);
     imageConfigurationList = Collections.singletonList(createNewImageConfiguration("user1/sample-image:latest", "foo/base:latest", null));
     registryConfig = new RegistryService.RegistryConfig.Builder()
@@ -126,6 +129,61 @@ class RegistryServicePushImagesBuildXTest {
     verifyBuildXServiceInvokedWithAuthConfigListSize(3);
   }
 
+  @Test
+  void whenBaseImageFromOtherRegistry_thenPushRegistryOfSubsequentImagesIsNotOverridden() throws MojoExecutionException, DockerAccessException {
+    // Given two images, the first one having a base image hosted on another registry than the push registry
+    imageConfigurationList = Arrays.asList(
+        createNewImageConfiguration("user1/first-image:latest", "registry2.org/user2/base:latest", null),
+        createNewImageConfiguration("user1/second-image:latest", "busybox:latest", null));
+    givenAuthConfigExistsForRegistry("registry1.org", "user1", "password1");
+    givenAuthConfigExistsForRegistry("registry2.org", "user2", "password2");
+
+    // When
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
+
+    // Then both images must be pushed to the configured push registry, not to the base image registry
+    ArgumentCaptor<String> registryCaptor = ArgumentCaptor.forClass(String.class);
+    verify(buildXService, times(2)).push(any(), any(), registryCaptor.capture(), any(), any());
+    assertEquals(Arrays.asList("registry1.org", "registry1.org"), registryCaptor.getAllValues());
+  }
+
+  @Test
+  void whenBaseImageFromOtherRegistry_thenLegacyPushOfSubsequentImageUsesPushRegistry() throws MojoExecutionException, DockerAccessException {
+    // Given a buildx image whose base image comes from docker.io, followed by a plain (non-buildx) image
+    imageConfigurationList = Arrays.asList(
+        createNewImageConfiguration("user1/first-image:latest", "docker.io/library/openjdk:21", null),
+        createNewLegacyImageConfiguration("user1/second-image:latest", "busybox:latest"));
+    givenAuthConfigExistsForRegistry("registry1.org", "user1", "password1");
+    givenAuthConfigExistsForRegistry("docker.io", "user2", "password2");
+
+    // When
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
+
+    // Then
+    verify(dockerAccess).pushImage(eq("user1/second-image:latest"), any(), eq("registry1.org"), anyInt());
+  }
+
+  /**
+   * Guards the invariant at its source, independently of which callers happen to reach the helper:
+   * collecting pull credentials must leave the caller's registry configuration alone, since that
+   * configuration is shared across every image of a `docker:push`.
+   */
+  @Test
+  void whenAuthConfigListCreatedForBaseImages_thenRegistryConfigIsNotMutated() throws MojoExecutionException {
+    // Given
+    BuildImageConfiguration buildConfig = createNewImageConfiguration("user1/sample-image:latest", "registry2.org/user2/base:latest", null)
+        .getBuildConfiguration();
+    givenAuthConfigExistsForRegistry("registry2.org", "user2", "password2");
+
+    // When
+    AuthConfigList authConfigList = RegistryService.createAuthConfigListForBaseImages(
+        buildConfig, mojoParameters, "registry1.org", registryConfig, Collections.emptyMap());
+
+    // Then
+    assertEquals(1, authConfigList.size());
+    assertEquals("registry1.org", registryConfig.getRegistry());
+  }
+
   private void verifyBuildXServiceInvokedWithAuthConfigListSize(int expectedSize) throws MojoExecutionException {
     ArgumentCaptor<AuthConfigList> authConfigListArgumentCaptor = ArgumentCaptor.forClass(AuthConfigList.class);
     verify(buildXService).push(any(), any(), anyString(), authConfigListArgumentCaptor.capture(), any());
@@ -138,6 +196,16 @@ class RegistryServicePushImagesBuildXTest {
 
     when(authConfigFactory.createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), any(), eq(registry)))
         .thenReturn(auth);
+  }
+
+  private ImageConfiguration createNewLegacyImageConfiguration(String name, String from) {
+    BuildImageConfiguration buildImageConfiguration = mock(BuildImageConfiguration.class);
+    when(buildImageConfiguration.getFrom()).thenReturn(from);
+    when(buildImageConfiguration.isBuildX()).thenReturn(false);
+    when(buildImageConfiguration.getTags()).thenReturn(Collections.emptyList());
+    return new ImageConfiguration.Builder()
+        .name(name)
+        .buildConfig(buildImageConfiguration).build();
   }
 
   private ImageConfiguration createNewImageConfiguration(String name, String from, File dockerFile) {
