@@ -100,6 +100,12 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.buildx.buildAllPlatforms*
 | When `true`, build all configured platforms already during `docker:build` (warming the cache) instead of only the native platform
 
+| *docker.buildx.driver*
+| BuildX driver used when creating the builder, defaulting to `docker-container`. Use `cloud` for a Docker Cloud builder, which expects `docker.buildx.builderName` in `<org>/<name>` form.
+
+| *docker.buildx.driverOpts.KEY*
+| Driver option passed to the builder as `--driver-opt KEY=value` when it is created. Merges with, and overrides, entries from `<driverOpts>`.
+
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container. See <<list-properties>>.
 
