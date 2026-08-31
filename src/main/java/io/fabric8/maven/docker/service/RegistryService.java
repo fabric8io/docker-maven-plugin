@@ -175,7 +175,6 @@ public class RegistryService {
             if (StringUtils.isNotBlank(configuredRegistry) && configuredRegistry.equalsIgnoreCase(fromRegistry)) {
                 continue;
             }
-            registryConfig.registry = fromRegistry;
             AuthConfig additionalAuth = registryConfig.createAuthConfig(false, null, fromRegistry);
             if (additionalAuth != null) {
                 authConfigList.addAuthConfig(additionalAuth);
