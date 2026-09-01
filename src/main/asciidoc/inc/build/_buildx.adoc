@@ -38,12 +38,10 @@ Set to `cloud` to build on a https://docs.docker.com/build-cloud/[Docker Cloud] 
 must be the cloud endpoint in `<org>/<name>` form, which is passed to `docker buildx create` as a positional
 argument instead of via `--name`, and the local builder is named `cloud-<org>-<name>` by Docker.  The `cloud`
 driver manages its own nodes and build configuration, so *nodeName* and *configFile* are not applied to it.
-Can be overridden on the command line with `-Ddocker.buildx.driver`.
 
 | *driverOpts*
 | Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created
-as `--driver-opt <key>=<value>`.  Individual entries can be added or overridden on the command line with
-`-Ddocker.buildx.driverOpts.<key>=<value>`.
+as `--driver-opt <key>=<value>`.
 
 | *nodeName*
 | Specify the name of the node to be created or modified.

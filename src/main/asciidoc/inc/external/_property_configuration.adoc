@@ -104,7 +104,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | BuildX driver used when creating the builder, defaulting to `docker-container`. Use `cloud` for a Docker Cloud builder, which expects `docker.buildx.builderName` in `<org>/<name>` form.
 
 | *docker.buildx.driverOpts.KEY*
-| Driver option passed to the builder as `--driver-opt KEY=value` when it is created. Merges with, and overrides, entries from `<driverOpts>`.
+| Driver option passed to the builder as `--driver-opt KEY=value` when it is created. Multiple such entries can be provided, and they are merged with any `<driverOpts>` from the XML configuration (specified similarly as in `docker.env.VARIABLE`).
 
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container. See <<list-properties>>.
