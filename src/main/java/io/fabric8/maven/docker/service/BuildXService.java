@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -42,6 +43,10 @@ import io.fabric8.maven.docker.util.ProjectPaths;
 
 public class BuildXService {
     private static final String DOCKER = "docker";
+    private static final String DRIVER_DOCKER_CONTAINER = "docker-container";
+    private static final String DRIVER_CLOUD = "cloud";
+    // A Docker Build Cloud endpoint is exactly "<org>/<name>", with no empty or extra segments
+    private static final Pattern CLOUD_ENDPOINT_PATTERN = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*");
     private final DockerAccess dockerAccess;
     private final DockerAssemblyManager dockerAssemblyManager;
     private final Logger logger;
@@ -78,10 +83,10 @@ public class BuildXService {
             copyBuildXToConfigPathIfBuildXBinaryInDefaultDockerConfig(configPath);
         }
 
-        String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
         Path configJson = configPath.resolve("config.json");
         try {
             createConfigJson(configJson, authConfig);
+            String builderName = createBuilder(configPath, buildX, imageConfig, buildDirs);
             builder.useBuilder(buildX, builderName, buildDirs, imageConfig,  configuredRegistry, buildArgs, context);
         } finally {
             removeConfigJson(configJson);
@@ -293,30 +298,49 @@ public class BuildXService {
 
     protected String createBuilder(Path configPath, List<String> buildX, ImageConfiguration imageConfig, BuildDirs buildDirs) throws MojoExecutionException {
         BuildXConfiguration buildXConfiguration = imageConfig.getBuildConfiguration().getBuildX();
-        String builderName = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+        String builderEndpoint = Optional.ofNullable(buildXConfiguration.getBuilderName()).orElse("maven");
+        String driver = Optional.ofNullable(buildXConfiguration.getDriver()).orElse(DRIVER_DOCKER_CONTAINER);
+
+        // For the cloud driver Docker derives the local builder name as "cloud-<org>-<name>"
+        String builderName = isCloudDriver(driver)
+            ? "cloud-" + builderEndpoint.replace("/", "-").toLowerCase()
+            : builderEndpoint;
 
         if ("default".equals(builderName)) {
             logger.info("Using default builder with buildx - only single platforms will be supported");
         } else {
-            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, buildDirs);
+            if (isCloudDriver(driver) && !CLOUD_ENDPOINT_PATTERN.matcher(builderEndpoint).matches()) {
+                throw new MojoExecutionException(
+                    "Cloud builder identifier must be in <org>/<name> form, got: " + builderEndpoint);
+            }
+            createCustomBuilderIfNotExists(configPath, buildX, buildXConfiguration, builderName, builderEndpoint, driver, buildDirs);
         }
         return builderName;
     }
 
-    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, BuildDirs buildDirs) throws MojoExecutionException {
-        String nodeName = buildXConfiguration.getNodeName();
+    private static boolean isCloudDriver(String driver) {
+        return DRIVER_CLOUD.equals(driver);
+    }
+
+    private void createCustomBuilderIfNotExists(Path configPath, List<String> buildX, BuildXConfiguration buildXConfiguration, String builderName, String builderEndpoint, String driver, BuildDirs buildDirs) throws MojoExecutionException {
         Path builderPath = configPath.resolve(Paths.get("buildx", "instances", builderName.toLowerCase()));
 
         if (Files.notExists(builderPath)) {
             List<String> cmds = new ArrayList<>(buildX);
-            append(cmds, "create", "--driver", "docker-container", "--name", builderName);
 
-            if (nodeName != null) {
-                append(cmds, "--node", nodeName);
+            if (isCloudDriver(driver)) {
+                // Cloud driver: endpoint is a positional argument; --name and --node are not used
+                append(cmds, "create", "--driver", driver, builderEndpoint);
+                addDriverOptions(cmds, buildXConfiguration);
+            } else {
+                append(cmds, "create", "--driver", driver, "--name", builderEndpoint);
+                String nodeName = buildXConfiguration.getNodeName();
+                if (nodeName != null) {
+                    append(cmds, "--node", nodeName);
+                }
+                addDriverOptions(cmds, buildXConfiguration);
+                addBuildConfig(cmds, buildXConfiguration, buildDirs);
             }
-
-            addDriverOptions(cmds, buildXConfiguration);
-            addBuildConfig(cmds, buildXConfiguration, buildDirs);
 
             int rc = exec.process(cmds);
             if (rc != 0) {

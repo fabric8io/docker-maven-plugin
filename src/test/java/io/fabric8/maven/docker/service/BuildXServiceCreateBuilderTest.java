@@ -12,6 +12,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -23,7 +25,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -90,6 +94,93 @@ class BuildXServiceCreateBuilderTest {
 
     //Then
     verifyBuildXArgumentDoesNotContain("--driver-opt", "network=foonet");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "invalid-no-slash", "myorg/", "/default", "/", "myorg/team/default", "my org/default" })
+  void cloudDriverRequiresOrgSlashNameFormat(String malformedEndpoint) {
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("cloud")
+        .builderName(malformedEndpoint));
+
+    MojoExecutionException exception = assertThrows(MojoExecutionException.class, () ->
+        buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs));
+    assertTrue(exception.getMessage().contains("must be in <org>/<name> form"));
+  }
+
+  @Test
+  void explicitNonCloudDriverIsPassedThrough() throws Exception {
+    //Given
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("kubernetes")
+        .builderName("mybuilder"));
+
+    // When
+    buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    verifyBuildXArgumentContains("--driver", "kubernetes", "--name", "mybuilder");
+  }
+
+  @Test
+  void cloudDriverUsesEndpointAsPositionalArg() throws Exception {
+    //Given
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("cloud")
+        .builderName("myorg/default"));
+
+    // When
+    buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
+    Mockito.verify(exec).process(captor.capture());
+    List<String> args = captor.getValue();
+    assertTrue(args.containsAll(Arrays.asList("--driver", "cloud", "myorg/default")));
+    assertFalse(args.contains("--name"));
+  }
+
+  @Test
+  void cloudDriverDerivesBuilderName() throws Exception {
+    //Given
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("cloud")
+        .builderName("myorg/default"));
+
+    // When
+    String builderName = buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    assertEquals("cloud-myorg-default", builderName);
+  }
+
+  @Test
+  void cloudDriverExistenceCheckUsesLocalName() throws Exception {
+    Path configPathSpy = Mockito.spy(configPath);
+    Path expectedPath = Paths.get("buildx", "instances", "cloud-myorg-default");
+
+    //Given
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX
+        .driver("cloud")
+        .builderName("myorg/default"));
+
+    // When
+    buildXService.createBuilder(configPathSpy, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    verify(configPathSpy).resolve(expectedPath);
+  }
+
+  @Test
+  void nonCloudDriverPreservesExistingBehavior() throws Exception {
+    //Given
+    buildConfigUsingBuildX(temporaryFolder, (buildX, buildImage) -> buildX.builderName("mybuilder"));
+
+    // When
+    buildXService.createBuilder(configPath, Arrays.asList("docker", "buildx"), imageConfig, buildDirs);
+
+    // Then
+    verifyBuildXArgumentContains("--driver", "docker-container", "--name", "mybuilder");
   }
 
   private void captureBuildXArguments() throws MojoExecutionException {
