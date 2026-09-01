@@ -19,6 +19,7 @@ package io.fabric8.maven.docker.config.handler.property;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.CopyConfiguration;
@@ -846,6 +847,46 @@ class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         Assertions.assertNotNull(config.getBuildConfiguration());
+    }
+
+    @Test
+    void testBuildXDriverAndDriverOpts() {
+        String[] testData = new String[] {
+            k(ConfigKey.NAME), "image",
+            k(ConfigKey.FROM), "base",
+            k(ConfigKey.BUILDX_DRIVER), "cloud",
+            k(ConfigKey.BUILDX_BUILDERNAME), "myorg/default",
+            k(ConfigKey.BUILDX_DRIVER_OPTS) + ".network", "host"
+        };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        BuildXConfiguration buildX = config.getBuildConfiguration().getBuildX();
+        Assertions.assertEquals("cloud", buildX.getDriver());
+        Assertions.assertEquals("myorg/default", buildX.getBuilderName());
+        Assertions.assertEquals(Collections.singletonMap("network", "host"), buildX.getDriverOpts());
+    }
+
+    @Test
+    void testBuildXDriverOptsMergeWithConfiguredOnes() {
+        imageConfiguration = new ImageConfiguration.Builder()
+            .externalConfig(externalConfigMode(PropertyMode.Override))
+            .buildConfig(new BuildImageConfiguration.Builder()
+                .buildx(new BuildXConfiguration.Builder()
+                    .driverOpts(Collections.singletonMap("image", "moby/buildkit:latest"))
+                    .build())
+                .build())
+            .build();
+
+        List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(
+            k(ConfigKey.NAME), "image",
+            k(ConfigKey.FROM), "base",
+            k(ConfigKey.BUILDX_DRIVER_OPTS) + ".network", "host"));
+
+        Assertions.assertEquals(1, configs.size());
+        Map<String, String> driverOpts = configs.get(0).getBuildConfiguration().getBuildX().getDriverOpts();
+        Assertions.assertEquals(2, driverOpts.size());
+        Assertions.assertEquals("moby/buildkit:latest", driverOpts.get("image"));
+        Assertions.assertEquals("host", driverOpts.get("network"));
     }
 
     @Test
