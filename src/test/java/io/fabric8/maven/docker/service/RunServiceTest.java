@@ -341,6 +341,52 @@ class RunServiceTest {
             () -> runService.createAndStartContainer(imageConfiguration, portMapping, gavLabel, properties, baseDirectory, "blah", buildTimestamp));
     }
 
+    @Test
+    void retryStartContainerOnDockerAccessException(
+        @Mock ImageConfiguration imageConfiguration,
+        @Mock PortMapping portMapping
+    ) throws DockerAccessException {
+
+        Mockito.doReturn("containerId")
+            .when(docker).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
+        Mockito.doReturn(new RunImageConfiguration()).when(imageConfiguration).getRunConfiguration();
+        Mockito.doReturn(false).when(portMapping).needsPropertiesUpdate();
+
+        // First start attempt fails with an I/O error, the retry succeeds
+        Mockito.doThrow(new DockerAccessException("I/O Error"))
+            .doNothing()
+            .when(docker).startContainer("containerId");
+
+        String containerId = runService.createAndStartContainer(imageConfiguration, portMapping,
+            new GavLabel("Im:A:Test"), properties, getBaseDirectory(), "blah", new Date(), 1);
+
+        Assertions.assertEquals("containerId", containerId);
+        Mockito.verify(docker, Mockito.times(2)).startContainer("containerId");
+        // The container created by the failed attempt is removed before retrying
+        Mockito.verify(docker).removeContainer("containerId", false);
+    }
+
+    @Test
+    void failToStartContainerAfterExceedingRetries(
+        @Mock ImageConfiguration imageConfiguration,
+        @Mock PortMapping portMapping
+    ) throws DockerAccessException {
+
+        Mockito.doReturn("containerId")
+            .when(docker).createContainer(Mockito.any(ContainerCreateConfig.class), Mockito.anyString());
+        Mockito.doReturn(new RunImageConfiguration()).when(imageConfiguration).getRunConfiguration();
+        Mockito.doThrow(new DockerAccessException("I/O Error")).when(docker).startContainer("containerId");
+
+        GavLabel gavLabel = new GavLabel("Im:A:Test");
+        File baseDirectory = getBaseDirectory();
+        Date buildTimestamp = new Date();
+        Assertions.assertThrows(DockerAccessException.class,
+            () -> runService.createAndStartContainer(imageConfiguration, portMapping, gavLabel, properties, baseDirectory, "blah", buildTimestamp, 2));
+
+        // 1 original attempt + 2 retries
+        Mockito.verify(docker, Mockito.times(3)).startContainer("containerId");
+    }
+
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
             .name("test_name")
