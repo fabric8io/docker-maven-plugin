@@ -274,6 +274,17 @@ class BuildXServiceTest {
     }
 
     @Test
+    void testBuildXSendsALabelWithoutAValueAsAnEmptyLabel() throws Exception {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("org.opencontainers.image.title", null);
+        buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> buildImage.labels(labels));
+
+        buildx.build(projectPaths, imageConfig, configuredRegistry, authConfigList, buildArchive, Collections.emptyMap());
+
+        verifyBuildXArgumentPresentInExec("--label", "org.opencontainers.image.title=");
+    }
+
+    @Test
     void testBuildXOmitsLabelFlagWhenNoLabelsConfigured() throws Exception {
         buildConfigUsingBuildx(temporaryFolder, (buildX, buildImage) -> { });
 
