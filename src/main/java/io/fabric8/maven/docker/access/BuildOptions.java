@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.access;/*
  */
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,6 +80,17 @@ public class BuildOptions {
     public BuildOptions buildArgs(Map<String, String> buildArgs) {
         if (buildArgs != null && buildArgs.size() > 0) {
             options.put("buildargs", JsonFactory.newJsonObject(buildArgs).toString());
+        }
+        return this;
+    }
+
+    public BuildOptions labels(Map<String, String> labels) {
+        if (labels != null && !labels.isEmpty()) {
+            // A label configured without a value is an empty label, not a JSON null, and the buildx
+            // path spells it the same way.
+            Map<String, String> defined = new LinkedHashMap<>();
+            labels.forEach((key, value) -> defined.put(key, value != null ? value : ""));
+            options.put("labels", JsonFactory.newJsonObject(defined).toString());
         }
         return this;
     }

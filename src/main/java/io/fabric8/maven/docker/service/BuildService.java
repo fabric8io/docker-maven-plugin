@@ -179,7 +179,10 @@ public class BuildService {
                         .cacheFrom(buildConfig.getCacheFrom())
                         .network(buildConfig.getNetwork())
                         .target(buildConfig.getTarget())
-                        .buildArgs(mergedBuildMap);
+                        .buildArgs(mergedBuildMap)
+                        // Labels end up in the generated Dockerfile as LABEL instructions, but a provided
+                        // Dockerfile (dockerFile/contextDir mode) is used verbatim, so pass them explicitly.
+                        .labels(buildConfig.getLabels());
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);
 
