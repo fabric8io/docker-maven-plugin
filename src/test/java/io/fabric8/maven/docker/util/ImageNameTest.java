@@ -159,10 +159,39 @@ class ImageNameTest {
         "fo$z$", "Foo@3cc", "Foo$3", "Foo*3", "Fo^3", "Foo!3", "F)xcz(", "fo%asd", "FOO/bar",
         "repo:fo$z$", "repo:Foo@3cc", "repo:Foo$3", "repo:Foo*3", "repo:Fo^3", "repo:Foo!3",
         "repo:%goodbye", "repo:#hashtagit", "repo:F)xcz(", "repo:-foo", "repo:..",
-        "-busybox:test", "-test/busybox:test", "-index:5000/busybox:test"
+        "-busybox:test", "-test/busybox:test", "-index:5000/busybox:test",
+        // #357: a registry configured as a URL leaks the scheme into the image name
+        "https://index:5000/busybox", "http://index:5000/busybox:test", "https://index:5000/user/busybox"
     })
     void invalidName(String illegal) {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new ImageName(illegal));
+    }
+
+    @Test
+    void nameWithUrlSchemeReportsTheScheme() {
+        // #357: without this the name is rejected too, but only with the generic per-part messages,
+        // which never mention that the URL scheme is what broke it.
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class,
+            () -> new ImageName("https://nexus.example.com:8443/user/test"));
+
+        Assertions.assertTrue(exception.getMessage().contains("must not contain a URL scheme"),
+            "Expected a hint about the URL scheme, but got: " + exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "https://nexus.example.com:8443", "http://localhost:5000" })
+    void validateRegistryRejectsUrl(String registry) {
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class,
+            () -> ImageName.validateRegistry(registry));
+
+        Assertions.assertTrue(exception.getMessage().contains("must not contain a URL scheme"),
+            "Expected a hint about the URL scheme, but got: " + exception.getMessage());
+    }
+
+    @Test
+    void validateRegistryAcceptsHostAndNull() {
+        Assertions.assertDoesNotThrow(() -> ImageName.validateRegistry("nexus.example.com:8443"));
+        Assertions.assertDoesNotThrow(() -> ImageName.validateRegistry(null));
     }
 
     @Test
