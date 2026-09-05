@@ -139,5 +139,26 @@ jobs:
           done
       - name: Run Integration tests
         run: |
+          set -o pipefail
           cd it/
-          mvn clean install
+          log="${RUNNER_TEMP}/integration-tests.log"
+          run() { mvn clean install "$@" 2>&1 | tee -a "$log"; }
+
+          if run; then
+            exit 0
+          fi
+
+          # The resolver in that Lima VM times out often enough to take down a reactor run that has
+          # nothing wrong with it. Only that signature earns a second attempt - any
+          # other failure is a real one and is reported straight away rather than costing another
+          # ~13 minutes to fail again.
+          if ! grep -qE 'lookup [a-z0-9.-]+( on [0-9.:]+)?: .*i/o timeout' "$log"; then
+            echo "::error::Integration tests failed for a reason other than name resolution"
+            exit 1
+          fi
+
+          # Maven prints the module to resume from, so only that module and the ones after it run
+          # again; everything already built stays built.
+          resume=$(grep -oE '\-rf :[A-Za-z0-9._-]+' "$log" | tail -1 || true)
+          echo "::warning::Name resolution timed out in the VM, resuming from ${resume:-the first module}"
+          run $resume
