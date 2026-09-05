@@ -157,8 +157,9 @@ jobs:
             exit 1
           fi
 
-          # Maven prints the module to resume from, so only that module and the ones after it run
-          # again; everything already built stays built.
+          # Maven names the module to resume from. The modules before it - the bulk of the run -
+          # are left out of the reactor altogether, so their images and containers are not built a
+          # second time; the resumed modules are cleaned and rebuilt as usual.
           resume=$(grep -oE '\-rf :[A-Za-z0-9._-]+' "$log" | tail -1 || true)
           echo "::warning::Name resolution timed out in the VM, resuming from ${resume:-the first module}"
           run $resume
