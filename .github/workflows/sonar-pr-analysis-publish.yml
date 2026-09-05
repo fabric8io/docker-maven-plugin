@@ -73,17 +73,37 @@ jobs:
           approvers=$(gh api "repos/$BASE_REPO/pulls/$pr/reviews" --paginate \
             --jq '.[]
                   | select(.state == "APPROVED" and .commit_id == env.HEAD_SHA)
-                  | select(.author_association == "OWNER"
-                        or .author_association == "MEMBER"
-                        or .author_association == "COLLABORATOR")
-                  | .user.login')
-          approver=$(printf '%s\n' "$approvers" | head -n 1)
+                  | .user.login' | sort -u)
+
+          # Who left that approval decides whether it is worth anything, and author_association is
+          # the wrong place to ask: MEMBER only says the reviewer belongs to the organisation, and
+          # COLLABORATOR is just as true of read and triage access. Neither can merge this pull
+          # request. Ask the repository for the permission it actually granted instead and take
+          # only write - which is what the API reports for maintain as well - or admin. Anything
+          # else leaves the gate closed, including an answer the API declines to give.
+          approver=
+          approver_permission=
+          for login in $approvers; do
+            if ! permission=$(gh api "repos/$BASE_REPO/collaborators/$login/permission" \
+                                --jq '.permission' 2>&1); then
+              echo "::warning::Could not read $login's permission on $BASE_REPO: $permission"
+              continue
+            fi
+            case "$permission" in
+              admin | write)
+                approver=$login
+                approver_permission=$permission
+                break
+                ;;
+            esac
+          done
+
           if [ -z "$approver" ]; then
-            skip "PR #$pr is from a fork and $HEAD_SHA carries no approval from a maintainer, skipping the analysis."
+            skip "PR #$pr is from a fork and $HEAD_SHA carries no approval from someone with write access to $BASE_REPO, skipping the analysis."
           fi
 
           echo "analyse=true" >> "$GITHUB_OUTPUT"
-          echo "::notice::PR #$pr was approved by $approver for $HEAD_SHA, analysing."
+          echo "::notice::PR #$pr was approved for $HEAD_SHA by $approver ($approver_permission access), analysing."
 
   sonar:
     name: Sonar PR Scanner
