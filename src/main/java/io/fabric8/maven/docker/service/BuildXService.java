@@ -182,7 +182,9 @@ public class BuildXService {
         if (labels != null) {
             labels.forEach((key, value) -> {
                 cmdLine.add("--label");
-                cmdLine.add(key + '=' + value);
+                // A label configured without a value is an empty label; concatenating null here
+                // would hand the daemon the four characters "null" instead.
+                cmdLine.add(key + '=' + (value != null ? value : ""));
             });
         }
         if (ConfigHelper.isNoCache(imageConfig)) {
