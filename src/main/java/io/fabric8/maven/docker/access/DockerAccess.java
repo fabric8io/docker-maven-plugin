@@ -43,6 +43,13 @@ public interface DockerAccess {
     String getServerApiVersion() throws DockerAccessException;
 
     /**
+     * Get the builder version recommended by the daemon (see 'Builder-Version' response header of  '/_ping' API)
+     *
+     * @return the recommended builder version or 'null' if dockerd doesn't recommend any version
+     */
+    String getDefaultBuilderVersion();
+
+    /**
      * Get the native platform
      * @return The platform os/arch
      */
