@@ -23,9 +23,12 @@ import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static io.fabric8.maven.docker.service.RegistryService.createCompleteAuthConfigList;
 
@@ -59,6 +62,9 @@ public class BuildMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     protected boolean skipTag;
 
+    @Parameter(property = "docker.build.parallel", defaultValue = "1")
+    protected String buildParallel;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws IOException, MojoExecutionException {
         if (skipBuild) {
@@ -67,15 +73,35 @@ public class BuildMojo extends AbstractDockerMojo {
 
         // Check for build plugins
         executeBuildPlugins();
+        try {
+            ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(buildParallel));
 
-        // Iterate over all the ImageConfigurations and process one by one
-        for (ImageConfiguration imageConfig : getResolvedImages()) {
-            processImageConfig(hub, imageConfig);
+            List<Future<?>> futureList = new ArrayList<>();
+
+            // Iterate over all the ImageConfigurations and process one by one
+            for (ImageConfiguration imageConfig : getResolvedImages()) {
+                Future<?> future = executorService.submit(() -> {
+                    try {
+                        processImageConfig(hub, imageConfig);
+                    } catch (IOException | MojoExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                futureList.add(future);
+            }
+            for (Future<?> future : futureList) {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new MojoExecutionException(e);
+                }
+            }
+        } catch (NumberFormatException e) {
+            throw new MojoExecutionException("Expected a number! Got " + buildParallel, e);
         }
     }
 
-    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-            throws MojoExecutionException, IOException {
+    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException, IOException {
 
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
@@ -85,7 +111,7 @@ public class BuildMojo extends AbstractDockerMojo {
     }
 
     private void proceedWithBuildProcess(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager) throws MojoExecutionException, IOException {
-        if (Boolean.TRUE.equals(jib)) {
+        if (jib) {
             proceedWithJibBuild(hub, buildContext, imageConfig);
         } else {
             proceedWithDockerBuild(hub, buildContext, imageConfig, pullManager);
@@ -97,11 +123,10 @@ public class BuildMojo extends AbstractDockerMojo {
         new JibBuildService(hub, createMojoParameters(), log).build(jibImageFormat, imageConfig, buildContext.getRegistryConfig());
     }
 
-    private void proceedWithDockerBuild(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager)
-        throws MojoExecutionException, IOException {
-        BuildService buildService= hub.getBuildService();
+    private void proceedWithDockerBuild(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager) throws MojoExecutionException, IOException {
+        BuildService buildService = hub.getBuildService();
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
-        if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
+        if (!shallBuildArchiveOnly()) {
             if (imageConfig.isBuildX()) {
                 BuildArgResolver buildArgResolver = new BuildArgResolver(log);
                 Map<String, String> buildArgsFromExternalSources = buildArgResolver.resolveBuildArgs(buildContext);
@@ -123,8 +148,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private String resolveBuildArchiveParameter() {
         if (buildArchiveOnly != null && !buildArchiveOnly.isEmpty()) {
-            if (!(buildArchiveOnly.equalsIgnoreCase("false") ||
-                buildArchiveOnly.equalsIgnoreCase("true"))) {
+            if (!(buildArchiveOnly.equalsIgnoreCase("false") || buildArchiveOnly.equalsIgnoreCase("true"))) {
                 return buildArchiveOnly;
             }
         }
@@ -133,8 +157,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private boolean shallBuildArchiveOnly() {
         if (buildArchiveOnly != null && !buildArchiveOnly.isEmpty()) {
-            if (buildArchiveOnly.equalsIgnoreCase("false") ||
-                    buildArchiveOnly.equalsIgnoreCase("true")) {
+            if (buildArchiveOnly.equalsIgnoreCase("false") || buildArchiveOnly.equalsIgnoreCase("true")) {
                 return Boolean.parseBoolean(buildArchiveOnly);
             }
             return true;
@@ -149,7 +172,7 @@ public class BuildMojo extends AbstractDockerMojo {
     /**
      * Helper method to process an ImageConfiguration.
      *
-     * @param hub ServiceHub
+     * @param hub          ServiceHub
      * @param aImageConfig ImageConfiguration that would be forwarded to build and tag
      * @throws DockerAccessException
      * @throws MojoExecutionException
@@ -183,8 +206,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void processDmpPluginDescription(URL pluginDesc, File outputDir) throws IOException {
         String line = null;
-        try (LineNumberReader reader =
-                 new LineNumberReader(new InputStreamReader(pluginDesc.openStream(), "UTF8"))) {
+        try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(pluginDesc.openStream(), StandardCharsets.UTF_8))) {
             line = reader.readLine();
             while (line != null) {
                 if (line.matches("^\\s*#")) {
@@ -197,9 +219,7 @@ public class BuildMojo extends AbstractDockerMojo {
         } catch (ClassNotFoundException e) {
             // Not declared as dependency, so just ignoring ...
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            log.verbose(Logger.LogVerboseCategory.BUILD,"Found dmp-plugin %s but could not be called : %s",
-                     line,
-                     e.getMessage());
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Found dmp-plugin %s but could not be called : %s", line, e.getMessage());
         }
     }
 
@@ -218,7 +238,7 @@ public class BuildMojo extends AbstractDockerMojo {
             method.invoke(null, outputDir);
             log.info("Extra files from %s extracted", buildPluginClass);
         } catch (NoSuchMethodException exp) {
-            log.verbose(Logger.LogVerboseCategory.BUILD,"Build plugin %s does not support 'addExtraFiles' method", buildPluginClass);
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Build plugin %s does not support 'addExtraFiles' method", buildPluginClass);
         }
     }
 
