@@ -53,11 +53,10 @@ public class HttpClientBuilder implements ClientBuilder {
         org.apache.http.impl.client.HttpClientBuilder builder = HttpClients.custom();
         HttpClientConnectionManager manager = getPooledConnectionFactory(certPath, maxConnections);
         builder.setConnectionManager(manager);
-        // TODO: For push-redirects working for 301, the redirect strategy should be relaxed (see #351)
-        // However not sure whether we should do it right now and whether this is correct, since normally
-        // a 301 should only occur when the image name is invalid (e.g. containing "//" in which case a redirect
-        // happens to the URL with a single "/")
-        // builder.setRedirectStrategy(new LaxRedirectStrategy());
+        // The redirect strategy is deliberately left at the default, which does not follow redirects for
+        // POST: a 301 on push means the image name is malformed (a "//" from a registry configured as a
+        // URL), so following it would paper over a configuration error. ImageName rejects such names with
+        // an explicit message instead.
 
         // TODO: Tune client if needed (e.g. add pooling factoring .....
         // But I think, that's not really required.
