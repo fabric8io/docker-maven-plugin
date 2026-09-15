@@ -127,7 +127,7 @@ By default a progress meter is printed out on the console, which is omitted when
 | `docker.build.jib.imageFormat`
 
 | *outputDirectory*
-| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
+| Default output directory to be used by this plugin. The default value is `${project.build.directory}/docker` and is only used for the goal `{plugin}:build`.
 | `docker.target.dir`
 
 | *portPropertyFile*
