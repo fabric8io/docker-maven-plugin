@@ -43,6 +43,13 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions builderVersion(String version) {
+        if (version != null) {
+            options.put("version", version);
+        }
+        return this;
+    }
+
     public BuildOptions dockerfile(String name) {
         if (name != null) {
             options.put("dockerfile", name);
