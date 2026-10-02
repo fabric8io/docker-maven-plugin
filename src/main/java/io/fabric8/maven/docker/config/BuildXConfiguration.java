@@ -11,6 +11,11 @@ import java.util.Map;
 public class BuildXConfiguration implements Serializable {
 
     /**
+     * Driver value which creates a https://docs.docker.com/build-cloud/[Docker Cloud] builder.
+     */
+    public static final String DRIVER_CLOUD = "cloud";
+
+    /**
      * Builder instance name
      */
     @Parameter
@@ -145,6 +150,15 @@ public class BuildXConfiguration implements Serializable {
 
     public String getDriver() {
         return driver;
+    }
+
+    /**
+     * Whether this configuration builds on a https://docs.docker.com/build-cloud/[Docker Cloud] builder.
+     * A cloud builder is always provisioned against Docker Hub, regardless of which registry the image
+     * is pushed to or which registry its base image is pulled from.
+     */
+    public boolean isCloudDriver() {
+        return DRIVER_CLOUD.equals(driver);
     }
 
     public static class Builder {

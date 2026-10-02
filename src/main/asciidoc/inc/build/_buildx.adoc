@@ -38,6 +38,9 @@ Set to `cloud` to build on a https://docs.docker.com/build-cloud/[Docker Cloud] 
 must be the cloud endpoint in `<org>/<name>` form, which is passed to `docker buildx create` as a positional
 argument instead of via `--name`, and the local builder is named `cloud-<org>-<name>` by Docker.  The `cloud`
 driver manages its own nodes and build configuration, so *nodeName* and *configFile* are not applied to it.
+Since a cloud builder is always provisioned against Docker Hub, credentials for `docker.io` are always added to
+the generated BuildX `config.json` when this driver is used, regardless of the image's push registry or the
+registry of its `FROM` image.
 
 | *driverOpts*
 | Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created

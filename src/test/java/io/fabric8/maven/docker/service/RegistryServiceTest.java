@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.AuthConfigList;
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -454,6 +455,32 @@ class RegistryServiceTest {
             thenBuildxImageHasBeenPushed(null, null, true, registry);
             thenNoExceptionThrown();
         }
+
+        @Test
+        void authConfigListForCloudDriverIncludesDockerHubCredentialsEvenWhenUnrelatedToPushRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenCloudBuildxImageConfiguration(registry + "/user/test:1.0.1", "myorg/default");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenDockerHubCredentials("dockerhub-user", "dockerhub-pass");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            thenDockerHubCredentialsWereLookedUp();
+            Assertions.assertEquals(2, authConfigList.size());
+        }
+
+        @Test
+        void authConfigListForNonCloudDriverDoesNotIncludeUnrelatedDockerHubCredentials() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfiguration(registry + "/user/test:1.0.1", null, null, null);
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+
+            whenCreateCompleteAuthConfigList(registry);
+
+            thenDockerHubCredentialsWereNotLookedUp();
+        }
     }
 
     // ====================================================================================================
@@ -609,6 +636,15 @@ class RegistryServiceTest {
         givenImageNameAndBuildX(imageName, buildx, dockerFile, tag);
     }
 
+    private void givenCloudBuildxImageConfiguration(String imageName, String cloudEndpoint) {
+        BuildXConfiguration buildx = new BuildXConfiguration.Builder()
+            .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
+            .driver("cloud")
+            .builderName(cloudEndpoint)
+            .build();
+        givenImageNameAndBuildX(imageName, buildx, null, null);
+    }
+
     private void givenImageNameAndBuildX(String imageName, BuildXConfiguration buildx, String dockerFile, String tag) {
         List<String> tags = tag != null ? Collections.singletonList(tag) : null;
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().buildx(buildx).tags(tags).dockerFile(dockerFile).build();
@@ -627,6 +663,33 @@ class RegistryServiceTest {
         Mockito.doReturn(new AuthConfig(authConfig))
             .when(authConfigFactory)
             .createAuthConfig(Mockito.eq(true), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.eq("user"), Mockito.any());
+    }
+
+    private void givenDockerHubCredentials(String username, String password) throws MojoExecutionException {
+        Map<String, String> dockerHubAuthConfig = new HashMap<>();
+        dockerHubAuthConfig.put(AuthConfig.AUTH_USERNAME, username);
+        dockerHubAuthConfig.put(AuthConfig.AUTH_PASSWORD, password);
+        Mockito.doReturn(new AuthConfig(dockerHubAuthConfig))
+            .when(authConfigFactory)
+            .createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
+    }
+
+    private AuthConfigList whenCreateCompleteAuthConfigList(String registry) throws MojoExecutionException {
+        RegistryService.RegistryConfig registryConfig =
+            new RegistryService.RegistryConfig.Builder()
+                .authConfigFactory(authConfigFactory)
+                .authConfig(authConfig)
+                .registry(registry)
+                .build();
+        return RegistryService.createCompleteAuthConfigList(true, imageConfiguration, registryConfig, mojoParameters, Collections.emptyMap());
+    }
+
+    private void thenDockerHubCredentialsWereLookedUp() throws MojoExecutionException {
+        Mockito.verify(authConfigFactory).createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
+    }
+
+    private void thenDockerHubCredentialsWereNotLookedUp() throws MojoExecutionException {
+        Mockito.verify(authConfigFactory, Mockito.never()).createAuthConfig(Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
     }
 
     private void givenAnImageConfigurationWithoutBuildConfig(String imageName) {
