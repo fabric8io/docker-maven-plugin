@@ -44,7 +44,7 @@ import io.fabric8.maven.docker.util.ProjectPaths;
 public class BuildXService {
     private static final String DOCKER = "docker";
     private static final String DRIVER_DOCKER_CONTAINER = "docker-container";
-    private static final String DRIVER_CLOUD = "cloud";
+    private static final String DRIVER_CLOUD = BuildXConfiguration.DRIVER_CLOUD;
     // A Docker Build Cloud endpoint is exactly "<org>/<name>", with no empty or extra segments
     private static final Pattern CLOUD_ENDPOINT_PATTERN = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*");
     private final DockerAccess dockerAccess;

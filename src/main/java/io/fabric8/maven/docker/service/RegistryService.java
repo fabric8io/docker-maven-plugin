@@ -14,6 +14,7 @@ import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.service.helper.BuildArgResolver;
@@ -165,7 +166,24 @@ public class RegistryService {
             authConfigList.addAuthConfig(authConfig);
         }
 
+        addDockerHubAuthConfigForCloudDriver(imageConfig, registryConfig, authConfigList);
+
         return authConfigList;
+    }
+
+    // A Docker Cloud builder is provisioned against Docker Hub regardless of the configured push
+    // registry or the registry of the Dockerfile's FROM image, so docker.io credentials must always
+    // be present in the buildx config.json when the cloud driver is used, or builder creation fails.
+    private static void addDockerHubAuthConfigForCloudDriver(ImageConfiguration imageConfig, RegistryConfig registryConfig, AuthConfigList authConfigList) throws MojoExecutionException {
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildXConfiguration buildX = buildConfig == null ? null : buildConfig.getBuildX();
+        if (buildX == null || !buildX.isCloudDriver()) {
+            return;
+        }
+        AuthConfig dockerHubAuth = registryConfig.createAuthConfig(false, null, AuthConfig.REGISTRY_DOCKER_IO);
+        if (dockerHubAuth != null) {
+            authConfigList.addAuthConfig(dockerHubAuth);
+        }
     }
 
     public static AuthConfigList createAuthConfigListForBaseImages(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, String configuredRegistry, RegistryConfig registryConfig, Map<String, String> buildArgsFromExternalSources) throws MojoExecutionException {
