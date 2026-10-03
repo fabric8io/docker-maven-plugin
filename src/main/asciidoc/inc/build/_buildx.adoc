@@ -40,7 +40,11 @@ argument instead of via `--name`, and the local builder is named `cloud-<org>-<n
 driver manages its own nodes and build configuration, so *nodeName* and *configFile* are not applied to it.
 Since a cloud builder is always provisioned against Docker Hub, credentials for `docker.io` are added to the
 generated BuildX `config.json` when this driver is used, unless the image's push registry or the registry of
-its `FROM` image already resolves to `docker.io`, in which case that entry is reused instead.
+its `FROM` image already resolves to `docker.io`, in which case that entry is reused instead. These credentials
+are looked up under the `<org>` part of *builderName*, so a
+`<server><id>docker.io/<org></id></server>` entry in `settings.xml` is preferred over a plain `docker.io` one,
+the same way a pushed image's own namespace already is; it falls back to a plain `docker.io` entry when no
+such org-specific server is configured.
 
 | *driverOpts*
 | Optional list of driverOpts to use with the builder. The driverOpts are passed to the builder when it is created

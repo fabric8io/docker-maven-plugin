@@ -188,10 +188,21 @@ public class RegistryService {
             || getRegistriesForPull(buildConfig, mojoParameters, buildArgsFromExternalSources).stream().anyMatch(RegistryService::isDockerHub)) {
             return;
         }
-        AuthConfig dockerHubAuth = registryConfig.createAuthConfig(false, null, AuthConfig.REGISTRY_DOCKER_IO);
+        AuthConfig dockerHubAuth = registryConfig.createAuthConfig(false, cloudBuilderOrg(buildX), AuthConfig.REGISTRY_DOCKER_IO);
         if (dockerHubAuth != null) {
             authConfigList.addAuthConfig(dockerHubAuth);
         }
+    }
+
+    // The cloud endpoint is always in <org>/<name> form, with <org> naming the Docker Hub organization
+    // that owns the builder. Passing it as the user lets a settings.xml <server><id>docker.io/<org></id></server>
+    // entry be picked up in preference to a plain docker.io one, the same way a pushed image's own registry
+    // user already is (see AuthConfigFactory#checkForServer); it still falls back to a plain docker.io entry
+    // when no such org-specific server is configured, or when builderName isn't yet in <org>/<name> form.
+    private static String cloudBuilderOrg(BuildXConfiguration buildX) {
+        String builderName = buildX.getBuilderName();
+        int slash = builderName == null ? -1 : builderName.indexOf('/');
+        return slash > 0 ? builderName.substring(0, slash) : null;
     }
 
     private static boolean isDockerHub(String registry) {
