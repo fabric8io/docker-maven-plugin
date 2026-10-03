@@ -166,24 +166,39 @@ public class RegistryService {
             authConfigList.addAuthConfig(authConfig);
         }
 
-        addDockerHubAuthConfigForCloudDriver(imageConfig, registryConfig, authConfigList);
+        addDockerHubAuthConfigForCloudDriver(imageConfig, configuredRegistry, mojoParameters, registryConfig, buildArgsFromExternalSources, authConfigList);
 
         return authConfigList;
     }
 
     // A Docker Cloud builder is provisioned against Docker Hub regardless of the configured push
-    // registry or the registry of the Dockerfile's FROM image, so docker.io credentials must always
-    // be present in the buildx config.json when the cloud driver is used, or builder creation fails.
-    private static void addDockerHubAuthConfigForCloudDriver(ImageConfiguration imageConfig, RegistryConfig registryConfig, AuthConfigList authConfigList) throws MojoExecutionException {
+    // registry or the registry of the Dockerfile's FROM image, so docker.io credentials must be
+    // present in the buildx config.json when the cloud driver is used, or builder creation fails.
+    // If the push registry or a FROM image already resolves to docker.io, its auth entry already
+    // covers this (and was resolved with the correct push/pull context); looking it up again here
+    // would just add a redundant entry that, worse, could silently overwrite the existing one with
+    // credentials resolved under the wrong (always-pull) context, so only add it when not already covered.
+    private static void addDockerHubAuthConfigForCloudDriver(ImageConfiguration imageConfig, String configuredRegistry, MojoParameters mojoParameters, RegistryConfig registryConfig, Map<String, String> buildArgsFromExternalSources, AuthConfigList authConfigList) throws MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         BuildXConfiguration buildX = buildConfig == null ? null : buildConfig.getBuildX();
         if (buildX == null || !buildX.isCloudDriver()) {
+            return;
+        }
+        if (isDockerHub(configuredRegistry)
+            || getRegistriesForPull(buildConfig, mojoParameters, buildArgsFromExternalSources).stream().anyMatch(RegistryService::isDockerHub)) {
             return;
         }
         AuthConfig dockerHubAuth = registryConfig.createAuthConfig(false, null, AuthConfig.REGISTRY_DOCKER_IO);
         if (dockerHubAuth != null) {
             authConfigList.addAuthConfig(dockerHubAuth);
         }
+    }
+
+    private static boolean isDockerHub(String registry) {
+        if (StringUtils.isBlank(registry)) {
+            return true;
+        }
+        return AuthConfig.REGISTRY_DOCKER_IO.equalsIgnoreCase(StringUtils.substringBefore(registry, "/"));
     }
 
     public static AuthConfigList createAuthConfigListForBaseImages(BuildImageConfiguration buildConfig, MojoParameters mojoParameters, String configuredRegistry, RegistryConfig registryConfig, Map<String, String> buildArgsFromExternalSources) throws MojoExecutionException {
