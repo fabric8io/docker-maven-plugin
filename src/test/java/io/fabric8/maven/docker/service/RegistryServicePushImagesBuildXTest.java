@@ -177,9 +177,11 @@ class RegistryServicePushImagesBuildXTest {
     // When
     registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
-    // Then: the cloud builder's own docker.io credentials are added alongside the push and base-image ones
+    // Then: the cloud builder's own docker.io credentials are added alongside the push and base-image ones,
+    // looked up under "myorg" (the cloud endpoint's org) so a server entry scoped to that org is preferred
     verifyBuildXServiceInvokedWithAuthConfigListSize(3);
-    verify(authConfigFactory, times(1)).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+    verify(authConfigFactory, times(1)).createAuthConfig(eq(false), anyBoolean(), any(), any(), eq("myorg"), eq("docker.io"));
+    verify(authConfigFactory, times(1)).createAuthConfig(eq(false), anyBoolean(), any(), any(), any(), eq("docker.io"));
   }
 
   @Test
@@ -194,8 +196,10 @@ class RegistryServicePushImagesBuildXTest {
     registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then: the base image's docker.io entry already covers the cloud builder, so it is not looked up again
+    // under its org ("myorg") either; exactly the one, null-user, base-image lookup should have happened
     verifyBuildXServiceInvokedWithAuthConfigListSize(2);
-    verify(authConfigFactory, times(1)).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+    verify(authConfigFactory, times(1)).createAuthConfig(eq(false), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+    verify(authConfigFactory, times(1)).createAuthConfig(eq(false), anyBoolean(), any(), any(), any(), eq("docker.io"));
   }
 
   @Test
@@ -214,9 +218,10 @@ class RegistryServicePushImagesBuildXTest {
     registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
 
     // Then: the push credentials (resolved with the correct push context) already cover docker.io, so the
-    // cloud builder's own, always-pull-context lookup must not run and risk overwriting them
+    // cloud builder's own, always-pull-context lookup (regardless of which org it would have used) must
+    // not run and risk overwriting them
     verifyBuildXServiceInvokedWithAuthConfigListSize(2);
-    verify(authConfigFactory, never()).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+    verify(authConfigFactory, never()).createAuthConfig(eq(false), anyBoolean(), any(), any(), any(), eq("docker.io"));
   }
 
   /**

@@ -461,12 +461,30 @@ class RegistryServiceTest {
             String registry = "myregistry.com";
             givenCloudBuildxImageConfiguration(registry + "/user/test:1.0.1", "myorg/default");
             givenCredentials("King_Roland_of_Druidia", "12345");
-            givenDockerHubCredentials("dockerhub-user", "dockerhub-pass");
+            givenDockerHubCredentials("myorg", "dockerhub-user", "dockerhub-pass");
             givenRegistry(registry);
 
             AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
 
-            thenDockerHubCredentialsWereLookedUp();
+            // Looked up under "myorg", the cloud endpoint's org, so a <server><id>docker.io/myorg</id></server>
+            // entry is preferred over a plain docker.io one, same as how a pushed image's own user already is.
+            thenDockerHubCredentialsWereLookedUpAsOrg("myorg");
+            Assertions.assertEquals(2, authConfigList.size());
+        }
+
+        @Test
+        void authConfigListForCloudDriverWithoutOrgInBuilderNameLooksUpPlainDockerHub() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            // builderName isn't yet in <org>/<name> form; BuildXService.createBuilder() will reject it
+            // later, but the auth lookup that runs before that must still degrade gracefully.
+            givenCloudBuildxImageConfiguration(registry + "/user/test:1.0.1", "no-org-here");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenDockerHubCredentials(null, "dockerhub-user", "dockerhub-pass");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            thenDockerHubCredentialsWereLookedUpAsOrg(null);
             Assertions.assertEquals(2, authConfigList.size());
         }
 
@@ -689,13 +707,13 @@ class RegistryServiceTest {
             .createAuthConfig(Mockito.eq(true), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.eq("user"), Mockito.any());
     }
 
-    private void givenDockerHubCredentials(String username, String password) throws MojoExecutionException {
+    private void givenDockerHubCredentials(String cloudBuilderOrg, String username, String password) throws MojoExecutionException {
         Map<String, String> dockerHubAuthConfig = new HashMap<>();
         dockerHubAuthConfig.put(AuthConfig.AUTH_USERNAME, username);
         dockerHubAuthConfig.put(AuthConfig.AUTH_PASSWORD, password);
         Mockito.doReturn(new AuthConfig(dockerHubAuthConfig))
             .when(authConfigFactory)
-            .createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
+            .createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.eq(cloudBuilderOrg), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
     }
 
     private AuthConfigList whenCreateCompleteAuthConfigList(String registry) throws MojoExecutionException {
@@ -708,12 +726,14 @@ class RegistryServiceTest {
         return RegistryService.createCompleteAuthConfigList(true, imageConfiguration, registryConfig, mojoParameters, Collections.emptyMap());
     }
 
-    private void thenDockerHubCredentialsWereLookedUp() throws MojoExecutionException {
-        Mockito.verify(authConfigFactory).createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
+    private void thenDockerHubCredentialsWereLookedUpAsOrg(String cloudBuilderOrg) throws MojoExecutionException {
+        Mockito.verify(authConfigFactory).createAuthConfig(Mockito.eq(false), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.eq(cloudBuilderOrg), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
     }
 
     private void thenDockerHubCredentialsWereNotLookedUp() throws MojoExecutionException {
-        Mockito.verify(authConfigFactory, Mockito.never()).createAuthConfig(Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.isNull(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
+        // isPush=false distinguishes this (the cloud driver's own, always-pull-context lookup) from the
+        // legitimate isPush=true push-auth call, which some of these tests also resolve against docker.io.
+        Mockito.verify(authConfigFactory, Mockito.never()).createAuthConfig(Mockito.eq(false), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(AuthConfig.REGISTRY_DOCKER_IO));
     }
 
     private void givenAnImageConfigurationWithoutBuildConfig(String imageName) {
