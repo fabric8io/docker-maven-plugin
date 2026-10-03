@@ -481,6 +481,30 @@ class RegistryServiceTest {
 
             thenDockerHubCredentialsWereNotLookedUp();
         }
+
+        @Test
+        void authConfigListForCloudDriverDoesNotDuplicateLookupWhenPushRegistryIsDockerHub() throws MojoExecutionException {
+            givenCloudBuildxImageConfiguration(AuthConfig.REGISTRY_DOCKER_IO + "/user/test:1.0.1", "myorg/default");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+
+            whenCreateCompleteAuthConfigList(null);
+
+            // The push credentials (resolved with the correct push context) already cover docker.io; looking
+            // it up again with the always-pull-context lookup could silently overwrite them with the wrong ones.
+            thenDockerHubCredentialsWereNotLookedUp();
+        }
+
+        @Test
+        void authConfigListForCloudDriverDoesNotDuplicateLookupWhenPushRegistryIsUnconfigured() throws MojoExecutionException {
+            givenCloudBuildxImageConfiguration("user/test:1.0.1", "myorg/default");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+
+            // No registry configured anywhere (image name, image config, or registry config), which
+            // defaults to docker.io, same as leaving the push registry unconfigured.
+            whenCreateCompleteAuthConfigList(null);
+
+            thenDockerHubCredentialsWereNotLookedUp();
+        }
     }
 
     // ====================================================================================================

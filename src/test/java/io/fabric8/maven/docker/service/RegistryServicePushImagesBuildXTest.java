@@ -33,7 +33,9 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -163,6 +165,60 @@ class RegistryServicePushImagesBuildXTest {
     verify(dockerAccess).pushImage(eq("user1/second-image:latest"), any(), eq("registry1.org"), anyInt());
   }
 
+  @Test
+  void whenCloudDriverAndNeitherPushNorFromRegistryIsDockerHub_thenDockerHubCredentialsAreAdded() throws MojoExecutionException, DockerAccessException {
+    // Given a cloud-driver image whose push registry and base image are both unrelated to docker.io
+    imageConfigurationList = Collections.singletonList(
+        createNewCloudImageConfiguration("user1/sample-image:latest", "registry2.org/user2/base:latest", null, "myorg/default"));
+    givenAuthConfigExistsForRegistry("registry1.org", "user1", "password1");
+    givenAuthConfigExistsForRegistry("registry2.org", "user2", "password2");
+    givenAuthConfigExistsForRegistry("docker.io", "dockerhubuser", "dockerhubpass");
+
+    // When
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
+
+    // Then: the cloud builder's own docker.io credentials are added alongside the push and base-image ones
+    verifyBuildXServiceInvokedWithAuthConfigListSize(3);
+    verify(authConfigFactory, times(1)).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+  }
+
+  @Test
+  void whenCloudDriverAndFromImageOnDockerHub_thenDockerHubCredentialsAreNotLookedUpTwice() throws MojoExecutionException, DockerAccessException {
+    // Given a cloud-driver image whose base image already resolves to docker.io
+    imageConfigurationList = Collections.singletonList(
+        createNewCloudImageConfiguration("user1/sample-image:latest", "docker.io/library/openjdk:21", null, "myorg/default"));
+    givenAuthConfigExistsForRegistry("registry1.org", "user1", "password1");
+    givenAuthConfigExistsForRegistry("docker.io", "dockerhubuser", "dockerhubpass");
+
+    // When
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
+
+    // Then: the base image's docker.io entry already covers the cloud builder, so it is not looked up again
+    verifyBuildXServiceInvokedWithAuthConfigListSize(2);
+    verify(authConfigFactory, times(1)).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+  }
+
+  @Test
+  void whenCloudDriverAndPushRegistryIsDockerHub_thenDockerHubCredentialsAreNotLookedUpTwice() throws MojoExecutionException, DockerAccessException {
+    // Given a cloud-driver image that is itself pushed to docker.io
+    registryConfig = new RegistryService.RegistryConfig.Builder()
+        .registry("docker.io")
+        .authConfigFactory(authConfigFactory)
+        .build();
+    imageConfigurationList = Collections.singletonList(
+        createNewCloudImageConfiguration("user1/sample-image:latest", "registry2.org/user2/base:latest", null, "myorg/default"));
+    givenAuthConfigExistsForRegistry("docker.io", "user1", "password1");
+    givenAuthConfigExistsForRegistry("registry2.org", "user2", "password2");
+
+    // When
+    registryService.pushImages(projectPaths, imageConfigurationList, 0, registryConfig, false, buildContext);
+
+    // Then: the push credentials (resolved with the correct push context) already cover docker.io, so the
+    // cloud builder's own, always-pull-context lookup must not run and risk overwriting them
+    verifyBuildXServiceInvokedWithAuthConfigListSize(2);
+    verify(authConfigFactory, never()).createAuthConfig(anyBoolean(), anyBoolean(), any(), any(), isNull(), eq("docker.io"));
+  }
+
   /**
    * Guards the invariant at its source, independently of which callers happen to reach the helper:
    * collecting pull credentials must leave the caller's registry configuration alone, since that
@@ -213,6 +269,22 @@ class RegistryServicePushImagesBuildXTest {
     when(buildImageConfiguration.getFrom()).thenReturn(from);
     when(buildImageConfiguration.getBuildX()).thenReturn(new BuildXConfiguration.Builder()
         .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
+        .build());
+    when(buildImageConfiguration.isBuildX()).thenReturn(true);
+    when(buildImageConfiguration.getDockerFile()).thenReturn(dockerFile);
+    when(buildImageConfiguration.getAbsoluteDockerFilePath(any())).thenReturn(dockerFile);
+    return new ImageConfiguration.Builder()
+        .name(name)
+        .buildConfig(buildImageConfiguration).build();
+  }
+
+  private ImageConfiguration createNewCloudImageConfiguration(String name, String from, File dockerFile, String cloudEndpoint) {
+    BuildImageConfiguration buildImageConfiguration = mock(BuildImageConfiguration.class);
+    when(buildImageConfiguration.getFrom()).thenReturn(from);
+    when(buildImageConfiguration.getBuildX()).thenReturn(new BuildXConfiguration.Builder()
+        .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
+        .driver("cloud")
+        .builderName(cloudEndpoint)
         .build());
     when(buildImageConfiguration.isBuildX()).thenReturn(true);
     when(buildImageConfiguration.getDockerFile()).thenReturn(dockerFile);
