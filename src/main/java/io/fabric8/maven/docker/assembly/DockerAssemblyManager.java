@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -392,7 +393,10 @@ public class DockerAssemblyManager {
         File directory = fileSet.getDirectory();
         List<String> excludes = new ArrayList<>();
         // Output directory will be always excluded
-        excludes.add(params.getOutputDirectory() + "/**");
+        String outputDirectoryExclusion = getOutputDirectoryExclusion(directory, params.getOutputDirectory());
+        if (outputDirectoryExclusion != null) {
+            excludes.add(outputDirectoryExclusion);
+        }
         for (String file : new String[] { DOCKER_EXCLUDE, DOCKER_IGNORE } ) {
             File dockerIgnore = new File(directory, file);
             if (dockerIgnore.exists()) {
@@ -403,6 +407,22 @@ public class DockerAssemblyManager {
             }
         }
         fileSet.setExcludes(excludes.toArray(new String[0]));
+    }
+
+    static String getOutputDirectoryExclusion(File contextDirectory, String outputDirectory) throws IOException {
+        File absoluteOutputDirectory = new File(outputDirectory);
+        if (!absoluteOutputDirectory.isAbsolute()) {
+            String relativeOutputDirectory = outputDirectory.replace(File.separatorChar, '/');
+            return relativeOutputDirectory.replaceFirst("/+$", "") + "/**";
+        }
+        Path contextPath = contextDirectory.getCanonicalFile().toPath();
+        Path outputPath = absoluteOutputDirectory.getCanonicalFile().toPath();
+        if (!outputPath.startsWith(contextPath)) {
+            return null;
+        }
+        String relativeOutputDirectory = contextPath.relativize(outputPath).toString()
+                .replace(File.separatorChar, '/');
+        return relativeOutputDirectory.isEmpty() ? "**" : relativeOutputDirectory + "/**";
     }
 
     private void addDockerIncludes(DefaultFileSet fileSet) throws IOException {
