@@ -10,42 +10,135 @@ on:
       - completed
 
 concurrency:
-  # Only run once for latest commit per ref and cancel other (previous) runs.
-  group: ci-sonar-docker-maven-plugin-${{ github.ref }}
+  # In a workflow_run event github.ref resolves to the default branch, so keying on it would put
+  # every pull request into one group and let them cancel each other. Key on the head instead.
+  group: ci-sonar-docker-maven-plugin-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  gate:
+    name: Check whether the commit may be analysed
+    runs-on: ubuntu-latest
+    outputs:
+      analyse: ${{ steps.check.outputs.analyse }}
+      pr: ${{ steps.check.outputs.pr }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      # This workflow holds the base repository's secrets, and the job below builds and tests the
+      # commit it checks out. For a fork that is only safe once a human who can merge the pull
+      # request has looked at the very code that is about to run, so establish that first.
+      - name: Check
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REPO: ${{ github.repository }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -eu
+
+          skip() {
+            echo "analyse=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$1"
+            exit 0
+          }
+
+          echo "sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+          # Identify the pull request by its head, and only accept one that still points at the
+          # commit this run was triggered for.
+          pr=$(gh api "repos/$BASE_REPO/pulls?head=$HEAD_OWNER:$HEAD_BRANCH&state=open" \
+                 --jq '[.[] | select(.head.sha == env.HEAD_SHA)] | .[0].number // empty')
+          if [ -z "$pr" ]; then
+            skip "No open pull request has $HEAD_SHA as its head; nothing to analyse."
+          fi
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+
+          # A branch in this repository can only be pushed by someone who already has write access,
+          # so there is no untrusted code here to gate - this covers Dependabot as well.
+          if [ "$HEAD_REPO" = "$BASE_REPO" ]; then
+            echo "analyse=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::PR #$pr comes from this repository, analysing $HEAD_SHA."
+            exit 0
+          fi
+
+          # The approval has to name this exact commit, so pushing after being approved closes the
+          # gate again rather than smuggling code past it.
+          approvers=$(gh api "repos/$BASE_REPO/pulls/$pr/reviews" --paginate \
+            --jq '.[]
+                  | select(.state == "APPROVED" and .commit_id == env.HEAD_SHA)
+                  | .user.login' | sort -u)
+
+          # Who left that approval decides whether it is worth anything, and author_association is
+          # the wrong place to ask: MEMBER only says the reviewer belongs to the organisation, and
+          # COLLABORATOR is just as true of read and triage access. Neither can merge this pull
+          # request. Ask the repository for the permission it actually granted instead and take
+          # only write - which is what the API reports for maintain as well - or admin. Anything
+          # else leaves the gate closed, including an answer the API declines to give.
+          approver=
+          approver_permission=
+          for login in $approvers; do
+            if ! permission=$(gh api "repos/$BASE_REPO/collaborators/$login/permission" \
+                                --jq '.permission' 2>&1); then
+              echo "::warning::Could not read $login's permission on $BASE_REPO: $permission"
+              continue
+            fi
+            case "$permission" in
+              admin | write)
+                approver=$login
+                approver_permission=$permission
+                break
+                ;;
+            esac
+          done
+
+          if [ -z "$approver" ]; then
+            skip "PR #$pr is from a fork and $HEAD_SHA carries no approval from someone with write access to $BASE_REPO, skipping the analysis."
+          fi
+
+          echo "analyse=true" >> "$GITHUB_OUTPUT"
+          echo "::notice::PR #$pr was approved for $HEAD_SHA by $approver ($approver_permission access), analysing."
+
   sonar:
     name: Sonar PR Scanner
+    needs: gate
+    if: needs.gate.outputs.analyse == 'true'
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_BASE_REF: ${{ github.event.workflow_run.head_branch }}
-      GITHUB_PR_AUTHOR: ${{ github.event.sender.login }}
-      GITHUB_REPO: ${{ github.repository }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      PR_NUMBER: ${{ needs.gate.outputs.pr }}
+      PR_SHA: ${{ needs.gate.outputs.sha }}
+      PR_BRANCH: ${{ github.event.workflow_run.head_branch }}
     steps:
       - name: Setup Java 21 # SonarQube Cloud requires Java 21+ to run the analysis
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Dump GitHub context
-        run: echo '${{ toJSON(github.event) }}'
-      - name: Get PR number
-        run: |
-          PR_QUERY_RESULT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$GITHUB_REPO/pulls?head=$GITHUB_PR_AUTHOR:$GITHUB_BASE_REF&state=open" | jq '.[0].number')
-          echo "PR_NUMBER=$PR_QUERY_RESULT" >> $GITHUB_ENV
-      - name: Checkout
+      - name: Checkout the approved commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: refs/pull/${{ env.PR_NUMBER }}/head
+          ref: ${{ needs.gate.outputs.sha }}
+          # Checking out a fork here is what actions/checkout refuses by default, and rightly so.
+          # It is opted into only because the gate above established that a maintainer approved
+          # this commit.
+          allow-unsafe-pr-checkout: true
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
+      - name: Verify the checkout is the commit that was approved
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "$PR_SHA" ]; then
+            echo "::error::Checked out $actual but $PR_SHA is what was approved"
+            exit 1
+          fi
       - name: Publish analysis on PR
         run: |
           ./mvnw ${MAVEN_ARGS} -Pjacoco,sonar clean install \
@@ -54,7 +147,7 @@ jobs:
              -Dsonar.login=${SONAR_TOKEN} \
              -Dsonar.host.url=https://sonarcloud.io \
              -Dsonar.pullrequest.base=master \
-             -Dsonar.pullrequest.branch=${GITHUB_BASE_REF} \
+             -Dsonar.pullrequest.branch=${PR_BRANCH} \
              -Dsonar.pullrequest.key=${PR_NUMBER} \
              -Dsonar.pullrequest.provider=GitHub \
              -Dsonar.pullrequest.github.repository=fabric8io/docker-maven-plugin \
