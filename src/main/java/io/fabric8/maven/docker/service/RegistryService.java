@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -167,8 +168,100 @@ public class RegistryService {
         }
 
         addDockerHubAuthConfigForCloudDriver(imageConfig, configuredRegistry, mojoParameters, registryConfig, buildArgsFromExternalSources, authConfigList);
+        addAuthConfigsForRegistryCaches(imageConfig, configuredRegistry, mojoParameters, registryConfig, buildArgsFromExternalSources, authConfigList);
 
         return authConfigList;
+    }
+
+    // BuildKit reads and writes a registry cache (cacheFrom/cacheTo of type=registry) with the credentials in the
+    // buildx config.json, which only holds what is added here. Without this, a cache ref on a registry that is
+    // neither the push registry nor the registry of a FROM image fails with 401 Unauthorized, and a failing
+    // cache export fails the build. Registries already covered are skipped, so their existing entry (resolved
+    // with the right push/pull context) is not overwritten.
+    private static void addAuthConfigsForRegistryCaches(ImageConfiguration imageConfig, String configuredRegistry, MojoParameters mojoParameters, RegistryConfig registryConfig, Map<String, String> buildArgsFromExternalSources, AuthConfigList authConfigList) throws MojoExecutionException {
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildXConfiguration buildX = buildConfig == null ? null : buildConfig.getBuildX();
+        if (buildX == null) {
+            return;
+        }
+        String cacheToRegistry = getRegistryOfRegistryCache(buildX.getCacheTo());
+        String cacheFromRegistry = getRegistryOfRegistryCache(buildX.getCacheFrom());
+        if (cacheToRegistry == null && cacheFromRegistry == null) {
+            return;
+        }
+
+        List<String> covered = new ArrayList<>(getRegistriesForPull(buildConfig, mojoParameters, buildArgsFromExternalSources));
+        covered.add(configuredRegistry);
+
+        // Exporting a cache writes to the registry, so it needs push credentials
+        if (cacheToRegistry != null) {
+            addAuthConfigForRegistryCache(cacheToRegistry, true, covered, registryConfig, authConfigList);
+        }
+        if (cacheFromRegistry != null) {
+            addAuthConfigForRegistryCache(cacheFromRegistry, false, covered, registryConfig, authConfigList);
+        }
+    }
+
+    private static void addAuthConfigForRegistryCache(String registry, boolean isPush, List<String> covered, RegistryConfig registryConfig, AuthConfigList authConfigList) throws MojoExecutionException {
+        for (String coveredRegistry : covered) {
+            if (isSameRegistry(coveredRegistry, registry)) {
+                return;
+            }
+        }
+        covered.add(registry);
+        AuthConfig cacheAuth = registryConfig.createAuthConfig(isPush, null, registry);
+        if (cacheAuth != null) {
+            authConfigList.addAuthConfig(cacheAuth);
+        }
+    }
+
+    // A blank registry means docker.io
+    private static boolean isSameRegistry(String registry1, String registry2) {
+        if (isDockerHub(registry1) && isDockerHub(registry2)) {
+            return true;
+        }
+        return StringUtils.isNotBlank(registry1) && registry1.equalsIgnoreCase(registry2);
+    }
+
+    /**
+     * Get the registry host of a buildx cache option value, if it points to an image in a registry. Handles the
+     * {@code type=registry,ref=<ref>[,...]} form and the bare {@code <ref>} shorthand of {@code --cache-from}.
+     *
+     * @return the registry, or null if the cache is not a registry cache or its ref does not name a registry
+     */
+    static String getRegistryOfRegistryCache(String cacheSpec) {
+        if (StringUtils.isBlank(cacheSpec)) {
+            return null;
+        }
+        String ref = null;
+        if (cacheSpec.indexOf('=') < 0) {
+            ref = cacheSpec.trim();
+        } else {
+            boolean registryType = true;
+            for (String attribute : cacheSpec.split(",")) {
+                String[] keyValue = attribute.trim().split("=", 2);
+                if (keyValue.length != 2) {
+                    continue;
+                }
+                if ("type".equals(keyValue[0])) {
+                    registryType = "registry".equals(keyValue[1]);
+                } else if ("ref".equals(keyValue[0])) {
+                    ref = keyValue[1];
+                }
+            }
+            if (!registryType) {
+                return null;
+            }
+        }
+        if (StringUtils.isBlank(ref)) {
+            return null;
+        }
+        try {
+            ImageName imageName = new ImageName(ref);
+            return imageName.hasRegistry() ? imageName.getRegistry() : null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     // A Docker Cloud builder is provisioned against Docker Hub regardless of the configured push
