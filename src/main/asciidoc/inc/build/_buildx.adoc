@@ -76,6 +76,9 @@ element defaults to `min` and the `<sbom>` element defaults to `false`.
 | A value to be passed through to the `--cache-from` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-from[docker buildx reference docs].
 | *cacheTo*
 | A value to be passed through to the `--cache-to` option of `docker buildx build`. See https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-to[docker buildx reference docs].
+For a `type=registry` cache (or the bare `<ref>` shorthand of *cacheFrom*), the credentials of the cache's registry
+are looked up the same way as for the push registry and passed to the builder, so the cache may live in a registry
+other than the one the image is pushed to. *cacheTo* uses push credentials, *cacheFrom* pull credentials.
 | *buildAllPlatforms*
 | When `true` and more than one `<platform>` is configured, the `docker:build` goal builds *all*
 configured platforms (warming the builder cache) in addition to building and loading the native
