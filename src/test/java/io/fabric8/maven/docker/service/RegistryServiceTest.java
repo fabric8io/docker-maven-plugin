@@ -523,6 +523,76 @@ class RegistryServiceTest {
 
             thenDockerHubCredentialsWereNotLookedUp();
         }
+
+        @Test
+        void authConfigListIncludesCredentialsOfCacheRegistryUnrelatedToPushRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfigurationWithCache(registry + "/user/test:1.0.1",
+                "type=registry,ref=cache.example.com/user/test:cache", "mode=max,type=registry,ref=cache.example.com/user/test:cache");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistryCredentials("cache.example.com", true, "cache-user", "cache-pass");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            // cacheTo writes, so push credentials are looked up; the same registry in cacheFrom is not looked up again
+            Mockito.verify(authConfigFactory).createAuthConfig(Mockito.eq(true), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq("cache.example.com"));
+            Mockito.verify(authConfigFactory, Mockito.never()).createAuthConfig(Mockito.eq(false), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq("cache.example.com"));
+            Assertions.assertEquals(2, authConfigList.size());
+        }
+
+        @Test
+        void authConfigListLooksUpPullCredentialsForCacheFromOnlyRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfigurationWithCache(registry + "/user/test:1.0.1", "cache.example.com/user/test:cache", null);
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistryCredentials("cache.example.com", false, "cache-user", "cache-pass");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            Assertions.assertEquals(2, authConfigList.size());
+        }
+
+        @Test
+        void authConfigListDoesNotLookUpCacheRegistryAlreadyCoveredByPushRegistry() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfigurationWithCache(registry + "/user/test:1.0.1",
+                "type=registry,ref=" + registry + "/user/test:cache", "type=registry,ref=" + registry + "/user/test:cache");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            Mockito.verify(authConfigFactory, Mockito.never()).createAuthConfig(Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(registry.toUpperCase()));
+            Assertions.assertEquals(1, authConfigList.size());
+        }
+
+        @Test
+        void authConfigListIgnoresNonRegistryAndRegistrylessCaches() throws MojoExecutionException {
+            String registry = "myregistry.com";
+            givenBuildxImageConfigurationWithCache(registry + "/user/test:1.0.1", "type=local,src=/tmp/cache", "user/test:cache");
+            givenCredentials("King_Roland_of_Druidia", "12345");
+            givenRegistry(registry);
+
+            AuthConfigList authConfigList = whenCreateCompleteAuthConfigList(registry);
+
+            Assertions.assertEquals(1, authConfigList.size());
+        }
+
+        @Test
+        void registryOfRegistryCache() {
+            Assertions.assertEquals("cache.example.com", RegistryService.getRegistryOfRegistryCache("type=registry,ref=cache.example.com/user/test:cache"));
+            Assertions.assertEquals("cache.example.com", RegistryService.getRegistryOfRegistryCache("mode=max,image-manifest=true,type=registry,ref=cache.example.com/user/test:cache"));
+            Assertions.assertEquals("cache.example.com:5000", RegistryService.getRegistryOfRegistryCache("cache.example.com:5000/user/test:cache"));
+            Assertions.assertEquals("cache.example.com", RegistryService.getRegistryOfRegistryCache("ref=cache.example.com/user/test"));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache("type=local,ref=cache.example.com/user/test"));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache("type=gha"));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache("user/test:cache"));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache("type=registry,ref=user/test:cache"));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache(""));
+            Assertions.assertNull(RegistryService.getRegistryOfRegistryCache(null));
+        }
     }
 
     // ====================================================================================================
@@ -685,6 +755,24 @@ class RegistryServiceTest {
             .builderName(cloudEndpoint)
             .build();
         givenImageNameAndBuildX(imageName, buildx, null, null);
+    }
+
+    private void givenBuildxImageConfigurationWithCache(String imageName, String cacheFrom, String cacheTo) {
+        BuildXConfiguration buildx = new BuildXConfiguration.Builder()
+            .platforms(Arrays.asList("linux/amd64", "linux/arm64"))
+            .cacheFrom(cacheFrom)
+            .cacheTo(cacheTo)
+            .build();
+        givenImageNameAndBuildX(imageName, buildx, null, null);
+    }
+
+    private void givenRegistryCredentials(String forRegistry, boolean isPush, String username, String password) throws MojoExecutionException {
+        Map<String, String> registryAuthConfig = new HashMap<>();
+        registryAuthConfig.put(AuthConfig.AUTH_USERNAME, username);
+        registryAuthConfig.put(AuthConfig.AUTH_PASSWORD, password);
+        Mockito.doReturn(new AuthConfig(registryAuthConfig))
+            .when(authConfigFactory)
+            .createAuthConfig(Mockito.eq(isPush), Mockito.eq(false), Mockito.eq(authConfig), Mockito.any(), Mockito.isNull(), Mockito.eq(forRegistry));
     }
 
     private void givenImageNameAndBuildX(String imageName, BuildXConfiguration buildx, String dockerFile, String tag) {
