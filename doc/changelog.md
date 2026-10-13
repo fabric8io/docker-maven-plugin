@@ -1,5 +1,6 @@
 * **0.50-SNAPSHOT**:
   - Pass credentials for the registry of a buildx `type=registry` `cacheFrom`/`cacheTo` to the builder, so a cache on a registry other than the push or `FROM` registry no longer fails with `401 Unauthorized`
+  - Respect a custom Maven build directory when selecting the default Docker output directory ([#1855](https://github.com/fabric8io/docker-maven-plugin/pull/1855))
   - Create the parent directory of `outputFile` and fail with an explicit message when it cannot be written, instead of swallowing the error and failing later with a `NullPointerException`; also make the progress bar usable without a preceding `progressStart()`
   - Do not fail `docker:stop` when the daemon is already removing the container itself, as it does for `<autoRemove>`; a conflict for any other reason (e.g. the container is still running) is still reported
   - Apply `<labels>` when building from a provided Dockerfile (`<dockerFile>`/`<dockerFileDir>`/`<contextDir>`), where they were previously dropped: buildx now receives them as `--label` and the classic build passes them as build options ([#1914](https://github.com/fabric8io/docker-maven-plugin/issues/1914))
