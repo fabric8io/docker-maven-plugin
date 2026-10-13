@@ -139,5 +139,40 @@ jobs:
           done
       - name: Run Integration tests
         run: |
+          set -o pipefail
           cd it/
-          mvn clean install
+          log="${RUNNER_TEMP}/integration-tests.log"
+          run() { mvn clean install "$@" 2>&1 | tee -a "$log"; }
+
+          if run; then
+            exit 0
+          fi
+
+          # The resolver in that Lima VM times out often enough to take down a reactor run that has
+          # nothing wrong with it. Only that signature earns a second attempt - any
+          # other failure is a real one and is reported straight away rather than costing another
+          # run to fail again. The reactor stops at the first failing module, so its output is the
+          # stretch between the last module header and the reactor summary; a timeout that an
+          # earlier module recovered from must not count.
+          failed_module_output() {
+            awk '/-< [^ ]+ >-/ { out = "" } /Reactor Summary/ { exit } { out = out $0 "\n" }
+                 END { printf "%s", out }' "$log"
+          }
+          if ! failed_module_output | grep -qE 'lookup [a-z0-9.-]+( on [0-9.:]+)?: .*i/o timeout'; then
+            echo "::error::Integration tests failed for a reason other than name resolution"
+            exit 1
+          fi
+
+          # Maven names the module to resume from. The modules before it - the bulk of the run -
+          # are left out of the reactor altogether, so their images and containers are not built a
+          # second time; the resumed modules are cleaned and rebuilt as usual.
+          resume=$(grep -oE '\-rf :[A-Za-z0-9._-]+' "$log" | tail -1 || true)
+          echo "::warning::Name resolution timed out in the VM, resuming from ${resume:-the first module}"
+
+          # A module that fails after docker:start never reaches docker:stop, and its containers
+          # would clash with the retry where names are fixed (dmp-it-net's box1 and box2).
+          leftover=$(docker ps -aq --filter label=dmp.coordinates)
+          if [ -n "$leftover" ]; then
+            docker rm -fv $leftover > /dev/null
+          fi
+          run $resume
