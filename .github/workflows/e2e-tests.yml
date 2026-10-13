@@ -168,4 +168,11 @@ jobs:
           # second time; the resumed modules are cleaned and rebuilt as usual.
           resume=$(grep -oE '\-rf :[A-Za-z0-9._-]+' "$log" | tail -1 || true)
           echo "::warning::Name resolution timed out in the VM, resuming from ${resume:-the first module}"
+
+          # A module that fails after docker:start never reaches docker:stop, and its containers
+          # would clash with the retry where names are fixed (dmp-it-net's box1 and box2).
+          leftover=$(docker ps -aq --filter label=dmp.coordinates)
+          if [ -n "$leftover" ]; then
+            docker rm -fv $leftover > /dev/null
+          fi
           run $resume
