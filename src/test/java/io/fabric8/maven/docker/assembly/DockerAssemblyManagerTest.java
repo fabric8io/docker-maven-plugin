@@ -86,6 +86,27 @@ class DockerAssemblyManagerTest {
     }
 
     @Test
+    void dockerfileUpToDate(@TempDir Path tmpDir, @Mock final MavenProject project, @Mock final MojoParameters mojoParams) throws Exception {
+        Mockito.when(project.getBasedir()).thenReturn(tmpDir.toFile());
+        Mockito.when(mojoParams.getProject()).thenReturn(project);
+        Mockito.when(mojoParams.getOutputDirectory()).thenReturn("target/docker");
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder().from("busybox:latest").build();
+        File buildDir = tmpDir.resolve("target/docker/test/image/latest/build").toFile();
+
+        // No Dockerfile created yet
+        Assertions.assertFalse(assemblyManager.isDockerfileUpToDate("test/image:latest", mojoParams, buildConfig));
+
+        // Same Dockerfile as the one created
+        Assertions.assertTrue(buildDir.mkdirs());
+        assemblyManager.createDockerFileBuilder(buildConfig, buildConfig.getAllAssemblyConfigurations()).write(buildDir);
+        Assertions.assertTrue(assemblyManager.isDockerfileUpToDate("test/image:latest", mojoParams, buildConfig));
+
+        // Other base image than the one used for the Dockerfile that was created
+        BuildImageConfiguration otherConfig = new BuildImageConfiguration.Builder().from("alpine:latest").build();
+        Assertions.assertFalse(assemblyManager.isDockerfileUpToDate("test/image:latest", mojoParams, otherConfig));
+    }
+
+    @Test
     void testShellIsSet() {
         BuildImageConfiguration buildConfig =
             new BuildImageConfiguration.Builder().shell(
