@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -28,6 +29,7 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -39,10 +41,12 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 class PushMojoBuildXTest {
@@ -51,18 +55,20 @@ class PushMojoBuildXTest {
   private File temporaryFolder;
 
   private Path expectedDockerStateDir;
+  private DockerAssemblyManager assemblyManager;
+  private ServiceHubFactory serviceHubFactory;
   private File expectedDockerStateConfigDir;
   private Settings mockedMavenSettings;
   private MockedConstruction<BuildXService.DefaultExec> defaultExecMockedConstruction;
 
   @BeforeEach
-  void setup() throws MojoExecutionException, MojoFailureException, IOException, SecDispatcherException {
+  void setup() throws MojoExecutionException, MojoFailureException, IOException, SecDispatcherException, ReflectiveOperationException {
     mockedMavenSettings = mock(Settings.class);
     MavenProject mavenProject = mock(MavenProject.class, RETURNS_DEEP_STUBS);
     DockerAccessFactory dockerAccessFactory = mock(DockerAccessFactory.class);
     DockerAccess dockerAccess = mock(DockerAccess.class);
     SecDispatcher mockedSecDispatcher = mock(SecDispatcher.class);
-    ServiceHubFactory serviceHubFactory = new ServiceHubFactory();
+    serviceHubFactory = new ServiceHubFactory();
     when(mockedMavenSettings.getInteractiveMode()).thenReturn(false);
     Properties properties = new Properties();
     when(mavenProject.getProperties()).thenReturn(properties);
@@ -79,6 +85,7 @@ class PushMojoBuildXTest {
     when(mockedSecDispatcher.decrypt(anyString())).thenReturn("testpassword");
     Map<String, Object> pluginContext = new HashMap<>();
     defaultExecMockedConstruction = mockConstruction(BuildXService.DefaultExec.class);
+    assemblyManager = injectMockedAssemblyManager();
     this.pushMojo = new PushMojo();
     this.pushMojo.setPluginContext(pluginContext);
     pushMojo.verbose = "true";
@@ -131,6 +138,61 @@ class PushMojoBuildXTest {
       System.clearProperty("docker.push.username");
       System.clearProperty("docker.push.password");
     }
+  }
+
+  @Test
+  @DisplayName("docker:push buildx, build context exists with the same Dockerfile, then do not recreate it")
+  void execute_whenBuildContextExistsWithSameDockerfile_thenDoNotRecreateBuildContext() throws Exception {
+    // Given
+    createBuildContextArchive();
+    when(assemblyManager.isDockerfileUpToDate(eq("test.example.org/testuser/sample-test-image:latest"), any(), any())).thenReturn(true);
+
+    // When
+    pushMojo.execute();
+
+    // Then
+    verify(assemblyManager, never()).createDockerTarArchive(any(), any(), any(), any(), any());
+    verifyDockerConfigOptionAddedToBuildX();
+  }
+
+  @Test
+  @DisplayName("docker:push buildx, build context exists with a different Dockerfile, then recreate it")
+  void execute_whenBuildContextExistsWithOtherDockerfile_thenRecreateBuildContext() throws Exception {
+    // Given
+    createBuildContextArchive();
+    when(assemblyManager.isDockerfileUpToDate(eq("test.example.org/testuser/sample-test-image:latest"), any(), any())).thenReturn(false);
+
+    // When
+    pushMojo.execute();
+
+    // Then
+    verify(assemblyManager).createDockerTarArchive(eq("test.example.org/testuser/sample-test-image:latest"), any(), any(), any(), any());
+    verifyDockerConfigOptionAddedToBuildX();
+  }
+
+  @Test
+  @DisplayName("docker:push buildx without prior docker:build, then create the build context before pushing")
+  void execute_whenBuildContextMissing_thenCreateBuildContext() throws Exception {
+    // When
+    pushMojo.execute();
+
+    // Then
+    verify(assemblyManager).createDockerTarArchive(eq("test.example.org/testuser/sample-test-image:latest"), any(), any(), any(), any());
+    verifyDockerConfigOptionAddedToBuildX();
+  }
+
+  private void createBuildContextArchive() throws IOException {
+    Path buildContextArchive = expectedDockerStateDir.resolve("tmp").resolve("docker-build.tar");
+    Files.createDirectories(buildContextArchive.getParent());
+    Files.createFile(buildContextArchive);
+  }
+
+  private DockerAssemblyManager injectMockedAssemblyManager() throws ReflectiveOperationException {
+    DockerAssemblyManager assemblyManager = mock(DockerAssemblyManager.class);
+    Field field = ServiceHubFactory.class.getDeclaredField("dockerAssemblyManager");
+    field.setAccessible(true);
+    field.set(serviceHubFactory, assemblyManager);
+    return assemblyManager;
   }
 
   private void verifyDockerConfigOptionAddedToBuildX() throws MojoExecutionException {

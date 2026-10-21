@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -223,6 +224,37 @@ public class DockerAssemblyManager {
         }
     }
 
+
+    /**
+     * Check whether the Dockerfile in the build directory of the image is identical to the one that would be created
+     * now, which is a cheap way to detect that a previously created docker build context was created with other
+     * settings (e.g. properties interpolated into the Dockerfile that differ by profile). Only the Dockerfile
+     * is compared, not the files of the assemblies.
+     *
+     * @param imageName image's name
+     * @param params mojo parameters
+     * @param buildConfig the build configuration of the image
+     * @return true if the Dockerfile in the build directory is identical to the one that would be created
+     */
+    public boolean isDockerfileUpToDate(String imageName, MojoParameters params, BuildImageConfiguration buildConfig) {
+        BuildDirs buildDirs = new BuildDirs(imageName, params);
+        try {
+            String expected;
+            File existing;
+            if (buildConfig.isDockerFileMode()) {
+                File dockerFile = buildConfig.getAbsoluteDockerFilePath(params);
+                expected = DockerFileUtil.interpolate(dockerFile, DockerFileUtil.createInterpolator(params, buildConfig.getFilter()));
+                existing = new File(buildDirs.getOutputDirectory(), dockerFile.getName());
+            } else {
+                expected = createDockerFileBuilder(buildConfig, buildConfig.getAllAssemblyConfigurations()).content();
+                existing = new File(buildDirs.getOutputDirectory(), DOCKERFILE_NAME);
+            }
+            return existing.isFile() && expected.equals(new String(Files.readAllBytes(existing.toPath()), Charset.defaultCharset()));
+        } catch (IOException | RuntimeException e) {
+            // Let the creation of the build context report any problem with the Dockerfile
+            return false;
+        }
+    }
 
     private void excludeDockerfile(DefaultFileSet fileSet, File dockerFile) {
         ArrayList<String> excludes =

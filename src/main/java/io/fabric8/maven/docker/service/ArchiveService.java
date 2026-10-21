@@ -130,6 +130,17 @@ public class ArchiveService {
         return dockerAssemblyManager.createChangedFilesArchive(entries, assemblyDir, imageName, mojoParameters);
     }
 
+    /**
+     * Check whether the Dockerfile of an existing docker build context is identical to the one that would be created now.
+     *
+     * @param imageConfig the image configuration
+     * @param params mojo params for the project
+     * @return true if the Dockerfile in the build directory is identical to the one that would be created
+     */
+    public boolean isDockerfileUpToDate(ImageConfiguration imageConfig, MojoParameters params) {
+        return dockerAssemblyManager.isDockerfileUpToDate(imageConfig.getName(), params, imageConfig.getBuildConfiguration());
+    }
+
     // =============================================
 
     File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log)
