@@ -80,6 +80,7 @@ class BuildMojoTest extends MojoTestBase {
         givenResolvedImages(buildMojo, Collections.singletonList(singleImageWithBuild()));
         givenPackaging("jar");
         givenSkipPom(true);
+        givenBuildParallel("1");
 
         whenMojoExecutes();
 
@@ -499,6 +500,10 @@ class BuildMojoTest extends MojoTestBase {
 
     private void givenSkipPom(boolean skipPom) {
         buildMojo.skipPom = skipPom;
+    }
+
+    private void givenBuildParallel(String count){
+        buildMojo.buildParallel = count;
     }
 
     private void givenBuildArchiveOnly(String archiveOnly) {
