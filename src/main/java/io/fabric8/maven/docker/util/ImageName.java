@@ -234,9 +234,29 @@ public class ImageName {
         new ImageName(image);
     }
 
+    /**
+     * Validate a configured registry. A registry is a host with an optional port, not a URL; configuring it
+     * as one lets the scheme leak into the image name, which the daemon answers with a redirect that is not
+     * followed for POST requests, so a push fails with a "Moved Permanently" that gives no hint about the cause.
+     *
+     * @param registry registry to validate, may be null
+     * @throws IllegalArgumentException if the registry contains a URL scheme
+     */
+    public static void validateRegistry(String registry) {
+        if (registry != null && URL_SCHEME_REGEXP.matcher(registry).find()) {
+            throw new IllegalArgumentException(
+                String.format("Configuration error: registry '%s' must not contain a URL scheme. " +
+                              "Use the host[:port] form instead, e.g. '%s'.",
+                              registry, URL_SCHEME_REGEXP.matcher(registry).replaceFirst("")));
+        }
+    }
+
     // Validate parts and throw an IllegalArgumentException if a part is not valid
     private void doValidate() {
         List<String> errors = new ArrayList<>();
+        if (URL_SCHEME_REGEXP.matcher(getFullName()).find()) {
+            errors.add("name must not contain a URL scheme, use the 'host[:port]/repository[:tag]' form instead");
+        }
         // Strip off user from repository name
         String image = user != null ? repository.substring(user.length() + 1) : repository;
         Object[] checks = new Object[] {
@@ -322,4 +342,9 @@ public class ImageName {
     private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
 
     private final Pattern DIGEST_REGEXP = Pattern.compile("^sha256:[a-z0-9]{32,}$");
+
+    // Not part of Docker's own patterns: catches the common mistake of configuring a registry or image
+    // name as a URL. Without this the resulting name still fails validation, but only with the generic
+    // per-part messages, which never mention the scheme that actually caused it.
+    private static final Pattern URL_SCHEME_REGEXP = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://");
 }

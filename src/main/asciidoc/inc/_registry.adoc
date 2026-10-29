@@ -12,6 +12,11 @@ plugin follows the same semantics, so if an image name is specified
 with a registry part, this registry is contacted. Authentication is
 explained in the next <<authentication,section>>.
 
+A registry is always given as a host with an optional port, never as a
+URL: use `nexus.example.com:8443`, not `https://nexus.example.com:8443`.
+A scheme would end up in the image name, which the daemon answers with a
+redirect that is not followed for push requests, so the plugin rejects it.
+
 There are some situations however where you want to have more
 flexibility for specifying a remote registry. This might be because
 you do not want to hard code a registry into `pom.xml` but
