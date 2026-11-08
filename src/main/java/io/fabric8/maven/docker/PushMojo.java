@@ -1,6 +1,8 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 
@@ -51,7 +53,25 @@ public class PushMojo extends AbstractDockerMojo {
     }
 
     private void executeDockerPush(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
+        createBuildXContexts(hub);
         hub.getRegistryService().pushImages(createProjectPaths(), getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag, getBuildContext());
+    }
+
+    /**
+     * A buildx push builds from the build directory of the image (<code>build/</code> for a generated Dockerfile, the
+     * <code>docker-build.tar</code> context for a provided one). Always create the docker build context here, so that
+     * <code>docker:push</code> works without <code>docker:build</code> and never pushes artifacts or assemblies left
+     * over from an earlier run in the same working directory.
+     */
+    private void createBuildXContexts(ServiceHub hub) throws MojoExecutionException {
+        MojoParameters mojoParameters = createMojoParameters();
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            if (buildConfig == null || !imageConfig.isBuildX() || buildConfig.skipPush() || buildConfig.getDockerArchive() != null) {
+                continue;
+            }
+            hub.getArchiveService().createDockerBuildArchive(imageConfig, mojoParameters);
+        }
     }
 
     private void executeJibPush(ServiceHub hub) throws MojoExecutionException {
